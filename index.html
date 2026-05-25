@@ -1792,6 +1792,8 @@ body.is-solving .site-footer{display:none!important}
     </footer>
 </div>
 
+<!-- site-config.js を SITE_CONFIG / FIELDS 参照より前にロード（運管本番拡張） -->
+<script src="site-config.js"></script>
 <!-- CSV 取り込みデータを QUESTIONS 等へ反映する（exam-site-data-past.js の末尾から呼ばれる） -->
 <script>
 var SITE_CONFIG = window.SITE_CONFIG || {};
