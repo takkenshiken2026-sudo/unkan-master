@@ -897,11 +897,11 @@ def build_question_html(
     <h2 id="q-opts-h" class="q-h2">選択肢</h2>
     {quiz_form_html}
   </section>
-  <section class="q-block q-answer q-quiz-locked q-quiz-relock" aria-labelledby="q-ans-h">
+  <section class="q-block q-answer" aria-labelledby="q-ans-h">
     <h2 id="q-ans-h" class="q-h2">正答</h2>
     {ans_block}
   </section>
-  <section class="q-block q-quiz-locked q-quiz-relock" aria-labelledby="q-exp-h">
+  <section class="q-block" aria-labelledby="q-exp-h">
     <h2 id="q-exp-h" class="q-h2">解説</h2>
     {exp_html}
   </section>
