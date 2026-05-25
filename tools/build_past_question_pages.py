@@ -120,6 +120,15 @@ def stem_preview(text: str, limit: int = 52) -> str:
     return one[: limit - 1] + "…"
 
 
+def _year_phrase(page: dict) -> str:
+    """page から年度表示用フレーズを得る（wareki 優先 / 5桁以上は wareki 必須）。"""
+    wareki = norm(page.get("wareki"))
+    year = page["year"]
+    if wareki:
+        return wareki
+    return f"{year}年"
+
+
 def page_heading(page: dict) -> str:
     from tools.q_page_seo import question_h1
 
@@ -128,11 +137,12 @@ def page_heading(page: dict) -> str:
         year=page["year"],
         qno=page["qno"],
         category=page["category"],
+        wareki=norm(page.get("wareki")),
     )
 
 
 def page_context_line(page: dict) -> str:
-    return f"{page['year']}年 · {page['category']}"
+    return f"{_year_phrase(page)} · {page['category']}"
 
 
 def page_title_seo(page: dict) -> str:
@@ -143,6 +153,7 @@ def page_title_seo(page: dict) -> str:
         year=page["year"],
         qno=page["qno"],
         category=page["category"],
+        wareki=norm(page.get("wareki")),
     )
 
 
@@ -152,7 +163,10 @@ def page_meta_description(page: dict) -> str:
     return question_meta_description(
         "past",
         headline=question_meta_headline(
-            "past", year=page["year"], qno=page["qno"]
+            "past",
+            year=page["year"],
+            qno=page["qno"],
+            wareki=norm(page.get("wareki")),
         ),
         category=page["category"],
         body=norm(page.get("stem_plain")),

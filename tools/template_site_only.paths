@@ -26,6 +26,19 @@ public_site/
 tools/past_question_seo.py
 *-master-data.js
 
+# --- 運管マスター（unkan-master）---
+# 第1回・第2回をユニーク化するため exam_year=西暦*10+回 で合成し、
+# wareki を見出し・タイトル・類似問題・SPA 年度ラベルで使うように本番側で
+# パッチ済み。テンプレ側を直したらここから外して同期に戻す。
+tools/q_page_seo.py
+tools/build_past_question_pages.py
+tools/q_similar_questions.py
+tools/csv_to_exam_site_past_js.py
+tools/import_unkan_freight_csv.py
+tools/import_unkan_practice_csv.py
+data/source_unkan_freight_questions.csv
+data/source_unkan_freight_practice.csv
+
 # --- 賃管マスター（chintaikanrishi-master）---
 # SPA 学習データ（eisei1 系）
 eisei1-data-glossary.js

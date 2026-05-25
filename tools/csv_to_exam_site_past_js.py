@@ -190,7 +190,7 @@ def main() -> int:
         y = o["year"]
         wl = norm(row.get("exam_wareki"))
         if y not in year_labels:
-            year_labels[y] = f"{y}年"
+            year_labels[y] = wl or f"{y}年"
 
     practice_objs = load_practice_questions()
     write_practice_js(practice_objs)
