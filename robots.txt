@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://unkan-master.jp/sitemap.xml

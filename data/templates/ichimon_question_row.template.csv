@@ -1,0 +1,2 @@
+id,question,answer,explanation,explanation_summary,explanation_correct,explanation_opposite,explanation_point,category,tags,source,note
+2026-01-1,【一問一答の問題文を1文で記入】,○,【1段落の解説（未分割時は自動展開）】,【要約】,【○/× が正しい理由】,【もう一方の記号を選びやすい考え】,【学習のヒント】,法令・制度,基本,出典メモ（任意）,テンプレート行。ichimon_questions.csv にコピーして編集（この行はビルド対象に含めない）

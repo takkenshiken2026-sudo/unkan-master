@@ -1,0 +1,109 @@
+# 本番サイト側だけが持つパス（テンプレ同期で上書きしない）
+# サイト用リポジトリの README / sites/<id>/ にも同内容を置く想定。
+
+site-config.json
+site-config.js
+site-theme.css
+CNAME
+index.html
+
+data/
+data/templates/
+
+exam-site-data-past.js
+exam-site-data-practice.js
+exam-site-data-ichimondou.js
+
+# ビルド生成物（各サイトの CSV から再生成）
+articles/
+terms/
+q/
+robots.txt
+sitemap.xml
+public_site/
+
+# サイト固有拡張（例: 宅建の SEO 拡張・マスターデータ JS）
+tools/past_question_seo.py
+*-master-data.js
+
+# --- 賃管マスター（chintaikanrishi-master）---
+# SPA 学習データ（eisei1 系）
+eisei1-data-glossary.js
+eisei1-data-ichimon.js
+eisei1-data-original.js
+eisei1-master-data.js
+# 本番 CSV（テンプレ名と異なる）
+data/original_questions.csv
+data/past_questions_marubatsu_all_explanations.csv
+# 本番のみの generator（マニフェスト外だが同期事故防止）
+tools/csv_to_chintaikan_eisei_master.py
+tools/csv_to_eisei_ichimon_js.py
+tools/glossary_csv_to_eisei_embed_js.py
+tools/write_guide_articles_csv.py
+tools/internal_links.py
+
+# --- 二衛マスター（eisei2shu-master）---
+eisei2-data-glossary.js
+eisei2-data-original.js
+eisei2-master-data.js
+_generated_r7_questions.js
+data/eisei2_past_questions.csv
+data/eisei2_original_questions.csv
+docs/glossary-terms-checklist.csv
+docs/glossary-article-slugs.json
+docs/term-question-links.json
+eisei-articles/
+privacy-terms.html
+tools/csv_to_eisei2_master.py
+tools/build_question_pages.py
+tools/question_slug_lib.py
+tools/generate_articles_index.py
+tools/generate_guide_articles_batch.py
+tools/generate_terms_index_html.py
+tools/generate_terms_sitemap.py
+tools/add_35_glossary_articles.py
+tools/add_35_glossary_articles_batch2.py
+tools/add_35_glossary_articles_batch3.py
+tools/build_term_question_links.py
+tools/inject_matome_learning_hub.py
+tools/inject_supabase_into_html.py
+tools/learning_links_lib.py
+tools/render_learning_hub.py
+tools/verify_static_internal_links.py
+tools/verify_supabase_url_in_html.sh
+
+# --- 一衛マスター（eisei1shu-master）---
+eisei1-data-glossary.js
+eisei1-data-ichimon.js
+eisei1-data-original.js
+eisei1-master-data.js
+data/eisei1_past_questions.csv
+data/eisei1_original_questions.csv
+privacy-terms.html
+tools/generate_guide_articles.py
+tools/build_question_pages.py
+tools/csv_to_eisei1_master.py
+tools/import_eisei1_kakomon_csv.py
+tools/glossary_csv_to_embed_js.py
+tools/generate_terms_index_html.py
+tools/generate_terms_sitemap.py
+tools/merge_sitemap_xmls.py
+
+# --- 2級ボイラーマスター（boiler-master）---
+eisei1-data-glossary.js
+eisei1-data-ichimon.js
+eisei1-data-original.js
+eisei1-master-data.js
+data/original_questions.csv
+data/past_questions_marubatsu_all_explanations.csv
+tools/csv_to_exam_site_master.py
+tools/csv_to_eisei_ichimon_js.py
+tools/glossary_csv_to_eisei_embed_js.py
+tools/apply_seo_growth.py
+tools/internal_links.py
+tools/import_boiler_csv.py
+tools/build_exam_guide_articles.py
+tools/export_guide_articles_csv.py
+tools/seo_batch2_data.py
+tools/seo_batch3_guides.py
+tools/seo_batch4_guides.py

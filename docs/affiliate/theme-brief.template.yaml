@@ -1,0 +1,42 @@
+# アフィリエイト記事テーマ入力（このファイルをコピーして data/affiliate-briefs/{slug}.yaml に保存）
+
+# 必須
+slug: affiliate-your-topic-slug          # 半角英小文字・ハイフン
+theme_key: textbooks-recommend           # scaffold --list-themes のキー。独自なら custom
+search_intent: 独学向けにおすすめのテキストを比較して選びたい
+
+# 任意（省略時は theme_key から自動補完）
+title: ◯◯試験のおすすめテキスト3選【独学・初心者向け】
+genre: 独学対策                          # 独学対策 / 学習計画 / 過去問活用 / 受験・申込
+layout: csv                              # csv | product-comparison
+asp_primary: amazon                      # amazon | a8 | afb | internal | mixed
+
+# 比較対象（Amazon・商品比較型で使用。空でも可）
+products:
+  - rank: 1
+    name: 【商品名・年度版】
+    publisher: 出版社名
+    image_file: exam-slug-product-a-2026.webp
+    amazon_url: https://amzn.to/xxxxxxxx
+    workbook_name: 【問題集名】
+    workbook_image_file: exam-slug-product-a-workbook-2026.webp
+    workbook_amazon_url: https://amzn.to/yyyyyyyy
+    for_who: 初学者で基礎から入りたい人
+  - rank: 2
+    name: 【商品名2】
+    publisher: 出版社名2
+    image_file: exam-slug-product-b-2026.webp
+    amazon_url: https://amzn.to/zzzzzzzz
+    for_who: 過去問演習を早めに始めたい人
+
+# 内部導線（slug:ラベル。存在する slug のみ）
+related_links:
+  - self-study-roadmap:独学の進め方
+  - study-plan:学習計画の立て方
+  - ../../q/index.html:過去問を解く（無料）
+
+# 非公開メモ（CSV original_note にも反映）
+operator_note: |
+  ASP: Amazonアソシエイト
+  プログラムID: （サイトのID）
+  更新: 年度版・価格は四半期ごと

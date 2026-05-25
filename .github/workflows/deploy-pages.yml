@@ -1,0 +1,55 @@
+# GitHub Pages
+# ① Settings → Pages → Build and deployment → Source を「GitHub Actions」に必ず設定
+# ② 未設定だと deploy ジョブが失敗します
+# リポジトリと本番URLは site-config.json に合わせて管理してください
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-exam-site-shell
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build template site
+        run: python3 tools/build_all.py
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

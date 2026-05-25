@@ -1,0 +1,53 @@
+---
+description: Affiliate guide articles — theme input to CSV/brief generation
+alwaysApply: false
+globs: data/affiliate-briefs/**,data/guide_articles.csv,tools/scaffold_affiliate_article.py,tools/articles_*.py,docs/affiliate/**
+---
+
+# Affiliate Article Auto-Create
+
+Use when the user gives an **article theme** or edits affiliate briefs / affiliate-tagged guide rows.
+
+**Rules (full):** `docs/affiliate/affiliate-article-rules.md`  
+**Workflow:** `docs/affiliate/auto-create-workflow.md`  
+**SEO/CSV identity:** `docs/seo-article-guidelines.md` (アフィリエイト section)
+
+## Step 1 — Scaffold (if slug/row missing)
+
+```bash
+python3 tools/scaffold_affiliate_article.py --list-themes
+python3 tools/scaffold_affiliate_article.py --theme <key> --slug <slug> --append --write-brief
+```
+
+Or from filled brief: `--from-brief data/affiliate-briefs/<slug>.yaml --append`
+
+## Step 2 — Complete content
+
+1. Read `data/affiliate-briefs/{slug}.yaml` (`search_intent`, `products`, `asp_primary`, `layout`).
+2. Update the matching row in `data/guide_articles.csv`:
+   - `tags` must include `アフィリエイト`
+   - `lead` must include 広告 / PR / アフィリエイト
+   - Fill every `section_*_body` (180–300 chars, no operator/template jargon)
+   - `related_links`: only slugs that exist in CSV (2+ internal)
+   - `original_note`: ASP IDs, product URLs, commission notes (never public)
+3. If `layout: product-comparison`, site may need `tools/articles_{slug}.py` + images under `images/textbooks/` — only on sites that already wire custom article modules.
+
+## Step 3 — Verify
+
+```bash
+python3 tools/validate_csv.py
+python3 tools/build_all.py
+```
+
+Do not publish if validation fails. No broken internal links.
+
+## Product comparison UI (when applicable)
+
+- Self-host cover images; no SVG placeholders; no hotlinking
+- `href` vs `workbook_href` must not be swapped
+- External links: `rel="nofollow sponsored noopener noreferrer"`
+- Hero + comparison table + cards: see `affiliate-article-rules.md` §4–5
+
+## Forbidden on public pages
+
+`update_policy`, `original_note`, editor how-to sections, placeholder `【本文を記入】` in published `content_status: published` rows.

@@ -1,0 +1,603 @@
+# -*- coding: utf-8 -*-
+"""過去問・実践演習・一問一答の解説 HTML（要約・正解の理由・他肢/反対符号・学習のヒント）。"""
+
+from __future__ import annotations
+
+import html
+import re
+
+
+def norm(value: object) -> str:
+    return (value or "").strip() if value is not None else ""
+
+
+def text_to_html(text: str) -> str:
+    if not text:
+        return ""
+    return html.escape(text).replace("\n", "<br>\n")
+
+
+def parse_explanation_choices(raw: str) -> dict[int, str]:
+    """選択肢別解説。形式: 「2:理由;3:理由」または改行区切り「（2）理由」。"""
+    out: dict[int, str] = {}
+    if not raw:
+        return out
+    for chunk in re.split(r"[\n;]+", raw):
+        chunk = norm(chunk)
+        if not chunk:
+            continue
+        m = re.match(r"^[（(]?(\d+)[）)]?\s*[:：]?\s*(.+)$", chunk)
+        if m:
+            out[int(m.group(1))] = m.group(2).strip()
+    return out
+
+
+def question_ask_mode(stem: str) -> str:
+    """設問の求め方: most_correct / least_appropriate / unknown。"""
+    s = norm(stem)
+    if re.search(r"適切でない|誤っている|誤りである|正しくない|不適切なもの", s):
+        return "least_appropriate"
+    if re.search(r"正しい|妥当|適切である|適切なもの", s):
+        return "most_correct"
+    return "unknown"
+
+
+def _choice_sounds_positive(text: str) -> bool:
+    t = norm(text)
+    if not t:
+        return False
+    positive = (
+        r"確認する|整理する|復習|見直|用語|過去問|頻出|公式|記録|学習に役立|効率|押さえ|"
+        r"組み合わせ|たどる|ブックマーク|振り返|比較表|一覧"
+    )
+    negative = r"しない方が|不要|優先する|削除|送信される|連携できない|役立たない|変わらない|固定"
+    if re.search(negative, t):
+        return False
+    return bool(re.search(positive, t))
+
+
+def _snippet(text: str, max_len: int = 36) -> str:
+    t = norm(text)
+    if len(t) <= max_len:
+        return t
+    return t[: max_len - 1] + "…"
+
+
+_MIN_CHOICE_NOTE_LEN = 72
+
+
+def _is_thin_choice_note(note: str, mode: str) -> bool:
+    """CSV の選択肢別解説が形式的・短すぎるか（読み手向けの価値が低い）。"""
+    n = norm(note)
+    if not n:
+        return True
+    if len(n) < _MIN_CHOICE_NOTE_LEN:
+        return True
+    if mode == "least_appropriate":
+        if re.search(r"本肢.*妥当|正しい学習|推奨される学習", n) and len(n) < 140:
+            if not re.search(
+                r"最も適切でない|正答は[（(]?\d|学習効果.*損|有害|放棄|誤った記述",
+                n,
+            ):
+                return True
+        if re.search(r"設問形式の読み違えに注意", n) and len(n) < 100:
+            return True
+    if mode == "most_correct" and re.search(r"本肢を選ぶ場合は、設問が", n):
+        return True
+    return False
+
+
+def infer_wrong_choice_note(
+    page: dict,
+    choice_num: int,
+    choice_text: str,
+    row: dict,
+) -> str:
+    """CSV に explanation_choices が無いとき、選択肢文から読み手向けの解説を組み立てる。"""
+    stem = norm(page.get("stem_plain") or page.get("stem") or "")
+    mode = question_ask_mode(stem)
+    opt = norm(choice_text)
+    correct = page.get("correct")
+    correct_text = ""
+    if correct and 1 <= correct <= len(page.get("opts") or []):
+        correct_text = page["opts"][correct - 1]
+    correct_body = norm(row.get("explanation_correct")) or norm(row.get("explanation")) or ""
+    category = norm(page.get("category") or "")
+
+    parts: list[str] = []
+
+    if mode == "least_appropriate" and _choice_sounds_positive(opt):
+        parts.append(
+            f"「{opt}」は、単体では適切な学習法・正しい対応に当たります。"
+            "したがって「最も適切でないもの」として選ぶ正答にはなりません。"
+        )
+        if correct and correct_text:
+            parts.append(
+                f"本問の正答は（{correct}）「{_snippet(correct_text, 56)}」です。"
+                "この記述は、学習効果を著しく損ねる・明らかに誤った方針であり、"
+                "他の肢より「最も不適切」と言えます。"
+            )
+        parts.append(
+            "よくある誤解は、「正しい学習法か」で各肢を判断してしまい、"
+            "（4）のような明らかに有害な記述を見落とすことです。"
+            "設問文の「最も適切でない」を先に線引きし、四肢を比較して選んでください。"
+        )
+    elif mode == "least_appropriate":
+        parts.append(
+            f"「{opt}」は、一見もっともらしく見える場合がありますが、"
+            f"正答（{correct}）「{_snippet(correct_text, 56)}」と比べると、"
+            "学習・制度・実務の観点で「最も問題がある」記述ではありません。"
+        )
+        parts.append(
+            "「最も適切でない」形式では、正しそうな肢が複数あることがあります。"
+            "各肢の主語・客体・数字・期限・手続の順序が設問条件と合うかを確認し、"
+            "最も不適切な一つだけを選びます。"
+        )
+    elif mode == "most_correct":
+        parts.append(
+            f"この肢は「{opt}」と述べていますが、"
+            f"{category or '本分野'}の基準では正しい記述ではありません。"
+        )
+        if correct and correct_text:
+            parts.append(
+                f"正答（{correct}）「{_snippet(correct_text, 56)}」は、"
+                "制度・手続・学習法のいずれかの観点で適切な内容です。"
+            )
+    else:
+        parts.append(
+            f"この肢「{_snippet(opt, 48)}」は、設問の求め方（正しいもの／誤っているもの／"
+            "最も適切でないもの）と照らすと正答になりません。"
+        )
+
+    rules: list[tuple[str, str]] = [
+        (
+            r"口コミ|SNS|ブログ|噂",
+            "受験制度・出題範囲・合格基準の正誤は、実施団体の公式発表が基準です。"
+            "口コミは参考程度にとどめ、日程・範囲・申込方法は必ず公式サイトや受験案内で確認してください。",
+        ),
+        (
+            r"毎年|常に|固定|変わらない|前年と同じ",
+            "試験日程・出題範囲・申込方法は改定されることがあります。"
+            "「一度確認すれば十分」と決めつけると、変更の見落としや学習範囲のズレにつながります。",
+        ),
+        (
+            r"生成済み|直接編集|手編集|JSだけ",
+            "公開用データは CSV とビルドスクリプトを正本にすると、再生成・検証・本番同期が一貫します。"
+            "生成物だけを手修正すると、次回ビルドで上書きされたり、テンプレと本番の差分が残りやすくなります。",
+        ),
+        (
+            r"列名は自由|列名.*変え",
+            "CSV 列名はツールの検証・変換と対応しています。"
+            "任意の列名に変えると、ビルドやリンク検証が失敗し、静的ページとアプリ用データの整合が崩れます。",
+        ),
+        (
+            r"ドメイン.*不要|設定は不要",
+            "canonical・サイトマップ・OGP には正しいドメイン（siteOrigin）が必要です。"
+            "プレースホルダーのままでは検索エンジンと SNS プレビューで URL が誤って扱われます。",
+        ),
+        (
+            r"削除される|送信される|連携できない",
+            "本テンプレートでは、学習履歴はブラウザ内保存を基本とし、復習・ブックマーク・用語解説へつなげる設計です。"
+            "この肢の断定は、実際の仕様（ローカル保存・関連ページ）と一致しません。",
+        ),
+        (
+            r"図表|比較.*役立たない",
+            "関連制度の違いや数値・期限は、表や比較で整理すると混同が減ります。"
+            "特に設備・税務・手続き分野では、一覧表を自作して見直すと得点しやすくなります。",
+        ),
+        (
+            r"記録しない|参照しない",
+            "苦手分野や混同しやすい用語を記録しておくと、復習の優先順位がつけられます。"
+            "用語の定義を飛ばすと、設問の前提（誰が・何を・どこまで）を取り違えやすくなります。",
+        ),
+        (
+            r"二度と見直さない|見直さない",
+            "誤答した問題を放置すると、同じパターンのミスが本番まで残ります。"
+            "復習リストや間隔を空けた解き直しで、弱点を可視化することが重要です。",
+        ),
+    ]
+    for pattern, msg in rules:
+        if re.search(pattern, opt):
+            if not any(re.search(pattern, p) for p in parts):
+                parts.append(msg)
+            break
+
+    if mode == "most_correct" and correct_text and len(parts) < 3:
+        parts.append(
+            f"正答の論点と照らすと、この肢は"
+            f"「{_snippet(opt, 40)}」という断定のどこかが設問の前提と矛盾します。"
+            "主語・客体・数字・期限・「毎年／常に／不要」などの限定語をチェックしてください。"
+        )
+
+    if correct_body and len(parts) < 2:
+        hint = _snippet(correct_body, 100)
+        parts.append(
+            f"正解の要点: {hint} "
+            "この観点と両立しない部分がこの肢にないか、用語解説で定義を確認しながら見直してください。"
+        )
+
+    if len(parts) < 2:
+        parts.append(
+            f"正答（{correct}）との差分を一行メモに残し、同分野の過去問・実践演習で解き直すと定着しやすくなります。"
+        )
+
+    return "\n\n".join(parts)
+
+
+def resolve_wrong_choice_note(
+    page: dict,
+    choice_num: int,
+    choice_text: str,
+    row: dict,
+    *,
+    csv_note: str = "",
+) -> str:
+    """CSV 優先。薄い解説は推論で置き換え、未記入は推論で補完。"""
+    stem = norm(page.get("stem_plain") or page.get("stem") or "")
+    mode = question_ask_mode(stem)
+    note = norm(csv_note)
+    inferred = infer_wrong_choice_note(page, choice_num, choice_text, row)
+    if not note:
+        return inferred
+    if _is_thin_choice_note(note, mode):
+        return inferred
+    return note
+
+
+CATEGORY_STUDY_HINTS: dict[str, str] = {
+    "法令・制度": (
+        "試験制度・受験要件は年度ごとに見直されることがあります。"
+        "受験要項・実施要領・合格発表の公式ページをブックマークし、改定年度は出題範囲表と学習計画を更新してください。"
+        "用語解説で「受験資格」「試験要項」「公式情報」などの定義を押さえたうえで、"
+        "同年・前後年度の過去問で出題パターンを確認すると、制度問題と実務問題のつながりが整理できます。"
+        "模試・実践演習の前には、最新の公式情報を再確認する習慣を入れておくと安心です。"
+    ),
+    "契約・実務": (
+        "実務・学習法の問題は、「誰が・何を・どこまで」が適切か、または「最も適切でないもの」かを"
+        "設問文で切り替えて読むことが重要です。間違えた問題は復習リストに残し、"
+        "正答・誤答それぞれについて「どの条件を満たさないか」を一文で書き出してください。"
+        "関連ガイド（学習計画・過去問の進め方）と用語解説を往復すると、"
+        "単発の暗記ではなく判断基準として定着しやすくなります。"
+    ),
+    "設備・その他": (
+        "数値・期限・例外規定は、暗記だけでは混同しやすいです。"
+        "自分用の比較表（単位・条件・責任者・手続の順序）を作り、週次で見直してください。"
+        "分野別の用語一覧から関連語をたどり、過去問一覧で出題傾向を確認する流れが効率的です。"
+        "実践演習で時間配分を測ったあと、間違えた設問だけ過去問の同分野に戻ると弱点がはっきりします。"
+    ),
+    "基礎・役割": (
+        "管理監督者の役割・法令の趣旨・ストレスの基礎は、用語の定義と"
+        "「誰が・何を・どこまで」がセットで出題されます。"
+        "間違えた肢ごとに、正答との差分（根拠法令・対象範囲・責任の所在）をメモし、"
+        "関連用語から同分野の過去問・実践演習を解き直してください。"
+    ),
+    "職場環境・配慮": (
+        "職場の配慮・リスク要因は、具体策と「誰が担うか」を対にして覚えると得点しやすくなります。"
+        "数値基準や手順は表に整理し、同年の過去問で実務イメージを補強してください。"
+        "一問一答で用語の定義を確認してから、記述式に近い過去問に戻ると理解が深まります。"
+    ),
+    "相談・連携・復職": (
+        "面談・医療連携・復職支援は、手順と禁止事項（やってはいけないこと）の区別が重要です。"
+        "正答肢のキーワードを用語解説で確認し、同分野の過去問でケースのパターンを増やしてください。"
+        "「最も不適切」形式では、一見正しそうな肢に惑わされないよう、設問文を先にマークする習慣をつけましょう。"
+    ),
+    "関係法令": (
+        "法令・制度は条文の趣旨と数字・期限をセットで覚えると得点しやすくなります。"
+        "関連用語を用語解説で押さえ、同年の過去問で「例外」「罰則」「手続」の組み合わせを確認してください。"
+        "公式情報の更新時期は学習カレンダーに入れておくと、直前期の取りこぼしを防げます。"
+    ),
+    "労働衛生": (
+        "衛生・安全は用語の定義と数値基準の組み合わせが多いです。"
+        "間違えた問題は復習リストに残し、用語解説で意味を確認しながら解き直してください。"
+        "図や表で「基準値・測定・記録義務」を一覧化すると、本番直前の確認が短くなります。"
+    ),
+    "労働生理": (
+        "生理・人体は図解と用語の対応づけが有効です。"
+        "分野別の用語一覧から関連語をたどり、過去問で「原因・対策・禁忌」のセットで復習してください。"
+    ),
+    "賃貸住宅管理業法": (
+        "業法は「誰が・何を・どこまで」がセットで問われます。"
+        "正答肢の義務主体と手続の流れをメモし、似た制度との違いを表に整理してから、"
+        "同年・前後年度の過去問で定着を確認してください。"
+    ),
+    "民法・借地借家法": (
+        "借地借家・民法改正は、権利関係の主体と効果の発生時期を一文で説明できるかが要点です。"
+        "間違えた肢は正答と「誰に・いつ・どの効果が及ぶか」で対比してください。"
+    ),
+    "賃貸借契約": (
+        "契約条項・個人情報・原状回復は、条文の趣旨と実務上の判断基準の両方が問われます。"
+        "数字・期限・例外は一覧表にし、他の選択肢との差分を意識して復習してください。"
+    ),
+    "賃貸借契約実務": (
+        "実務問題は「適切な対応か」「義務の範囲か」を区別する設問が多いです。"
+        "誤答肢がどの要件を満たさないかを具体的に書き出すと定着します。"
+    ),
+    "賃貸不動産経営": (
+        "経営・管理では、貸主・借主・管理者の視点の違いがポイントです。"
+        "「最も不適切」形式では、一見正しそうな肢こそ見落としやすいので、設問文を再確認してください。"
+    ),
+    "管理実務": (
+        "管理実務は手続の順序と義務の主体が問われやすいです。"
+        "間違えた問題は復習リストに残し、同分野の用語とセットで解き直してください。"
+    ),
+    "建物・設備": (
+        "設備・維持保全は数値基準・点検周期・責任の所在がセットで出題されます。"
+        "他選択肢がどの要件（数値・主体・手続）とずれているかを確認してください。"
+    ),
+    "会計・税金・保険": (
+        "税務・会計は計算の前提と課税関係者・時期の取り違えに注意です。"
+        "誤答肢がどの前提を誤っているかを明示して復習してください。"
+    ),
+    "会計税務": (
+        "税務・会計は計算の前提と課税関係者・時期の取り違えに注意です。"
+        "誤答肢がどの前提を誤っているかを明示して復習してください。"
+    ),
+    "サブリース": (
+        "サブリースは貸主・転貸人・借主の関係と契約上の効果の区別が要点です。"
+        "誤答肢がどの関係を取り違えているかを確認してください。"
+    ),
+    "原状回復": (
+        "原状回復は費用負担・範囲・特約の有無が問われやすいです。"
+        "正答肢の要件を押さえ、他肢との差分を整理してください。"
+    ),
+    "賃料管理・督促": (
+        "賃料・督促は手続の順序と法的効果の対応が重要です。"
+        "誤答肢がどの段階・要件を誤っているかを確認してください。"
+    ),
+    "関連法令": (
+        "関連法令は本試験の主たる論点と位置づけの違いが問われます。"
+        "根拠法令名と趣旨をセットで覚えてください。"
+    ),
+    "政策課題・社会情勢": (
+        "政策・社会情勢は制度の目的と論点の組み合わせが出題されます。"
+        "公式の考え方・用語の定義を確認したうえで復習してください。"
+    ),
+}
+
+DEFAULT_STUDY_HINT = (
+    "この問題で間違えた場合は、設問文の求め方（「正しいもの」「誤っているもの」「最も適切でないもの」）を"
+    "最初に線引きしてください。正答・誤答それぞれについて、用語の定義と制度の前提を用語解説で確認し、"
+    "復習リストや実践演習・一問一答と組み合わせて、同分野の過去問を解き直すと定着しやすくなります。"
+)
+
+
+def build_study_hint(page: dict, row: dict) -> str:
+    point = norm(row.get("explanation_point"))
+    if point:
+        return point
+    category = norm(page.get("category") or "")
+    hint = CATEGORY_STUDY_HINTS.get(category) or DEFAULT_STUDY_HINT
+    tags = page.get("tags") or []
+    if tags and "復習" in tags and "復習" not in hint:
+        hint += " 復習機能・学習日記と連携し、週次で振り返ると弱点の再発を防げます。"
+    return hint
+
+
+def split_legacy_explanation(exp: str) -> tuple[str, str]:
+    m = re.match(r"^正解は\s*(\d+)\s*です[。.]?\s*(.*)$", exp, re.DOTALL)
+    if m:
+        body = norm(m.group(2)) or exp
+        summary = f"正答は（{m.group(1)}）です。"
+        return summary, body
+    return "", exp
+
+
+def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]:
+    parsed = parse_explanation_choices(norm(row.get("explanation_choices")))
+    correct = page.get("correct")
+    items: list[tuple[int, str, str]] = []
+    for i, opt in enumerate(page["opts"], start=1):
+        if page.get("is_invalidated") or correct is None:
+            continue
+        if i == correct:
+            continue
+        note = resolve_wrong_choice_note(
+            page, i, opt, row, csv_note=parsed.get(i) or ""
+        )
+        items.append((i, opt, note))
+    return items
+
+
+def build_explanation_html(page: dict, row: dict) -> str:
+    base = norm(row.get("explanation")) or "（解説は未入力です。）"
+    if page.get("is_invalidated") or page.get("correct") is None:
+        return f'<div class="q-exp"><p>{text_to_html(base)}</p></div>'
+
+    summary = norm(row.get("explanation_summary"))
+    correct_body = norm(row.get("explanation_correct"))
+    point = norm(row.get("explanation_point"))
+
+    if not summary and not correct_body and not point:
+        leg_summary, leg_body = split_legacy_explanation(base)
+        summary = summary or leg_summary
+        correct_body = correct_body or leg_body
+
+    parts: list[str] = ['<div class="q-exp">']
+    if summary:
+        parts.append(f'<p class="q-exp-lead">{text_to_html(summary)}</p>')
+
+    correct = page.get("correct")
+    if correct and not page.get("is_invalidated"):
+        opt_text = page["opts"][correct - 1] if 1 <= correct <= len(page["opts"]) else ""
+        parts.append(
+            '<section class="q-exp-section" aria-labelledby="q-exp-correct-h">'
+            '<h3 id="q-exp-correct-h" class="q-exp-h3">正解の理由</h3>'
+        )
+        if correct_body:
+            parts.append(f"<p>{text_to_html(correct_body)}</p>")
+        if opt_text:
+            parts.append(
+                f'<p class="q-exp-correct-opt"><strong>（{correct}）</strong> '
+                f"{html.escape(opt_text)}</p>"
+            )
+        parts.append("</section>")
+
+        wrong_items = build_choice_commentary(page, row)
+        if wrong_items:
+            lis = "".join(
+                f'<li class="q-exp-choice-item">'
+                f'<p class="q-exp-choice-head">'
+                f'<span class="q-exp-choice-num">（{n}）</span> '
+                f'<span class="q-exp-choice-text">{html.escape(opt)}</span></p>'
+                f'<p class="q-exp-choice-note">{text_to_html(note)}</p></li>'
+                for n, opt, note in wrong_items
+            )
+            parts.append(
+                '<section class="q-exp-section" aria-labelledby="q-exp-wrong-h">'
+                '<h3 id="q-exp-wrong-h" class="q-exp-h3">他の選択肢</h3>'
+                f'<ul class="q-exp-choice-list">{lis}</ul></section>'
+            )
+
+    hint = build_study_hint(page, row)
+    if hint:
+        parts.append(
+            '<section class="q-exp-section" aria-labelledby="q-exp-tip-h">'
+            '<h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3>'
+            f"<p>{text_to_html(hint)}</p></section>"
+        )
+
+    parts.append("</div>")
+    return "\n    ".join(parts)
+
+
+def _ichimon_answer_is_true(page: dict) -> bool:
+    return bool(page.get("correct_answer"))
+
+
+def split_legacy_ichimon_explanation(
+    exp: str, *, is_true: bool, statement: str
+) -> tuple[str, str]:
+    """1 段落の explanation から要約と正解理由のたたき台を作る。"""
+    body = norm(exp) or "（解説は未入力です。）"
+    if is_true:
+        summary = (
+            "この記述は正しい内容です。"
+            "○ が正答になります。"
+        )
+    else:
+        summary = (
+            "この記述は誤りです。"
+            "× が正答になります。"
+        )
+    if len(body) <= 120:
+        return summary, body
+    first = re.split(r"[。.]\s*", body, maxsplit=1)[0]
+    if first and len(first) >= 20:
+        summary = first + ("。" if not first.endswith("。") else "")
+    lead = f"設問文「{_snippet(statement, 48)}」について、"
+    return summary, lead + body
+
+
+def infer_ichimon_opposite_note(page: dict, row: dict) -> str:
+    """○/× のもう一方を選びそうになる理由（CSV 未記入時）。"""
+    statement = norm(page.get("statement") or row.get("question"))
+    is_true = _ichimon_answer_is_true(page)
+    category = norm(page.get("category") or "")
+    wrong = "×" if is_true else "○"
+    parts: list[str] = []
+
+    if is_true:
+        parts.append(
+            f"設問文は正しい記述ですが、{wrong} を選ぶ場合は"
+            "「受験情報は一度調べれば足りる」「一般論として正しそうだから○/×はどちらでもよい」"
+            "と読み替えている可能性があります。"
+            "一問一答では、**必要・不要・毎年・常に・しなくてもよい** などの限定語が"
+            "試験制度・学習法の正誤を決めるキーワードになります。"
+        )
+    else:
+        parts.append(
+            f"設問文は誤った記述ですが、{wrong} を選ぶ場合は"
+            "「学習の一般論として正しそう」「自分の経験では合っている」"
+            "と、設問の一文だけを見ずに判断している可能性があります。"
+            "「最も適切でない」「誤っている」系の過去問と同様、"
+            "一見もっともらしい記述こそ × の対象になりやすい点に注意してください。"
+        )
+
+    if "復習" in statement or "見直" in statement or "定着" in statement:
+        parts.append(
+            "誤答の記録・復習リスト・間隔を空けた解き直しは、弱点を可視化する基本です。"
+            "「しなくても定着する」「二度と見ない」は学習科学の観点でも不適切です。"
+        )
+    elif re.search(r"公式|受験案内|出題範囲|毎年", statement):
+        parts.append(
+            "制度・日程・範囲の正誤は実施団体の公式発表が基準です。"
+            "SNS や前年の記憶だけで ×/○ を決めないよう、公式ページを開く習慣をつけてください。"
+        )
+    elif re.search(r"数字|期限|表|整理", statement):
+        parts.append(
+            "数値・期限は暗記だけでは混同しやすいです。"
+            "比較表で整理したうえで一問一答するほうが、本番の選択肢問題でも役立ちます。"
+        )
+
+    if category:
+        parts.append(
+            f"分野「{category}」では、用語の定義と制度の前提を用語解説で確認し、"
+            "同分野の過去問・実践演習へつなげて解き直すと定着しやすくなります。"
+        )
+
+    return "\n\n".join(parts)
+
+
+def build_ichimon_explanation_html(page: dict, row: dict) -> str:
+    """一問一答 — 過去問と同型（要約・正解の理由・もう一方の記号・学習のヒント）。"""
+    statement = norm(page.get("statement") or row.get("question"))
+    is_true = _ichimon_answer_is_true(page)
+    ans = "○" if is_true else "×"
+    wrong = "×" if is_true else "○"
+
+    summary = norm(row.get("explanation_summary"))
+    correct_body = norm(row.get("explanation_correct"))
+    opposite = norm(row.get("explanation_opposite"))
+    point = norm(row.get("explanation_point"))
+    base = norm(row.get("explanation")) or "（解説は未入力です。）"
+
+    if not summary and not correct_body and not point:
+        leg_summary, leg_body = split_legacy_ichimon_explanation(
+            base, is_true=is_true, statement=statement
+        )
+        summary = summary or leg_summary
+        correct_body = correct_body or leg_body
+
+    if not opposite:
+        opposite = infer_ichimon_opposite_note(page, row)
+
+    parts: list[str] = ['<div class="q-exp">']
+    if summary:
+        parts.append(f'<p class="q-exp-lead">{text_to_html(summary)}</p>')
+
+    parts.append(
+        '<section class="q-exp-section" aria-labelledby="q-exp-correct-h">'
+        '<h3 id="q-exp-correct-h" class="q-exp-h3">正解の理由</h3>'
+    )
+    if correct_body:
+        parts.append(f"<p>{text_to_html(correct_body)}</p>")
+    truth = "正しい" if is_true else "誤っている"
+    parts.append(
+        f'<p class="q-exp-correct-opt">'
+        f"設問文は<strong>{truth}</strong>記述のため、答えは "
+        f'<strong class="q-marubatsu">{html.escape(ans)}</strong> です。'
+        f"</p>"
+    )
+    if statement:
+        parts.append(
+            f'<blockquote class="q-exp-quote">{text_to_html(statement)}</blockquote>'
+        )
+    parts.append("</section>")
+
+    parts.append(
+        '<section class="q-exp-section" aria-labelledby="q-exp-opposite-h">'
+        '<h3 id="q-exp-opposite-h" class="q-exp-h3">'
+        f"{html.escape(wrong)} を選びやすい考え方</h3>"
+        f"<p>{text_to_html(opposite)}</p></section>"
+    )
+
+    hint = build_study_hint(page, row)
+    if hint:
+        parts.append(
+            '<section class="q-exp-section" aria-labelledby="q-exp-tip-h">'
+            '<h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3>'
+            f"<p>{text_to_html(hint)}</p></section>"
+        )
+
+    parts.append("</div>")
+    return "\n    ".join(parts)

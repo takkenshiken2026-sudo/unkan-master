@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""data/past_questions.csv と data/practice_questions.csv（任意）→ exam-site-data-past.js（CSV_IMPORTED_*）。"""
+
+from __future__ import annotations
+
+import csv
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools.site_config import category_to_field_map
+
+DATA_CSV = ROOT / "data" / "past_questions.csv"
+PRACTICE_CSV = ROOT / "data" / "practice_questions.csv"
+OUT_JS = ROOT / "exam-site-data-past.js"
+OUT_PRACTICE_JS = ROOT / "exam-site-data-practice.js"
+
+# 実践演習プール（index.html の isCsvPracticePoolQuestion / applyCsvImportedQuestions と対応）
+PRACTICE_POOL_YEAR = "orig"
+PRACTICE_ID_BASE = 900_000
+
+LABELS = [("ア", "statement_a"), ("イ", "statement_b"), ("ウ", "statement_c"), ("エ", "statement_d")]
+
+# site-config.json の fields[].aliases / name に対応
+CATEGORY_TO_FIELD: dict[str, str] = category_to_field_map()
+
+
+def norm(s: str | None) -> str:
+    return (s or "").strip()
+
+
+def build_plain_text(row: dict) -> str:
+    parts: list[str] = []
+    stem = norm(row.get("stem"))
+    preamble = norm(row.get("preamble"))
+    if stem:
+        parts.append(stem)
+    if preamble:
+        parts.append(preamble)
+    for lab, key in LABELS:
+        t = norm(row.get(key))
+        if t:
+            parts.append(f"{lab}　{t}")
+    return "\n\n".join(parts) if parts else "（問題文なし）"
+
+
+def parse_correct(raw: str) -> int | None:
+    raw = norm(raw)
+    if not raw:
+        return None
+    try:
+        n = int(raw)
+    except ValueError:
+        return None
+    if 1 <= n <= 5:
+        return n - 1
+    return None
+
+
+def row_to_obj(row: dict, line_no: int) -> dict | None:
+    if norm(row.get("is_invalidated", "")).upper() == "TRUE":
+        return None
+    year = int(row["exam_year"])
+    qno = int(row["question_no"])
+    cat = norm(row.get("category"))
+    field = CATEGORY_TO_FIELD.get(cat)
+    if not field:
+        raise ValueError(f"line {line_no}: 未対応の category={cat!r}")
+
+    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
+    if not all(opts):
+        raise ValueError(f"line {line_no}: 選択肢欠け year={year} no={qno}")
+
+    inv = norm(row.get("is_invalidated", "")).upper() == "TRUE"
+    cor = parse_correct(row.get("correct"))
+    if cor is None and not inv:
+        raise ValueError(f"line {line_no}: 正答なし year={year} no={qno}")
+
+    text = build_plain_text(row)
+    exp = norm(row.get("explanation")) or "（解説は未入力です。）"
+
+    qid = year * 100 + qno
+    return {
+        "id": qid,
+        "year": year,
+        "num": qno,
+        "field": field,
+        "text": text,
+        "opts": opts,
+        "ans": 0 if cor is None else cor,
+        "exp": exp,
+    }
+
+
+def level_from_tags(tags: str) -> int:
+    m = re.search(r"level(\d)", norm(tags))
+    if m:
+        lv = int(m.group(1))
+        if lv in (1, 2, 3):
+            return lv
+    return 1
+
+
+def practice_row_to_obj(row: dict, line_no: int) -> dict | None:
+    """実践演習 CSV（exam_year なし）。year は常に PRACTICE_POOL_YEAR。"""
+    if norm(row.get("is_invalidated", "")).upper() == "TRUE":
+        return None
+    qno = int(row["question_no"])
+    cat = norm(row.get("category"))
+    field = CATEGORY_TO_FIELD.get(cat)
+    if not field:
+        raise ValueError(f"practice_questions.csv line {line_no}: 未対応の category={cat!r}")
+
+    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
+    if not all(opts):
+        raise ValueError(f"practice_questions.csv line {line_no}: 選択肢欠け no={qno}")
+
+    cor = parse_correct(row.get("correct"))
+    if cor is None:
+        raise ValueError(f"practice_questions.csv line {line_no}: 正答なし no={qno}")
+
+    text = build_plain_text(row)
+    exp = norm(row.get("explanation")) or "（解説は未入力です。）"
+    qid = PRACTICE_ID_BASE + qno
+    return {
+        "id": qid,
+        "year": PRACTICE_POOL_YEAR,
+        "num": qno,
+        "field": field,
+        "text": text,
+        "opts": opts,
+        "ans": 0 if cor is None else cor,
+        "exp": exp,
+        "level": level_from_tags(row.get("tags", "")),
+        "publicPath": f"q/practice/p{qno:03d}/index.html",
+    }
+
+
+def load_practice_questions() -> list[dict]:
+    if not PRACTICE_CSV.is_file():
+        return []
+    text = PRACTICE_CSV.read_text(encoding="utf-8-sig")
+    rows = list(csv.DictReader(text.splitlines()))
+    out: list[dict] = []
+    for i, row in enumerate(rows, start=2):
+        o = practice_row_to_obj(row, i)
+        if o is None:
+            continue
+        out.append(o)
+    return out
+
+
+def write_practice_js(practice_objs: list[dict]) -> None:
+    """index.html の実践演習 UI 用データを出力する。"""
+    by_level: dict[int, list[dict]] = {1: [], 2: [], 3: []}
+    for obj in practice_objs:
+        q = dict(obj)
+        lv = int(q.pop("level", 1))
+        if lv not in by_level:
+            lv = 1
+        by_level[lv].append(q)
+    lines = [
+        "/* AUTO-GENERATED by tools/csv_to_exam_site_past_js.py — data/practice_questions.csv を編集し再生成 */",
+        f"const CSV_IMPORTED_PRACTICE_QUESTION_COUNT = {len(practice_objs)};",
+        "const PRACTICE_QUESTIONS = " + json.dumps(by_level, ensure_ascii=False, indent=2) + ";",
+    ]
+    payload = "\n".join(lines) + "\n"
+    OUT_PRACTICE_JS.write_text(payload, encoding="utf-8")
+
+
+def main() -> int:
+    if not DATA_CSV.is_file():
+        print(f"入力がありません: {DATA_CSV}", file=sys.stderr)
+        return 1
+    text = DATA_CSV.read_text(encoding="utf-8-sig")
+    rows = list(csv.DictReader(text.splitlines()))
+    objs: list[dict] = []
+    year_labels: dict[int, str] = {}
+    for i, row in enumerate(rows, start=2):
+        o = row_to_obj(row, i)
+        if o is None:
+            continue
+        objs.append(o)
+        y = o["year"]
+        wl = norm(row.get("exam_wareki"))
+        if y not in year_labels:
+            year_labels[y] = f"{y}年"
+
+    practice_objs = load_practice_questions()
+    write_practice_js(practice_objs)
+    practice_years = [PRACTICE_POOL_YEAR] if practice_objs else []
+
+    lines = [
+        "// AUTO-GENERATED by tools/csv_to_exam_site_past_js.py — "
+        "data/past_questions.csv を編集し再生成（実践演習は exam-site-data-practice.js）",
+        f"const CSV_IMPORTED_PAST_YEAR_COUNT = {len(year_labels)};",
+        "const CSV_IMPORTED_YEAR_LABELS = " + json.dumps(year_labels, ensure_ascii=False) + ";",
+        "const CSV_IMPORTED_PRACTICE_POOL_YEARS = " + json.dumps(practice_years, ensure_ascii=False) + ";",
+        "const CSV_IMPORTED_QUESTIONS = [",
+    ]
+    for o in objs:
+        lines.append("  " + json.dumps(o, ensure_ascii=False) + ",")
+    lines.append("];")
+    lines.append("")
+    lines.append("if (typeof applyCsvImportedQuestions === 'function') {")
+    lines.append("  applyCsvImportedQuestions();")
+    lines.append("}")
+    lines.append("")
+
+    payload = "\n".join(lines)
+    OUT_JS.write_text(payload, encoding="utf-8")
+    print(
+        f"Wrote {OUT_JS} (過去問 {len(objs)} 問, 実践演習 {len(practice_objs)} 問, 年度ラベル {len(year_labels)})"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

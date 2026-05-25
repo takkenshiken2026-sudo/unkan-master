@@ -1,0 +1,90 @@
+{
+  "brandName": "運管マスター",
+  "brandMark": "運",
+  "examName": "運行管理者試験",
+  "siteOrigin": "https://unkan-master.jp",
+  "contactUrl": "https://example.com/contact",
+  "ga4MeasurementId": "",
+  "copyright": "",
+  "footerDisclaimer": "学習用のコンテンツです。出題・法令の正確な内容は公式情報で必ず確認してください。",
+  "officialOrganization": "公益財団法人 運行管理者試験センター",
+  "seoCopy": {
+    "mockExam": "模試・模擬試験",
+    "studyModes": "過去問・実践演習・一問一答"
+  },
+  "theme": {
+    "accent": "#333333",
+    "accentText": "#ffffff",
+    "background": "#f0f0f1",
+    "surface": "#ffffff",
+    "surfaceAlt": "#f4f4f5",
+    "text": "#111111",
+    "textMuted": "#555555",
+    "border": "rgba(0, 0, 0, 0.09)",
+    "radius": "10px",
+    "navWidth": "1080px",
+    "contentWidth": "1080px"
+  },
+  "navigation": {
+    "header": [
+      {"label": "トップ", "href": "index.html", "key": "top"},
+      {"label": "このサイトについて", "href": "about.html", "key": "about"},
+      {"label": "過去問一覧", "href": "q/index.html", "key": "q"},
+      {"label": "用語解説", "href": "terms/index.html", "key": "terms"},
+      {"label": "試験ガイド", "href": "articles/index.html", "key": "articles"},
+      {"label": "関連リンク", "href": "related-sites.html", "key": "related"},
+      {"label": "プライバシー", "href": "privacy.html", "key": "privacy"}
+    ],
+    "footer": [
+      {"label": "トップ", "href": "index.html", "key": "top"},
+      {"label": "このサイトについて", "href": "about.html", "key": "about"},
+      {"label": "過去問一覧", "href": "q/index.html", "key": "q"},
+      {"label": "用語解説", "href": "terms/index.html", "key": "terms"},
+      {"label": "試験ガイド", "href": "articles/index.html", "key": "articles"},
+      {"label": "関連リンク", "href": "related-sites.html", "key": "related"},
+      {"label": "プライバシー", "href": "privacy.html", "key": "privacy"},
+      {"label": "お問い合わせ", "href": "__CONTACT__", "key": "contact"}
+    ]
+  },
+  "guideArticleGenres": [
+    {"id": "overview", "label": "試験概要", "phase": "制度を知る", "style": "overview", "hint": "試験の全体像・公式情報の見方・サイトの使い方"},
+    {"id": "application", "label": "受験・申込", "phase": "制度を知る", "style": "institution", "hint": "受験資格・日程・手数料・申込手続き・免除"},
+    {"id": "pass-stats", "label": "合格・難易度", "phase": "制度を知る", "style": "institution", "hint": "合格率・合格点・難易度・統計の読み方"},
+    {"id": "exam-scope", "label": "出題・形式", "phase": "制度を知る", "style": "institution", "hint": "出題範囲・科目構成・試験形式・CBT・記述"},
+    {"id": "study-plan", "label": "学習計画", "phase": "学習を設計する", "style": "study", "hint": "学習期間・週間表・働きながら・初学者向け"},
+    {"id": "self-study", "label": "独学対策", "phase": "学習を設計する", "style": "study", "hint": "独学の進め方・教材選び・つまずき・継続"},
+    {"id": "past-questions", "label": "過去問活用", "phase": "演習と定着", "style": "practice", "hint": "過去問・模試・一問一答・解き直し・弱点分析"},
+    {"id": "field-study", "label": "分野別対策", "phase": "演習と定着", "style": "practice", "hint": "分野ごとの基礎・頻出・計算・事例（fields ごとに増やす）"},
+    {"id": "glossary-study", "label": "用語整理", "phase": "演習と定着", "style": "practice", "hint": "用語集の使い方・混同語・数字・期限の整理"},
+    {"id": "review-weak", "label": "復習・苦手克服", "phase": "演習と定着", "style": "practice", "hint": "復習サイクル・間違いノート・苦手分野の立て直し"},
+    {"id": "final-prep", "label": "直前・当日", "phase": "直前と当日", "style": "final", "hint": "直前1〜2週間・当日の持ち物・会場・メンタル"},
+    {"id": "cautions", "label": "注意点・更新", "phase": "横断", "style": "meta", "hint": "誤解・制度変更・合格後手続き・再受験"}
+  ],
+  "fields": [
+    {
+      "id": "law",
+      "name": "法令・制度",
+      "aliases": ["法令・制度", "関連法令"],
+      "legacyGlossaryCat": "law"
+    },
+    {
+      "id": "rights",
+      "name": "契約・実務",
+      "aliases": ["契約・実務", "実務"],
+      "legacyGlossaryCat": "rights"
+    },
+    {
+      "id": "limit",
+      "name": "設備・その他",
+      "aliases": ["設備・その他", "その他"],
+      "legacyGlossaryCat": "limit"
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "公益財団法人 運行管理者試験センター（公式）",
+      "url": "https://www.unkan.or.jp/",
+      "description": "試験日程・要項・合格発表などの公式情報を確認してください。"
+    }
+  ]
+}
