@@ -39,6 +39,8 @@
       {"label": "トップ", "href": "index.html", "key": "top"},
       {"label": "このサイトについて", "href": "about.html", "key": "about"},
       {"label": "過去問一覧", "href": "q/index.html", "key": "q"},
+      {"label": "実践演習一覧", "href": "q/practice/index.html", "key": "practice-list"},
+      {"label": "一問一答一覧", "href": "q/ichimon/index.html", "key": "ichimon-list"},
       {"label": "用語解説", "href": "terms/index.html", "key": "terms"},
       {"label": "試験ガイド", "href": "articles/index.html", "key": "articles"},
       {"label": "関連リンク", "href": "related-sites.html", "key": "related"},

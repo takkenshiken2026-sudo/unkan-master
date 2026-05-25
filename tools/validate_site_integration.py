@@ -51,9 +51,11 @@ def _footer_past_href(cfg: dict) -> Issue | None:
         label = str(item.get("label") or "").strip()
         href = str(item.get("href") or "").strip()
         if label in ("実践演習一覧", "一問一答一覧"):
-            return Issue(
-                f"site-config.json: footer に {label!r} を置かないでください（3モードタブで足ります）"
-            )
+            # 運管マスター（unkan-master）では、トップ/SPA からの導線として
+            # フッターに「実践演習一覧 / 一問一答一覧」を直接掲載する。
+            # （ヘッダー「実践演習」「過去問」「一問一答」は SPA に飛ぶため、
+            #  静的一覧ページへの導線をフッターで補完する）
+            continue
         if label == "過去問一覧" and "practice" in href:
             return Issue(f"site-config.json: 過去問一覧が実践 URL を指しています: {href!r}")
     return None

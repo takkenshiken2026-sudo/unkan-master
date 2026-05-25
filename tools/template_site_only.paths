@@ -46,6 +46,9 @@ q-page-quiz.js
 q-page-quiz.css
 # 採点アセットを public_site/ にコピーするよう拡張済み
 tools/prepare_public_site.sh
+# フッターに「実践演習一覧 / 一問一答一覧」を直リンクで掲載するため、本番側で
+# validate_site_integration.py のチェックを緩和済み。
+tools/validate_site_integration.py
 
 # --- 賃管マスター（chintaikanrishi-master）---
 # SPA 学習データ（eisei1 系）
