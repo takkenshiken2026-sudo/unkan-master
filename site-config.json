@@ -62,22 +62,34 @@
   ],
   "fields": [
     {
-      "id": "law",
-      "name": "法令・制度",
-      "aliases": ["法令・制度", "関連法令"],
-      "legacyGlossaryCat": "law"
+      "id": "jigyo",
+      "name": "貨物自動車運送事業法関係",
+      "aliases": ["貨物自動車運送事業法関係", "事業法関係", "貨物事業法", "事業法"],
+      "legacyGlossaryCat": "jigyo"
     },
     {
-      "id": "rights",
-      "name": "契約・実務",
-      "aliases": ["契約・実務", "実務"],
-      "legacyGlossaryCat": "rights"
+      "id": "vehicle",
+      "name": "道路運送車両法関係",
+      "aliases": ["道路運送車両法関係", "車両法関係", "車両法"],
+      "legacyGlossaryCat": "vehicle"
     },
     {
-      "id": "limit",
-      "name": "設備・その他",
-      "aliases": ["設備・その他", "その他"],
-      "legacyGlossaryCat": "limit"
+      "id": "traffic",
+      "name": "道路交通法関係",
+      "aliases": ["道路交通法関係", "道交法関係", "道交法"],
+      "legacyGlossaryCat": "traffic"
+    },
+    {
+      "id": "labor",
+      "name": "労働基準法関係",
+      "aliases": ["労働基準法関係", "労基法関係", "労基法"],
+      "legacyGlossaryCat": "labor"
+    },
+    {
+      "id": "practice",
+      "name": "実務上の知識及び能力",
+      "aliases": ["実務上の知識及び能力", "実務"],
+      "legacyGlossaryCat": "practice"
     }
   ],
   "externalLinks": [

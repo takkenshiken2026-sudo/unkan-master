@@ -2,7 +2,7 @@
 window.ICHIMONDOU_ROWS = [
   {
     "id": "2026-01-1",
-    "field": "law",
+    "field": "jigyo",
     "statement": "受験案内や出題範囲は毎年公式情報で確認する必要がある。",
     "correctAnswer": true,
     "exp": "試験制度は更新される場合があります。公式サイトの最新情報を確認してください。",
@@ -10,7 +10,7 @@ window.ICHIMONDOU_ROWS = [
   },
   {
     "id": "2026-01-2",
-    "field": "rights",
+    "field": "practice",
     "statement": "一度間違えた問題は復習しなくても定着する。",
     "correctAnswer": false,
     "exp": "間違えた問題を復習することで、弱点を効率よく補強できます。",
@@ -18,7 +18,7 @@ window.ICHIMONDOU_ROWS = [
   },
   {
     "id": "2025-01-1",
-    "field": "limit",
+    "field": "traffic",
     "statement": "数字や期限は比較表で整理すると学習しやすい。",
     "correctAnswer": true,
     "exp": "混同しやすい情報は、表やメモで整理すると確認しやすくなります。",

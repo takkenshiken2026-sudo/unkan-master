@@ -6,7 +6,7 @@ const PRACTICE_QUESTIONS = {
       "id": 900001,
       "year": "orig",
       "num": 1,
-      "field": "law",
+      "field": "jigyo",
       "text": "テンプレートの使い方に関する次の記述のうち、正しいものはどれか。",
       "opts": [
         "data/past_questions.csv を編集して生成スクリプトを実行する。",
@@ -22,7 +22,7 @@ const PRACTICE_QUESTIONS = {
       "id": 900002,
       "year": "orig",
       "num": 2,
-      "field": "rights",
+      "field": "practice",
       "text": "復習機能の説明として正しいものはどれか。",
       "opts": [
         "不正解やブックマークした問題をあとで見直せる。",
