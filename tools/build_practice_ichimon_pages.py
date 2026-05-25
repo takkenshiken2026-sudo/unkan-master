@@ -34,6 +34,7 @@ from tools.build_past_question_pages import (  # noqa: E402
     Q_INDEX_CSS_VER,
     ROBOTS_INDEX_FOLLOW,
     q_index_filter_chip_btn,
+    build_quiz_form_html,
     build_stem_html,
     glossary_links_for_tags,
     guide_links_for_page,
@@ -42,11 +43,14 @@ from tools.build_past_question_pages import (  # noqa: E402
     meta_description,
     normalize_glossary_href,
     norm,
+    parse_combination_correct,
     parse_correct,
     parse_tags,
+    parse_truefalse_correct,
     public_url,
     rel_css,
     rel_href,
+    rel_quiz_assets,
     rel_theme_css,
     stem_preview,
     text_to_html,
@@ -171,22 +175,30 @@ def practice_page_dict(row: dict, line_no: int) -> dict:
     if norm(row.get("is_invalidated", "")).upper() == "TRUE":
         raise ValueError(f"practice line {line_no}: 無効行はスキップ対象")
     qno = int(row["question_no"])
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
-        raise ValueError(f"practice line {line_no}: 選択肢欠け no={qno}")
-    cor = parse_correct(row.get("correct"))
-    if cor is None:
-        raise ValueError(f"practice line {line_no}: 正答なし no={qno}")
+    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 9) if norm(row.get(f"choice_{i}"))]
+    if len(opts) < 2:
+        raise ValueError(f"practice line {line_no}: 選択肢が 2 件未満 no={qno}")
+    typ = norm(row.get("type")) or "single"
+    correct_raw = norm(row.get("correct"))
+    if typ == "single":
+        cor = parse_correct(correct_raw)
+        if cor is None:
+            raise ValueError(f"practice line {line_no}: 正答なし no={qno}")
+    else:
+        cor = None
+        if not correct_raw:
+            raise ValueError(f"practice line {line_no}: 正答なし no={qno}")
     cat = norm(row.get("category"))
     stem_plain = norm(row.get("stem"))
     return {
         "qno": qno,
         "category": cat,
-        "type": norm(row.get("type")) or "single",
+        "type": typ,
         "stem_html": build_stem_html(row),
         "stem_plain": stem_plain,
         "opts": opts,
         "correct": cor,
+        "correct_raw": correct_raw,
         "exp": norm(row.get("explanation")) or "（解説は未入力です。）",
         "tags": parse_tags(norm(row.get("tags"))),
         "rel_path": practice_rel_path(qno),
@@ -353,11 +365,22 @@ def build_practice_question_html(
     study_modes_note = study_modes_note_html()
     canonical = public_url(base_url, page["rel_path"])
     lead_html = f'<p class="q-page-lead">{html.escape(stem)}</p>' if stem else ""
-    opts_html = "".join(
-        f'<li class="q-opt"><span class="q-opt-num">（{i}）</span> {html.escape(o)}</li>'
-        for i, o in enumerate(page["opts"], start=1)
-    )
-    ans_block = f'<p>正答は <strong>（{page["correct"]}）</strong> です。</p>'
+    quiz_form_html = build_quiz_form_html(page)
+    qtype = page.get("type") or "single"
+    correct_raw = page.get("correct_raw") or ""
+    if qtype == "single" and page.get("correct") is not None:
+        ans_block = f'<p>正答は <strong>（{page["correct"]}）</strong> です。</p>'
+    elif qtype == "multi":
+        ans_block = f'<p>正答は <strong>（{html.escape(correct_raw)}）</strong> の選択肢すべてです。</p>'
+    elif qtype == "combination":
+        pretty = "、".join(f"{lab}={n}" for lab, n in parse_combination_correct(correct_raw))
+        ans_block = f'<p>正答の組合せは <strong>{html.escape(pretty)}</strong> です。</p>'
+    elif qtype == "truefalse_group":
+        _, by_stmt = parse_truefalse_correct(correct_raw)
+        pretty = " / ".join(f"記述{n}={lab}" for n, lab in sorted(by_stmt.items()))
+        ans_block = f'<p>正答は <strong>{html.escape(pretty)}</strong> です。</p>'
+    else:
+        ans_block = f'<p>正答情報：<strong>{html.escape(correct_raw)}</strong></p>'
     exp_html = build_explanation_html(
         {
             **page,
@@ -409,6 +432,7 @@ def build_practice_question_html(
         ],
     )
     site_footer = site_page_footer(rel_path, current="practice")
+    quiz_js_href, quiz_css_href = rel_quiz_assets(rel_path)
 
     return f"""<!DOCTYPE html>
 <html lang="ja">
@@ -427,6 +451,7 @@ def build_practice_question_html(
 {HEAD_FONTS}
 <link rel="stylesheet" href="{html.escape(rel_css(rel_path))}">
 <link rel="stylesheet" href="{html.escape(rel_theme_css(rel_path))}">
+<link rel="stylesheet" href="{html.escape(quiz_css_href)}">
 <script type="application/ld+json">
 {json.dumps(json_ld, ensure_ascii=False, indent=2)}
 </script>
@@ -445,15 +470,15 @@ def build_practice_question_html(
     <h2 id="q-stem-h" class="q-h2">問題</h2>
     <div class="q-stem">{page["stem_html"]}</div>
   </section>
-  <section class="q-block" aria-labelledby="q-opts-h">
+  <section class="q-block q-quiz" aria-labelledby="q-opts-h">
     <h2 id="q-opts-h" class="q-h2">選択肢</h2>
-    <ol class="q-opts">{opts_html}</ol>
+    {quiz_form_html}
   </section>
-  <section class="q-block q-answer" aria-labelledby="q-ans-h">
+  <section class="q-block q-answer q-quiz-locked q-quiz-relock" aria-labelledby="q-ans-h">
     <h2 id="q-ans-h" class="q-h2">正答</h2>
     {ans_block}
   </section>
-  <section class="q-block" aria-labelledby="q-exp-h">
+  <section class="q-block q-quiz-locked q-quiz-relock" aria-labelledby="q-exp-h">
     <h2 id="q-exp-h" class="q-h2">解説</h2>
     {exp_html}
   </section>
@@ -463,6 +488,7 @@ def build_practice_question_html(
 </main>
 {site_footer}
 {site_page_wrap_close()}
+<script src="{html.escape(quiz_js_href)}" defer></script>
 </body>
 </html>
 """

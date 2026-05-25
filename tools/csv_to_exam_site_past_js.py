@@ -58,13 +58,17 @@ def parse_correct(raw: str) -> int | None:
         n = int(raw)
     except ValueError:
         return None
-    if 1 <= n <= 5:
+    if 1 <= n <= 8:
         return n - 1
     return None
 
 
 def row_to_obj(row: dict, line_no: int) -> dict | None:
     if norm(row.get("is_invalidated", "")).upper() == "TRUE":
+        return None
+    # SPA は single（4〜5択 1 答）のみサポート。複合型は静的ページで採点する。
+    qtype = norm(row.get("type")) or "single"
+    if qtype != "single":
         return None
     year = int(row["exam_year"])
     qno = int(row["question_no"])
@@ -73,9 +77,9 @@ def row_to_obj(row: dict, line_no: int) -> dict | None:
     if not field:
         raise ValueError(f"line {line_no}: 未対応の category={cat!r}")
 
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
-        raise ValueError(f"line {line_no}: 選択肢欠け year={year} no={qno}")
+    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 9) if norm(row.get(f"choice_{i}"))]
+    if len(opts) < 2:
+        raise ValueError(f"line {line_no}: 選択肢が 2 件未満 year={year} no={qno}")
 
     inv = norm(row.get("is_invalidated", "")).upper() == "TRUE"
     cor = parse_correct(row.get("correct"))
@@ -111,15 +115,18 @@ def practice_row_to_obj(row: dict, line_no: int) -> dict | None:
     """実践演習 CSV（exam_year なし）。year は常に PRACTICE_POOL_YEAR。"""
     if norm(row.get("is_invalidated", "")).upper() == "TRUE":
         return None
+    qtype = norm(row.get("type")) or "single"
+    if qtype != "single":
+        return None
     qno = int(row["question_no"])
     cat = norm(row.get("category"))
     field = CATEGORY_TO_FIELD.get(cat)
     if not field:
         raise ValueError(f"practice_questions.csv line {line_no}: 未対応の category={cat!r}")
 
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
-        raise ValueError(f"practice_questions.csv line {line_no}: 選択肢欠け no={qno}")
+    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 9) if norm(row.get(f"choice_{i}"))]
+    if len(opts) < 2:
+        raise ValueError(f"practice_questions.csv line {line_no}: 選択肢が 2 件未満 no={qno}")
 
     cor = parse_correct(row.get("correct"))
     if cor is None:

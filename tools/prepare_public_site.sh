@@ -24,7 +24,9 @@ for f in \
   .nojekyll \
   exam-site-data-past.js \
   exam-site-data-practice.js \
-  exam-site-data-ichimondou.js
+  exam-site-data-ichimondou.js \
+  q-page-quiz.js \
+  q-page-quiz.css
 do
   if [[ ! -e "$f" ]]; then
     echo "prepare_public_site.sh: 必須ファイルがありません: $f" >&2

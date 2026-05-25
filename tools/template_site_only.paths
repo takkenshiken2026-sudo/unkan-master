@@ -29,15 +29,23 @@ tools/past_question_seo.py
 # --- 運管マスター（unkan-master）---
 # 第1回・第2回をユニーク化するため exam_year=西暦*10+回 で合成し、
 # wareki を見出し・タイトル・類似問題・SPA 年度ラベルで使うように本番側で
-# パッチ済み。テンプレ側を直したらここから外して同期に戻す。
+# パッチ済み。さらに multi/combination/truefalse_group の複合型に対応する
+# ため CSV スキーマと build/validate を本番側で拡張済み。
 tools/q_page_seo.py
 tools/build_past_question_pages.py
+tools/build_practice_ichimon_pages.py
 tools/q_similar_questions.py
 tools/csv_to_exam_site_past_js.py
+tools/validate_csv.py
 tools/import_unkan_freight_csv.py
 tools/import_unkan_practice_csv.py
 data/source_unkan_freight_questions.csv
 data/source_unkan_freight_practice.csv
+# 静的ページ採点用の JS / CSS（本番拡張）
+q-page-quiz.js
+q-page-quiz.css
+# 採点アセットを public_site/ にコピーするよう拡張済み
+tools/prepare_public_site.sh
 
 # --- 賃管マスター（chintaikanrishi-master）---
 # SPA 学習データ（eisei1 系）
