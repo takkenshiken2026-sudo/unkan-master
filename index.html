@@ -1481,9 +1481,11 @@ body.is-solving .site-footer{display:none!important}
         <p class="ichi-config-lead">分野を選んで「開始」してください。記述が正しいときは○、誤りのときは×で答えます。</p>
         <div class="field-chips" id="ichi-field-chips">
           <button type="button" class="chip on" data-field="" onclick="selectIchiField(this)">全分野</button>
-          <button type="button" class="chip" data-field="law" onclick="selectIchiField(this)">法令・制度</button>
-          <button type="button" class="chip" data-field="rights" onclick="selectIchiField(this)">契約・実務</button>
-          <button type="button" class="chip" data-field="limit" onclick="selectIchiField(this)">設備・その他</button>
+          <button type="button" class="chip" data-field="jigyo" onclick="selectIchiField(this)">貨物自動車運送事業法関係</button>
+          <button type="button" class="chip" data-field="vehicle" onclick="selectIchiField(this)">道路運送車両法関係</button>
+          <button type="button" class="chip" data-field="traffic" onclick="selectIchiField(this)">道路交通法関係</button>
+          <button type="button" class="chip" data-field="labor" onclick="selectIchiField(this)">労働基準法関係</button>
+          <button type="button" class="chip" data-field="practice" onclick="selectIchiField(this)">実務上の知識及び能力</button>
         </div>
         <button type="button" class="btn-primary ichi-start-btn" onclick="beginIchimondouSession()">開始</button>
       </div>
@@ -1809,9 +1811,11 @@ var FIELDS = (Array.isArray(SITE_CONFIG.fields) && SITE_CONFIG.fields.length)
       };
     })
   : [
-      { id: 'law', name: '法令・制度', aliases:['法令・制度','関連法令'], legacyGlossaryCat:'law' },
-      { id: 'rights', name: '契約・実務', aliases:['契約・実務','実務'], legacyGlossaryCat:'rights' },
-      { id: 'limit', name: '設備・その他', aliases:['設備・その他','その他'], legacyGlossaryCat:'limit' }
+      { id: 'jigyo', name: '貨物自動車運送事業法関係', aliases:['貨物自動車運送事業法関係','事業法'], legacyGlossaryCat:'jigyo' },
+      { id: 'vehicle', name: '道路運送車両法関係', aliases:['道路運送車両法関係','車両法'], legacyGlossaryCat:'vehicle' },
+      { id: 'traffic', name: '道路交通法関係', aliases:['道路交通法関係','道交法'], legacyGlossaryCat:'traffic' },
+      { id: 'labor', name: '労働基準法関係', aliases:['労働基準法関係','労基法'], legacyGlossaryCat:'labor' },
+      { id: 'practice', name: '実務上の知識及び能力', aliases:['実務上の知識及び能力','実務'], legacyGlossaryCat:'practice' }
     ];
 function getFieldLabel(fieldId){
   var f = FIELDS.find(function(x){ return x.id === fieldId; });
