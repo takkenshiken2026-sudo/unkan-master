@@ -51,6 +51,10 @@ tools/prepare_public_site.sh
 # フッターに「実践演習一覧 / 一問一答一覧」を直リンクで掲載するため、本番側で
 # validate_site_integration.py のチェックを緩和済み。
 tools/validate_site_integration.py
+# 用語解説 Step1 生成（importance=A 約200語）
+tools/build_unkan_glossary_terms.py
+tools/generate_glossary_step1.py
+tools/glossary_seed/
 
 # --- 賃管マスター（chintaikanrishi-master）---
 # SPA 学習データ（eisei1 系）
