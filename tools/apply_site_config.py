@@ -63,6 +63,7 @@ def replace_all(text: str) -> str:
         ("https://example.com/contact", contact_url()),
         ("window.__GA4_MEASUREMENT_ID__=\"\"", f'window.__GA4_MEASUREMENT_ID__="{ga4_measurement_id()}"'),
         ('var DEFAULT_MID = "";', f'var DEFAULT_MID = "{ga4_measurement_id()}";'),
+        ("（測定ID <code></code>）", f'（測定ID <code>{html.escape(ga4_measurement_id())}</code>）'),
         ("一般社団法人 試験実施団体", official_organization()),
         ("試験実施団体（試験・登録の公式）", official.get("label", official_organization())),
         ("https://example.com/", official.get("url", "https://example.com/")),
@@ -79,6 +80,24 @@ def replace_all(text: str) -> str:
         replacements.append(("◯◯試験", exam_name()))
     for src, dst in replacements:
         text = text.replace(src, dst)
+
+    mid = ga4_measurement_id()
+    if mid:
+        text = re.sub(
+            r'window\.__GA4_MEASUREMENT_ID__="[^"]*"',
+            f'window.__GA4_MEASUREMENT_ID__="{html.escape(mid)}"',
+            text,
+        )
+        text = re.sub(
+            r'var DEFAULT_MID = "[^"]*";',
+            f'var DEFAULT_MID = "{html.escape(mid)}";',
+            text,
+        )
+        text = re.sub(
+            r"（測定ID <code>[^<]*</code>）",
+            f"（測定ID <code>{html.escape(mid)}</code>）",
+            text,
+        )
 
     marker = '<script src="./site-config.js"></script>'
     if "site-config.js" not in text and "site-analytics.js" in text:
@@ -185,6 +204,7 @@ def update_index_shell_footer(text: str) -> str:
 
 def update_index_brand_mark(text: str) -> str:
     mark = html.escape(brand_mark())
+    name = html.escape(brand_name())
 
     def _inject_mark(m: re.Match[str]) -> str:
         return f"{m.group(1)}{mark}{m.group(3)}"
@@ -202,6 +222,11 @@ def update_index_brand_mark(text: str) -> str:
         text,
         count=1,
         flags=re.S,
+    )
+    text = re.sub(
+        r'title="サービス略称（差し替え）"',
+        f'title="{name}"',
+        text,
     )
     return text
 

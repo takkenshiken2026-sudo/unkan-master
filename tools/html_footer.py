@@ -180,7 +180,7 @@ def _topnav_logo(rel_path: Path) -> str:
     name = html.escape(brand_name())
     exam = html.escape(exam_name())
     return f"""<a class="topnav-logo" href="{root}" aria-label="{name}、{exam}対策のトップへ">
-          <div class="topnav-logo-mark" title="サービス略称（差し替え）">{mark}</div>
+          <div class="topnav-logo-mark" title="{name}">{mark}</div>
           <span class="topnav-logo-stack">
             <span class="topnav-logo-text">{name}</span>
             <span class="topnav-logo-sub">{exam}</span>
@@ -273,7 +273,7 @@ def site_shell_footer(
     <div class="site-footer-scroll">
       <div class="site-footer-inner">
         <a class="site-footer-brand" href="{root}" title="{title}">
-          <span class="site-footer-logo-mark" title="サービス略称（差し替え）">{mark}</span>
+          <span class="site-footer-logo-mark" title="{name}">{mark}</span>
           <span class="site-footer-site-name">{name}</span>
         </a>
         <span class="site-footer-sep" aria-hidden="true"></span>

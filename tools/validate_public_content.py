@@ -27,6 +27,14 @@ FORBIDDEN_SNIPPETS: list[tuple[str, str]] = [
     ("guide_articles.csv", "CSV運用の説明"),
     ("related_terms に", "CSV列名の説明（FAQ・本文）"),
     ("term_detail_body、", "CSV列名の説明"),
+    ("action_items", "CSV列名が本文に露出"),
+    ("site-config", "設定ファイル名が本文に露出"),
+    ("サービス略称（差し替え）", "テンプレ差し替え指示（title属性）"),
+    ("本番公開では", "編集者向け表現"),
+    ("CSVの related_terms", "CSV列名の説明（FAQ・本文）"),
+    ("演習 CSV", "CSV運用の説明"),
+    ("過去問CSV", "CSV運用の説明（確認欄）"),
+    ("用語CSV", "CSV運用の説明（確認欄）"),
 ]
 
 ARTICLE_INDEX_FORBIDDEN = [
@@ -47,6 +55,8 @@ PUBLIC_HTML_GLOBS = [
     "terms/g-*.html",
     "q/index.html",
     "q/past/**/index.html",
+    "q/practice/**/index.html",
+    "q/ichimon/**/index.html",
 ]
 
 
@@ -85,12 +95,16 @@ class PublicContentValidator:
     def scan_file(self, path: Path) -> None:
         text = path.read_text(encoding="utf-8")
         rel = str(path.relative_to(ROOT))
+        # script/style/comment は公開本文ではないため除外
+        body = re.sub(r"<!--.*?-->", " ", text, flags=re.S)
+        body = re.sub(r"<script[\s\S]*?</script>", " ", body, flags=re.I)
+        body = re.sub(r"<style[\s\S]*?</style>", " ", body, flags=re.I)
         for snippet, reason in FORBIDDEN_SNIPPETS:
-            if snippet in text:
+            if snippet in body:
                 self.error(path, f"禁止コンテンツ「{snippet}」: {reason}")
         if rel == "articles/index.html":
             for snippet in ARTICLE_INDEX_FORBIDDEN:
-                if snippet in text:
+                if snippet in body:
                     self.error(path, f"試験ガイド一覧に禁止語「{snippet}」")
 
     def run(self) -> int:
