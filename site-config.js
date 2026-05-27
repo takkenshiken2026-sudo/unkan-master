@@ -3,7 +3,7 @@ window.SITE_CONFIG = {
   "brandMark": "運",
   "examName": "運行管理者試験",
   "siteOrigin": "https://unkan-master.jp",
-  "contactUrl": "https://example.com/contact",
+  "contactUrl": "https://forms.gle/c2SxYVPDbdThhnYw8",
   "ga4MeasurementId": "",
   "theme": {
     "accent": "#333333",
@@ -104,7 +104,7 @@ window.SITE_CONFIG = {
       },
       {
         "label": "お問い合わせ",
-        "href": "https://example.com/contact",
+        "href": "https://forms.gle/c2SxYVPDbdThhnYw8",
         "key": "contact"
       }
     ]
