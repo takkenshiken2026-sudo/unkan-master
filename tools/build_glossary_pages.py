@@ -51,6 +51,9 @@ HEAD_FONTS = """<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">"""
 
+PRESERVED_TERM_SUBDIRS = frozenset({"compare", "numbers", "mistakes", "priority", "samples", "diagram-samples"})
+PRESERVED_TERM_HTML = frozenset({"index.html", "g-writing-sample.html", "g-diagram-sample.html"})
+
 GLOSSARY_CSV = ROOT / "data" / "glossary_terms.csv"
 TERMS_DIR = ROOT / "terms"
 BASE_DEFAULT = clean_origin()
@@ -1369,10 +1372,10 @@ def main() -> int:
 
     TERMS_DIR.mkdir(parents=True, exist_ok=True)
     for stale in TERMS_DIR.glob("*.html"):
-        if stale.name != "index.html":
+        if stale.name not in PRESERVED_TERM_HTML:
             stale.unlink()
     for stale in TERMS_DIR.iterdir():
-        if stale.is_dir():
+        if stale.is_dir() and stale.name not in PRESERVED_TERM_SUBDIRS:
             shutil.rmtree(stale)
 
     for e in entries:

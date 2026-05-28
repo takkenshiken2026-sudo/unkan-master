@@ -22,6 +22,15 @@ from tools.glossary_term_rules import (
     check_glossary_row,
 )
 from tools.guide_article_rules import check_guide_row
+from tools.knowledge_hub_rules import (
+    HUB_CSV_NAMES,
+    HUB_LABELS,
+    check_compare_row,
+    check_mistakes_row,
+    check_numbers_row,
+    production_count_message,
+)
+
 from tools.site_config import category_to_field_map, guide_genre_labels
 
 
@@ -160,7 +169,14 @@ class Validator:
         if missing:
             return fieldnames, rows
         if not rows:
-            self.error(path, None, "データ行がありません")
+            if path.name in ("comparisons.csv", "numbers.csv", "mistakes.csv"):
+                self.warn(
+                    path,
+                    None,
+                    "データ行がありません（知識ハブは執筆拡充前でも可。目標件数は validate_knowledge_hub の WARN を参照）",
+                )
+            else:
+                self.error(path, None, "データ行がありません")
         return fieldnames, rows
 
     @staticmethod
@@ -507,12 +523,62 @@ class Validator:
                 " 検索意図の重複と更新負荷がないか確認してください。",
             )
 
+
+    def validate_knowledge_hub(self) -> None:
+        entries: list[dict[str, str]] = []
+        glossary_path = DATA_DIR / "glossary_terms.csv"
+        if glossary_path.is_file():
+            _, gloss_rows = self.read_csv(glossary_path, set())
+            for row in gloss_rows:
+                term = self.norm(row.get("term"))
+                if term:
+                    entries.append({"term": term, "slug_file": "g-dummy.html"})
+        term_lookup = make_term_lookup(entries)
+
+        validators = {
+            "compare": (check_compare_row, {"title", "category", "col_labels", "compare_rows"}),
+            "numbers": (check_numbers_row, {"title", "category", "highlight", "item_rows"}),
+            "mistakes": (check_mistakes_row, {"title", "category", "confusion_point", "pattern_rows"}),
+        }
+        for hub_type, (checker, required) in validators.items():
+            path = DATA_DIR / HUB_CSV_NAMES[hub_type]
+            if not path.is_file():
+                self.warn(
+                    path,
+                    None,
+                    f"{HUB_LABELS[hub_type]} の CSV がありません: {HUB_CSV_NAMES[hub_type]}",
+                )
+                continue
+            _, rows = self.read_csv(
+                path, required | {"article_title", "article_lead", "exam_points", "related_terms"}
+            )
+            published = [row for row in rows if self.norm(row.get("title"))]
+            msg = production_count_message(hub_type, len(published))
+            if msg:
+                self.warn(path, None, msg)
+            seen_titles: set[str] = set()
+            for idx, row in enumerate(rows, start=2):
+                title = self.norm(row.get("title"))
+                if not title:
+                    continue
+                if title in seen_titles:
+                    self.error(path, idx, f"title が重複しています: {title}")
+                seen_titles.add(title)
+                if hasattr(self, "validate_category"):
+                    self.validate_category(path, row, idx)
+                for issue in checker(row, term_lookup=term_lookup, line=idx):
+                    if issue.level == "ERROR":
+                        self.error(path, idx, f"[{issue.column}] {issue.message}")
+                    else:
+                        self.warn(path, idx, f"[{issue.column}] {issue.message}")
+
     def run(self) -> int:
         self.validate_past_questions()
         self.validate_practice_questions()
         self.validate_ichimon_questions()
         self.validate_glossary()
         self.validate_guide_articles()
+        self.validate_knowledge_hub()
 
         for issue in self.issues:
             print(issue.format(), file=sys.stderr if issue.level == "ERROR" else sys.stdout)
