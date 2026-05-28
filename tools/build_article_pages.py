@@ -10,7 +10,6 @@ import json
 import re
 import shutil
 import sys
-from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +25,7 @@ from tools.html_footer import (  # noqa: E402
     site_page_wrap_close,
     site_page_wrap_open,
 )
+from tools.seo_utils import content_date_from_row, json_ld_date_modified, meta_updated_html  # noqa: E402
 from tools.site_config import (  # noqa: E402
     brand_name,
     clean_origin,
@@ -330,7 +330,7 @@ def build_article_html(article: dict[str, str], by_slug: dict[str, dict[str, str
     title = apply_vars(article["title"])
     desc = meta_description(apply_vars(article.get("meta_description") or article.get("lead") or title))
     canonical = public_url(f"articles/{slug}/")
-    updated = date.today().isoformat()
+    updated = content_date_from_row(article)
     genre = apply_vars(article.get("genre", "試験ガイド"))
     tags = split_semicolon(apply_vars(article.get("tags", "")))
     sections = sections_html(article)
@@ -363,7 +363,7 @@ def build_article_html(article: dict[str, str], by_slug: dict[str, dict[str, str
         "inLanguage": "ja-JP",
         "about": [genre, *tags],
         "isPartOf": public_url("articles/index.html"),
-        "dateModified": updated,
+        **json_ld_date_modified(updated),
     }
     if author:
         article_schema["author"] = {"@type": "Person", "name": author}
@@ -427,7 +427,7 @@ def build_article_html(article: dict[str, str], by_slug: dict[str, dict[str, str
   <article class="seo-article-card article-body">
     <div class="article-meta">
       <span class="meta-category">{html.escape(genre)}</span>
-      <span class="meta-updated">更新日：{html.escape(updated)}</span>
+      {meta_updated_html(updated)}
     </div>
     <h1 class="article-title">{html.escape(title)}</h1>
     <p class="article-lead">{html.escape(apply_vars(article.get("lead", "")))}</p>

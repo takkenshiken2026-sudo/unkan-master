@@ -51,11 +51,9 @@ def _footer_past_href(cfg: dict) -> Issue | None:
         label = str(item.get("label") or "").strip()
         href = str(item.get("href") or "").strip()
         if label in ("実践演習一覧", "一問一答一覧"):
-            # 運管マスター（unkan-master）では、トップ/SPA からの導線として
-            # フッターに「実践演習一覧 / 一問一答一覧」を直接掲載する。
-            # （ヘッダー「実践演習」「過去問」「一問一答」は SPA に飛ぶため、
-            #  静的一覧ページへの導線をフッターで補完する）
-            continue
+            return Issue(
+                f"site-config.json: footer に {label!r} を置かないでください（3モードタブで足ります）"
+            )
         if label == "過去問一覧" and "practice" in href:
             return Issue(f"site-config.json: 過去問一覧が実践 URL を指しています: {href!r}")
     return None
@@ -100,7 +98,11 @@ def _q_index(q_index: Path) -> list[Issue]:
         issues.append(Issue("q/index.html: q_hub_links_html（3モードタブ）がありません"))
     if 'aria-current="page">過去問</span>' not in text and "is-current" not in text:
         issues.append(Issue("q/index.html: 過去問タブの current 表示がありません"))
-    if "/q/practice/index.html" not in text and 'href="practice/index.html"' not in text:
+    if (
+        "/q/orig/index.html" not in text
+        and "/q/practice/index.html" not in text
+        and 'href="practice/index.html"' not in text
+    ):
         issues.append(Issue("q/index.html: 実践演習タブへのリンクがありません"))
     return issues
 
@@ -236,16 +238,38 @@ def _mode_index_config(mode: str, index_path: Path) -> list[Issue]:
     return issues
 
 
+def _is_redirect_stub(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    head = path.read_text(encoding="utf-8", errors="replace")[:600]
+    return "refresh" in head.lower() and "0;url=" in head.lower()
+
+
+def _orig_practice_index_ok(path: Path) -> bool:
+    """q/orig/index.html は site-q-orig-index.js ベース（#q-index-data 非使用）。"""
+    if not path.is_file():
+        return False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return "q-orig-index-page" in text and "site-q-orig-index.js" in text
+
+
 def _mode_index_counts(root: Path) -> list[Issue]:
     issues: list[Issue] = []
+    practice_index = root / "q" / "orig" / "index.html"
+    if not _orig_practice_index_ok(practice_index):
+        practice_index = root / "q" / "practice" / "index.html"
     checks = [
-        ("practice", root / "data" / "practice_questions.csv", root / "q" / "practice" / "index.html", True),
+        ("practice", root / "data" / "practice_questions.csv", practice_index, True),
         ("ichimon", root / "data" / "ichimon_questions.csv", root / "q" / "ichimon" / "index.html", False),
     ]
     for mode, csv_path, index_path, skip_invalid in checks:
         csv_n = _csv_row_count(csv_path, skip_invalid=skip_invalid)
         json_n = _q_index_data_count(index_path)
         if csv_n == 0:
+            continue
+        if mode == "ichimon" and _is_redirect_stub(index_path):
+            continue
+        if mode == "practice" and _orig_practice_index_ok(index_path):
             continue
         if json_n is None:
             issues.append(Issue(f"q/{mode}/index.html: #q-index-data がありません（build_practice_ichimon を実行）"))
@@ -317,11 +341,208 @@ def _build_all_includes_practice(build_all: Path) -> Issue | None:
     if not build_all.is_file():
         return Issue("tools/build_all.py がありません")
     text = build_all.read_text(encoding="utf-8")
-    if "build_practice_ichimon_pages.py" not in text:
-        return Issue("tools/build_all.py: build_practice_ichimon_pages.py の呼び出しがありません")
+    if (
+        "build_practice_ichimon_pages.py" not in text
+        and "build_practice_question_pages.py" not in text
+    ):
+        return Issue(
+            "tools/build_all.py: build_practice_ichimon_pages.py または "
+            "build_practice_question_pages.py の呼び出しがありません"
+        )
     if "validate_site_integration.py" not in text:
         return Issue("tools/build_all.py: validate_site_integration.py の呼び出しがありません")
     return None
+
+
+def _html_footer_source(root: Path) -> list[Issue]:
+    """tools/html_footer.py の契約（LEARNING_NAV / tnav-past）。"""
+    path = root / "tools" / "html_footer.py"
+    if not path.is_file():
+        return [Issue("tools/html_footer.py がありません")]
+    text = path.read_text(encoding="utf-8")
+    issues: list[Issue] = []
+    if '"q": "tnav-past"' in text or "'q': 'tnav-past'" in text:
+        issues.append(
+            Issue(
+                "html_footer.py: LEARNING_NAV_ACTIVE_BY_PAGE に q → tnav-past を含めないでください（site-chrome.md §3）"
+            )
+        )
+    if '("tnav-past", "過去問", "q/index.html"' in text or "('tnav-past', '過去問', 'q/index.html'" in text:
+        issues.append(
+            Issue(
+                'html_footer.py: LEARNING_NAV_ITEMS の tnav-past は "#past" にしてください（site-chrome.md §3）'
+            )
+        )
+    return issues
+
+
+def _header_learning_nav(root: Path) -> list[Issue]:
+    """静的ページの学習ナビ href / q/index の active 状態（site-chrome.md §3, §7）。"""
+    spa_hash = {
+        "tnav-past": "/#past",
+        "tnav-dash": "/#dash",
+        "tnav-review": "/#review",
+    }
+    article_sample = root / "articles" / "field-law-basics" / "index.html"
+    if not article_sample.is_file():
+        article_sample = root / "articles" / "exam-overview" / "index.html"
+    samples: list[tuple[str, Path]] = [
+        ("articles sample", article_sample),
+        ("terms/index.html", root / "terms" / "index.html"),
+        ("about.html", root / "about.html"),
+        ("q/index.html", root / "q" / "index.html"),
+    ]
+    issues: list[Issue] = []
+    for label, path in samples:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for nav_id, expected in spa_hash.items():
+            m = re.search(rf'id="{re.escape(nav_id)}"\s+href="([^"]+)"', text)
+            if not m:
+                issues.append(Issue(f"{label}: {nav_id} がありません"))
+                continue
+            href = m.group(1)
+            if href != expected:
+                issues.append(
+                    Issue(
+                        f"{label}: {nav_id} の href は {expected!r} にしてください（現在: {href!r}）"
+                    )
+                )
+            if "q/index.html" in href and nav_id == "tnav-past":
+                issues.append(
+                    Issue(
+                        f"{label}: ヘッダー「過去問」が過去問一覧 q/index.html を指しています（site-chrome.md §3）"
+                    )
+                )
+
+    q_index = root / "q" / "index.html"
+    if q_index.is_file():
+        text = q_index.read_text(encoding="utf-8")
+        if re.search(r'id="tnav-past"[^>]*\saria-current="page"', text) or 'class="topnav-link active" id="tnav-past"' in text:
+            issues.append(
+                Issue(
+                    "q/index.html: ヘッダー「過去問」に active / aria-current を付けないでください（フッター「過去問一覧」のみ）"
+                )
+            )
+        if not re.search(
+            r'<a\s+[^>]*href="[^"]*"[^>]*aria-current="page"[^>]*>\s*過去問一覧\s*</a>',
+            text,
+            flags=re.I,
+        ):
+            issues.append(
+                Issue("q/index.html: フッター「過去問一覧」に aria-current=\"page\" がありません")
+            )
+    return issues
+
+
+VIEWPORT_META_RE = re.compile(
+    r'<meta\s+name="viewport"\s+content="width=device-width,\s*initial-scale=1',
+    re.I,
+)
+RESPONSIVE_SECTION_MARKER = "全ページ共通レスポンシブ"
+MOBILE_STATIC_MQ = "@media (max-width: 760px)"
+MIN_SITE_PAGES_CSS_LINES = 3500
+
+
+def _responsive_css_source(root: Path) -> list[Issue]:
+    """site-pages.css がテンプレ最新（レスポンシブ節あり）か。"""
+    css_path = root / "site-pages.css"
+    if not css_path.is_file():
+        return [Issue("site-pages.css がありません（responsive-layout.md §1）")]
+    text = css_path.read_text(encoding="utf-8")
+    issues: list[Issue] = []
+    line_count = text.count("\n") + (1 if text else 0)
+    if RESPONSIVE_SECTION_MARKER not in text:
+        issues.append(
+            Issue(
+                "site-pages.css: 「全ページ共通レスポンシブ」節がありません。"
+                "旧版 CSS の可能性 — テンプレから同期してください（docs/responsive-layout.md §0）"
+            )
+        )
+    if MOBILE_STATIC_MQ not in text:
+        issues.append(
+            Issue(
+                "site-pages.css: @media (max-width: 760px) がありません（responsive-layout.md §2）"
+            )
+        )
+    if line_count < MIN_SITE_PAGES_CSS_LINES:
+        issues.append(
+            Issue(
+                f"site-pages.css: 行数が {line_count} 行と少なすぎます（目安 ≥{MIN_SITE_PAGES_CSS_LINES}）。"
+                "テンプレ最新版への同期が必要です"
+            )
+        )
+    return issues
+
+
+def _viewport_and_static_css(root: Path) -> list[Issue]:
+    """代表静的 HTML の viewport と site-pages.css リンク。"""
+    samples = [
+        "about.html",
+        "articles/index.html",
+        "terms/index.html",
+        "q/index.html",
+    ]
+    issues: list[Issue] = []
+    for rel in samples:
+        path = root / rel
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if not VIEWPORT_META_RE.search(text):
+            issues.append(
+                Issue(
+                    f"{rel}: viewport meta（width=device-width, initial-scale=1）がありません"
+                    "（responsive-layout.md §3.1）"
+                )
+            )
+        if "site-pages.css" not in text:
+            issues.append(
+                Issue(f"{rel}: site-pages.css がリンクされていません（responsive-layout.md §3.1）")
+            )
+    index = root / "index.html"
+    if index.is_file():
+        text = index.read_text(encoding="utf-8")
+        if not VIEWPORT_META_RE.search(text):
+            issues.append(
+                Issue("index.html: viewport meta がありません（SPA — responsive-layout.md §4）")
+            )
+    return issues
+
+
+def _static_chrome(root: Path) -> list[Issue]:
+    """docs/site-chrome.md — ヘッダー topnav 統一・旧 q-static-header 禁止。"""
+    issues: list[Issue] = []
+    samples: list[tuple[str, Path, bool]] = [
+        ("about.html", root / "about.html", True),
+        ("privacy.html", root / "privacy.html", True),
+        ("q/index.html", root / "q" / "index.html", True),
+        ("terms/index.html", root / "terms" / "index.html", True),
+    ]
+    for label, path, require_topnav in samples:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if require_topnav and "topnav site-shell-header" not in text:
+            issues.append(
+                Issue(f"{label}: site_page_header 由来の topnav site-shell-header がありません（site-chrome.md）")
+            )
+        if "q-static-header" in text:
+            issues.append(Issue(f"{label}: 旧ヘッダー q-static-header が残っています（site-chrome.md）"))
+
+    q_past = root / "q" / "past"
+    if q_past.is_dir():
+        for html in sorted(q_past.glob("**/index.html"))[:3]:
+            text = html.read_text(encoding="utf-8")
+            rel = html.relative_to(root)
+            if "topnav site-shell-header" not in text:
+                issues.append(
+                    Issue(f"{rel}: topnav site-shell-header がありません（build_past_question_pages / site-chrome.md）")
+                )
+            if "q-static-header" in text:
+                issues.append(Issue(f"{rel}: q-static-header が残っています"))
+    return issues
 
 
 def main() -> int:
@@ -357,6 +578,11 @@ def main() -> int:
     issues.extend(_mode_index_counts(root))
     issues.extend(_ichimon_js_public_paths(root))
     issues.extend(_site_q_index_js(root / "site-q-index.js"))
+    issues.extend(_static_chrome(root))
+    issues.extend(_html_footer_source(root))
+    issues.extend(_header_learning_nav(root))
+    issues.extend(_responsive_css_source(root))
+    issues.extend(_viewport_and_static_css(root))
 
     if not issues:
         print("validate_site_integration: OK")

@@ -54,3 +54,25 @@ globs: site-config.json,index.html,site-pages.css,site-q-index.js,site-terms-ind
 | 過去問一覧 → `q/practice/index.html` | 実践ページ上で自己リンク化 |
 | index フッターだけ手直しして site-config 放置 | 次の `build_all` で上書き or 不整合 |
 | 宅建へフル `sync_from_template` | `build_all` / `build_past` 破壊 |
+| 生成 HTML に **手書き topnav** / **`q-static-header`** | フッター遷移でヘッダーが別物になる（[site-chrome.md](../docs/site-chrome.md)） |
+
+## Site chrome（ヘッダー・フッター）
+
+**正本:** [docs/site-chrome.md](../docs/site-chrome.md) / **Cursor:** [site-chrome-nav.mdc](./site-chrome-nav.mdc)
+
+- ヘッダーは **`site_page_header()` のみ**。フッターは **`site_page_footer()`**
+- **ヘッダー「過去問」= SPA 演習 `/#past`**。**フッター「過去問一覧」= 静的 `q/index.html`**（別コンテンツ・混同禁止）
+- ヘッダー `current` active: `terms` / `practice` / `ichimon` のみ。**`q` は active にしない**
+- フッター `current`: `site-config.json` → `navigation.footer[].key`（`q` = 過去問一覧）
+- SPA ハッシュ（過去問・記録・復習）は **`/_learning_nav_href` → `/#past` 等のルート絶対パス**
+- `html_footer.py` 変更後は **`patch_header_nav.py` または `build_all.py`**
+- `validate_site_integration.py` が `tnav-past` / `q/index.html` の active 状態を検証
+
+## Responsive（レスポンシブ）
+
+**正本:** [docs/responsive-layout.md](../docs/responsive-layout.md) / **Cursor:** [responsive-layout.mdc](./responsive-layout.mdc)
+
+- 静的ページは **`site-pages.css`**（「全ページ共通レスポンシブ」節必須）。旧 ~1.6k 行 CSS は **未同期**
+- 全公開 HTML: **viewport** + `site-pages.css`（+ `site-theme.css`）
+- サイト別 `*-mobile.css` **禁止**
+- 375px 目視: `/`, `articles/index.html`, `terms/index.html`, `q/index.html`

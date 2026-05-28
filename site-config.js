@@ -73,16 +73,6 @@ window.SITE_CONFIG = {
         "key": "q"
       },
       {
-        "label": "実践演習一覧",
-        "href": "q/practice/index.html",
-        "key": "practice-list"
-      },
-      {
-        "label": "一問一答一覧",
-        "href": "q/ichimon/index.html",
-        "key": "ichimon-list"
-      },
-      {
         "label": "用語解説",
         "href": "terms/index.html",
         "key": "terms"

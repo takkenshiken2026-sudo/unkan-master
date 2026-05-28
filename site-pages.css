@@ -2873,6 +2873,32 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   font-weight: 600;
   white-space: nowrap;
 }
+.terms-idx-th-importance,
+.terms-idx-td-importance {
+  width: 5.5em;
+  white-space: nowrap;
+}
+.term-importance-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  line-height: 1.35;
+}
+.term-importance-s {
+  color: #7a2e00;
+  background: #fff1e6;
+  border: 1px solid #ffd2b3;
+}
+.term-importance-a {
+  color: #1f4f8f;
+  background: #eef5ff;
+  border: 1px solid #c9ddff;
+}
+.priority-index-panel .terms-idx-chips--importance {
+  margin-bottom: 4px;
+}
 .terms-idx-td-snippet {
   color: var(--text2);
 }
@@ -3473,9 +3499,6 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   padding: 6px 10px;
 }
 .terms-index-tools {
-  position: sticky;
-  top: var(--site-sticky-top, 54px);
-  z-index: 20;
   display: grid;
   gap: 12px;
   margin-bottom: 18px;
@@ -3618,9 +3641,6 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   padding: 6px 10px;
 }
 .past-index-tools {
-  position: sticky;
-  top: var(--q-index-sticky-top, 52px);
-  z-index: 8;
   display: grid;
   gap: 12px;
   margin-bottom: 18px;
@@ -3920,6 +3940,381 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 .seo-info-table tr:last-child th {
   border-bottom: none;
 }
+/* 比較・整理表（terms/compare） */
+.compare-index-page .q-hub-links--tabs,
+.terms-index-page .q-hub-links--tabs,
+.compare-article-page .q-hub-links--tabs,
+.numbers-index-page .q-hub-links--tabs,
+.mistakes-index-page .q-hub-links--tabs,
+.numbers-article-page .q-hub-links--tabs,
+.mistakes-article-page .q-hub-links--tabs {
+  margin-bottom: 14px;
+}
+.compare-matrix-table {
+  width: 100%;
+}
+.numbers-matrix-table,
+.mistakes-matrix-table {
+  width: 100%;
+}
+.compare-matrix-table th[scope="row"] {
+  white-space: nowrap;
+  width: 18%;
+}
+.numbers-matrix-table th[scope="row"] {
+  white-space: nowrap;
+  width: 22%;
+}
+.mistakes-matrix-table th[scope="row"] {
+  white-space: nowrap;
+  width: 14%;
+}
+.compare-matrix-table th[scope="col"]:first-child {
+  width: 18%;
+}
+/* 用語解説・比較・早見・誤答 — 表内テキスト 14px */
+.terms-index-page .terms-idx-table th,
+.terms-index-page .terms-idx-table td,
+.compare-index-page .terms-idx-table th,
+.compare-index-page .terms-idx-table td,
+.numbers-index-page .terms-idx-table th,
+.numbers-index-page .terms-idx-table td,
+.mistakes-index-page .terms-idx-table th,
+.mistakes-index-page .terms-idx-table td {
+  font-size: 14px;
+}
+.compare-article-page .compare-matrix-table th,
+.compare-article-page .compare-matrix-table td,
+.numbers-article-page .numbers-matrix-table th,
+.numbers-article-page .numbers-matrix-table td,
+.mistakes-article-page .mistakes-matrix-table th,
+.mistakes-article-page .mistakes-matrix-table td {
+  font-size: 14px;
+}
+.compare-idx-table .compare-idx-td-subjects {
+  color: var(--text2);
+}
+/* 知識ハブ執筆サンプル */
+.knowledge-hub-sample-banner {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border2));
+  border-radius: var(--r2);
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--bg));
+  font-size: var(--fs-sub);
+  line-height: 1.65;
+  color: var(--ink);
+}
+.knowledge-hub-sample-banner p {
+  margin: 0 0 8px;
+}
+.knowledge-hub-sample-banner p:last-child {
+  margin-bottom: 0;
+}
+.knowledge-hub-sample-banner-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-caption);
+}
+.knowledge-hub-sample-banner-links a {
+  color: var(--accent-emphasis);
+  font-weight: 600;
+  text-decoration: none;
+}
+.knowledge-hub-sample-banner-links a:hover {
+  text-decoration: underline;
+}
+.knowledge-hub-sample-doc-note {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  background: var(--bg2);
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  color: var(--text2);
+}
+.knowledge-hub-sample-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.knowledge-hub-sample-card {
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  background: var(--bg);
+  padding: 18px;
+  box-shadow: var(--sh);
+}
+.knowledge-hub-sample-card h2 {
+  margin: 0 0 8px;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+}
+.knowledge-hub-sample-card h2 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.knowledge-hub-sample-card h2 a:hover {
+  color: var(--accent-emphasis);
+  text-decoration: underline;
+}
+.knowledge-hub-sample-card p {
+  margin: 0 0 10px;
+  font-size: var(--fs-sub);
+  line-height: 1.65;
+  color: var(--text2);
+}
+.knowledge-hub-sample-card-meta code {
+  font-size: var(--fs-caption);
+}
+.knowledge-hub-sample-card-link {
+  display: inline-block;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  color: var(--accent-emphasis);
+  text-decoration: none;
+}
+.knowledge-hub-sample-card-link:hover {
+  text-decoration: underline;
+}
+/* 用語解説 HTML 図解（compare_dual 等）
+   デザイン契約: docs/term-diagrams.md §6 — クラス名・色・レイアウトを変えるときは term_diagram.py と同時に更新 */
+.term-diagram-section .term-diagram {
+  margin: 0;
+}
+.term-diagram-standalone {
+  max-width: var(--site-readable-w);
+  margin: 0 auto;
+}
+.term-diagram-standalone-note,
+.term-diagram-sample-embed-link {
+  margin: 0 0 20px;
+  font-size: var(--fs-sub);
+  line-height: 1.65;
+  color: var(--text2);
+}
+.term-diagram-sample-embed-link a {
+  color: var(--accent-emphasis);
+  font-weight: 700;
+  text-decoration: none;
+}
+.term-diagram-sample-embed-link a:hover {
+  text-decoration: underline;
+}
+.term-diagram {
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  background: var(--bg2);
+  padding: 20px;
+}
+.term-diagram-header {
+  margin: 0 0 18px;
+  text-align: center;
+}
+.term-diagram-eyebrow {
+  margin: 0 0 6px;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--green);
+}
+.term-diagram-title {
+  margin: 0;
+  font-size: clamp(1.125rem, 2vw + 0.85rem, 1.375rem);
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text);
+}
+.term-diagram-subtitle {
+  margin: 10px 0 0;
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--text2);
+}
+.term-diagram-grid {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .term-diagram-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.term-diagram-card {
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  background: var(--bg);
+  padding: 18px;
+  box-shadow: var(--sh);
+}
+.term-diagram-card-label {
+  display: inline-flex;
+  margin: 0 0 14px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--accent-text);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.term-diagram-card-catch {
+  min-height: 3rem;
+  margin: 0 0 16px;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  line-height: 1.65;
+  color: var(--text);
+}
+.term-diagram-visual {
+  margin: 0 auto 16px;
+}
+.term-diagram-land {
+  position: relative;
+  width: 14rem;
+  height: 11rem;
+  margin: 0 auto;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+}
+.term-diagram-land-site {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-size: var(--fs-caption);
+  color: var(--text2);
+}
+.term-diagram-land-plot {
+  position: absolute;
+  left: 3rem;
+  top: 2.25rem;
+  width: 8rem;
+  height: 6rem;
+  border: 2px solid var(--ink);
+  background: var(--bg2);
+}
+.term-diagram-land-label {
+  position: absolute;
+  left: 5rem;
+  top: 5rem;
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--text);
+}
+.term-diagram-floors {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 14rem;
+  height: 11rem;
+  margin: 0 auto;
+}
+.term-diagram-floor-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  border-top: 2px solid var(--ink);
+  border-left: 2px solid var(--ink);
+  border-right: 2px solid var(--ink);
+  background: var(--bg);
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--text);
+}
+.term-diagram-floors-base {
+  height: 0.75rem;
+  border: 2px solid var(--ink);
+  background: var(--bg3);
+}
+.term-diagram-card-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+}
+.term-diagram-card-box--formula {
+  background: var(--bg2);
+}
+.term-diagram-card-box--example {
+  border-color: color-mix(in srgb, var(--green) 28%, var(--border2));
+  background: color-mix(in srgb, var(--green) 8%, var(--bg));
+}
+.term-diagram-card-box-kicker {
+  margin: 0;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  color: var(--text2);
+}
+.term-diagram-card-box--example .term-diagram-card-box-kicker {
+  color: var(--green);
+}
+.term-diagram-card-box-body {
+  margin: 4px 0 0;
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  line-height: 1.55;
+  color: var(--text);
+}
+.term-diagram-card-memo {
+  margin: 14px 0 0;
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--text2);
+}
+.term-diagram-exam-point,
+.term-diagram-quiz {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  background: var(--bg);
+}
+.term-diagram-exam-point {
+  background: var(--bg2);
+}
+.term-diagram-exam-point-title,
+.term-diagram-quiz-title {
+  margin: 0 0 10px;
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--text);
+}
+.term-diagram-exam-point-body,
+.term-diagram-quiz-question {
+  margin: 0;
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  line-height: 1.65;
+  color: var(--text);
+}
+.term-diagram-quiz-question {
+  margin-bottom: 12px;
+}
+.term-diagram-quiz-answers {
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 768px) {
+  .term-diagram-quiz-answers {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.term-diagram-quiz-answer {
+  padding: 12px 14px;
+  border-radius: var(--r);
+  background: var(--bg2);
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--text);
+}
+.term-diagram-quiz-answer--highlight {
+  background: color-mix(in srgb, var(--green) 10%, var(--bg));
+  color: color-mix(in srgb, var(--green) 75%, var(--text));
+}
 .related-box {
   background: var(--bg);
   border: 1px solid var(--border2);
@@ -4032,6 +4427,14 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 @media (max-width: 760px) {
   :root {
     --site-sticky-top: 56px;
+    /* モバイル読みやすさ: 本文16px維持・見出しは clamp・UIは14px基準 */
+    --fs-body: 16px;
+    --fs-sub: 14px;
+    --fs-small: 14px;
+    --fs-caption: 12px;
+    --fs-h2: clamp(1.0625rem, 2.4vw + 0.82rem, 1.1875rem);
+    --fs-page-h1: clamp(1.0625rem, 2.6vw + 0.78rem, 1.3125rem);
+    --fs-article-title: clamp(1.0625rem, 3vw + 0.72rem, 1.3125rem);
   }
   .site-page-header-inner,
   .site-shell-header .topnav-inner {
@@ -4144,6 +4547,10 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     white-space: normal;
     border-bottom: 1px solid var(--table-border);
   }
+  .compare-article-page .article-body table.seo-info-table th,
+  .compare-article-page .article-body table.seo-info-table td {
+    font-size: 14px;
+  }
   .site-page-section table td,
   .article-body table.seo-info-table td {
     background: var(--bg);
@@ -4225,7 +4632,49 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 32px;
+    font-size: var(--fs-h2);
+  }
+  .article-body p,
+  .article-body li,
+  .term-article-page .article-body p,
+  .term-article-page .article-body li,
+  .guide-article-page .article-body p,
+  .guide-article-page .article-body li {
     font-size: var(--fs-body);
+    line-height: 1.75;
+  }
+  .q-hub-tab {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+  }
+  .q-hub-tab-label {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: var(--fs-sub);
+    line-height: 1.35;
+  }
+  .term-diagram {
+    padding: 16px;
+  }
+  .term-diagram-card {
+    padding: 14px;
+  }
+  .term-diagram-card-catch {
+    font-size: var(--fs-sub);
+    min-height: 0;
+  }
+  .term-diagram-card-label {
+    font-size: var(--fs-sub);
+  }
+  .term-diagram-card-box-body,
+  .term-diagram-exam-point-body,
+  .term-diagram-quiz-question,
+  .term-diagram-quiz-answer {
+    font-size: var(--fs-sub);
+    line-height: 1.65;
+  }
+  .term-diagram-title {
+    font-size: clamp(1.0625rem, 2.8vw + 0.75rem, 1.25rem);
   }
   .term-definition-section {
     padding: 14px 16px 2px;
@@ -4469,8 +4918,17 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     font-size: 11px;
   }
   .terms-index-page .terms-idx-table td,
-  .terms-index-page .terms-idx-td-term a {
-    font-size: var(--fs-caption);
+  .terms-index-page .terms-idx-td-term a,
+  .compare-index-page .terms-idx-table th,
+  .compare-index-page .terms-idx-table td,
+  .compare-index-page .terms-idx-td-term a,
+  .numbers-index-page .terms-idx-table th,
+  .numbers-index-page .terms-idx-table td,
+  .numbers-index-page .terms-idx-td-term a,
+  .mistakes-index-page .terms-idx-table th,
+  .mistakes-index-page .terms-idx-table td,
+  .mistakes-index-page .terms-idx-td-term a {
+    font-size: 14px;
   }
   .q-index-page .past-index-panel {
     padding: 6px 0 0;
@@ -4675,8 +5133,24 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     padding: 8px 10px;
     font-size: var(--fs-caption);
   }
+  .terms-index-page .terms-idx-table:not(.terms-idx-table-duo) th,
+  .terms-index-page .terms-idx-table:not(.terms-idx-table-duo) td,
+  .compare-index-page .terms-idx-table:not(.terms-idx-table-duo) th,
+  .compare-index-page .terms-idx-table:not(.terms-idx-table-duo) td,
+  .numbers-index-page .terms-idx-table:not(.terms-idx-table-duo) th,
+  .numbers-index-page .terms-idx-table:not(.terms-idx-table-duo) td,
+  .mistakes-index-page .terms-idx-table:not(.terms-idx-table-duo) th,
+  .mistakes-index-page .terms-idx-table:not(.terms-idx-table-duo) td {
+    font-size: 14px;
+  }
   .terms-idx-table:not(.terms-idx-table-duo) thead th {
     font-size: var(--fs-tiny);
+  }
+  .terms-index-page .terms-idx-table:not(.terms-idx-table-duo) thead th,
+  .compare-index-page .terms-idx-table:not(.terms-idx-table-duo) thead th,
+  .numbers-index-page .terms-idx-table:not(.terms-idx-table-duo) thead th,
+  .mistakes-index-page .terms-idx-table:not(.terms-idx-table-duo) thead th {
+    font-size: 14px;
   }
   .seo-toc {
     border-radius: 0;
@@ -4901,18 +5375,19 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 }
 .terms-index-page .terms-idx-table td {
   color: var(--ink);
-  font-size: var(--fs-caption);
+  font-size: 14px;
 }
 .terms-index-page .terms-idx-td-term a {
   color: var(--ink);
+  font-size: 14px;
 }
 .terms-index-page .terms-idx-td-cat {
   color: var(--text2);
-  font-size: var(--fs-caption);
+  font-size: 14px;
 }
 .terms-index-page .terms-idx-td-snippet {
   color: var(--text2);
-  font-size: var(--fs-sub);
+  font-size: 14px;
 }
 .terms-index-page .terms-idx-page-title,
 .terms-field-hub-page .terms-idx-page-title {

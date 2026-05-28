@@ -79,8 +79,6 @@ def load_question_catalog(root: Path) -> list[dict]:
             qno = int(row["question_no"])
             cat = norm(row.get("category"))
             stem = norm(row.get("stem"))
-            wareki = norm(row.get("exam_wareki"))
-            year_phrase = wareki or f"{year}年"
             refs.append(
                 {
                     "mode": "past",
@@ -89,7 +87,7 @@ def load_question_catalog(root: Path) -> list[dict]:
                     "category": cat,
                     "tags": parse_tags(norm(row.get("tags"))),
                     "text": stem,
-                    "title": f"{year_phrase} 第{qno}問",
+                    "title": f"{year}年 第{qno}問",
                     "preview": stem_preview(stem),
                 }
             )
@@ -153,8 +151,6 @@ def current_ref_from_page(page: dict, *, mode: str) -> dict:
     if mode == "past":
         stem = norm(page.get("stem_plain") or page.get("stem"))
         year, qno = page["year"], page["qno"]
-        wareki = norm(page.get("wareki"))
-        year_phrase = wareki or f"{year}年"
         return {
             "mode": "past",
             "key": _past_key(year, qno),
@@ -162,7 +158,7 @@ def current_ref_from_page(page: dict, *, mode: str) -> dict:
             "category": norm(page.get("category")),
             "tags": list(page.get("tags") or []),
             "text": stem,
-            "title": f"{year_phrase} 第{qno}問",
+            "title": f"{year}年 第{qno}問",
             "preview": stem_preview(stem),
         }
     if mode == "practice":

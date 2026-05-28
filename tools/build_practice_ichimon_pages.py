@@ -237,6 +237,7 @@ def build_practice_related_html(
     guides: list[dict[str, str]],
 ) -> str:
     from tools.build_glossary_pages import field_hub_slug
+    from tools.knowledge_hub_seo import field_hub_page_exists
 
     links: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -258,8 +259,10 @@ def build_practice_related_html(
     for gl in glossary_links_for_tags(page.get("tags") or [], glossary_lookup):
         add(rel_href(rel_path, normalize_glossary_href(gl["href"])), gl["label"])
 
-    hub = field_hub_slug(page.get("category") or "")
-    add(rel_href(rel_path, f"terms/{hub}/index.html"), f"{page.get('category', '')}の用語一覧")
+    cat = page.get("category") or ""
+    if field_hub_page_exists(cat):
+        hub = field_hub_slug(cat)
+        add(rel_href(rel_path, f"terms/{hub}/index.html"), f"{cat}の用語一覧")
 
     for href_rel, title in guide_links_for_page(page.get("category") or "", guides):
         add(rel_href(rel_path, href_rel), title)
@@ -288,6 +291,7 @@ def build_ichimon_related_html(
     guides: list[dict[str, str]],
 ) -> str:
     from tools.build_glossary_pages import field_hub_slug
+    from tools.knowledge_hub_seo import field_hub_page_exists
 
     links: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -310,8 +314,10 @@ def build_ichimon_related_html(
     for gl in glossary_links_for_tags(page.get("tags") or [], glossary_lookup):
         add(rel_href(rel_path, normalize_glossary_href(gl["href"])), gl["label"])
 
-    hub = field_hub_slug(page.get("category") or "")
-    add(rel_href(rel_path, f"terms/{hub}/index.html"), f"{page.get('category', '')}の用語一覧")
+    cat = page.get("category") or ""
+    if field_hub_page_exists(cat):
+        hub = field_hub_slug(cat)
+        add(rel_href(rel_path, f"terms/{hub}/index.html"), f"{cat}の用語一覧")
 
     for href_rel, title in guide_links_for_page(page.get("category") or "", guides):
         add(rel_href(rel_path, href_rel), title)

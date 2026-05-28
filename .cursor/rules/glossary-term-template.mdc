@@ -9,6 +9,7 @@ globs: **/*.{csv,py,md,html}
 Use when editing `data/glossary_terms.csv`, term generators, or `terms/` pages.
 
 **Full source of truth:** `docs/glossary-term-template.md`  
+**HTML diagrams (optional):** `docs/term-diagrams.md` — CSV `diagram_id` → `data/term_diagrams/{id}.json`  
 **Editorial quality:** `docs/editorial-quality.md`  
 **SEO shared rules:** `docs/seo-article-guidelines.md`
 
@@ -53,7 +54,7 @@ FAQ roles: (1) definition, (2) common mistake, (3) exam angle, (4) next study st
 
 Same SEO skeleton as guide articles: lead → TOC → reliability → action box → numbered body (5–7 visible h2) → FAQ → basic info → official links → related terms → next pages.
 
-Body sections from CSV: summary, exam points, definition (+ peer compare table from `related_terms`), legal, choice traps, mistakes, memory tip, example.
+Body sections from CSV: summary, exam points, definition (+ peer compare table from `related_terms`), **diagram (optional `diagram_id`)**, legal, choice traps, mistakes, memory tip, example.
 
 ## Internal links
 

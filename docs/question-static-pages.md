@@ -133,6 +133,17 @@ python3 tools/build_all.py
 
 静的ページの解説ブロックは **要約 → 正解の理由 → もう一方の記号 / 他の選択肢 → 学習のヒント** の順で、過去問・実践演習・一問一答で同じ見出し粒度に揃えます（`tools/q_explanation.py`）。
 
+### HTML 図解（`diagram_id`・任意）
+
+| 列 | 必須 | 説明 |
+|----|------|------|
+| `diagram_id` | — | `data/term_diagrams/{id}.json` を参照（拡張子なし）。用語記事と **同じ JSON を共用可** |
+
+- **契約・新規/既存サイト手順:** [term-diagrams.md](./term-diagrams.md)
+- **用語ページ:** ✅ 実装済（定義の直後に「図解で理解する」）
+- **問題ページ:** 📋 未実装。実装時は解説内「正解の理由」の後に **図解で整理** を挿入（`diagram_body_html()` を共用）
+- `validate_csv.py` は 3 種 CSV とも `diagram_id` があれば JSON 存在を検証（ERROR）
+
 `id` の年部分は個別ページ URL の `y{年}` に使われます。**一覧のグループは分野（category）** です（`groupBy: category`）。
 
 SPA の `publicPath` は `q/ichimon/y{年}/i{月}-{枝番}/index.html` に自動設定されます（`csv_to_exam_site_ichimondou_js.py`）。

@@ -35,10 +35,14 @@ REQUIRED_MANIFEST_PATHS = [
     "tools/import_base_questions_to_ichimon_csv.py",
     "tools/validate_site_integration.py",
     "tools/build_glossary_pages.py",
+    "tools/term_diagram.py",
     "docs/integration-checklist.md",
     "docs/question-static-pages.md",
+    "docs/term-diagrams.md",
+    "docs/site-chrome.md",
     ".cursor/rules/site-integration.mdc",
     ".cursor/rules/practice-ichimon-static.mdc",
+    ".cursor/rules/term-diagrams.mdc",
 ]
 
 REQUIRED_BUILD_ALL_SNIPPETS = [
@@ -53,6 +57,7 @@ REQUIRED_BUILD_ALL_SNIPPETS = [
 REQUIRED_DOCS = [
     "docs/integration-checklist.md",
     "docs/question-static-pages.md",
+    "docs/term-diagrams.md",
     "docs/multi-site-workflow.md",
     "docs/README.md",
     "data/README.md",

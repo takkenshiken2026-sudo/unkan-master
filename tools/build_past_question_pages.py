@@ -562,6 +562,7 @@ def parse_related_link_tokens(
 ) -> list[tuple[str, str]]:
     """(相対href, ラベル)"""
     from tools.build_glossary_pages import field_hub_slug, lookup_key
+    from tools.knowledge_hub_seo import field_hub_page_exists
 
     items: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -615,11 +616,13 @@ def parse_related_link_tokens(
         elif kind == "practice":
             add(rel_href(rel_path, "index.html#past"), label or "アプリで演習する")
         elif kind == "field":
-            hub = field_hub_slug(page.get("category") or "")
-            add(
-                rel_href(rel_path, f"terms/{hub}/index.html"),
-                label or f"{page.get('category', '')}の用語一覧",
-            )
+            cat = page.get("category") or ""
+            if field_hub_page_exists(cat):
+                hub = field_hub_slug(cat)
+                add(
+                    rel_href(rel_path, f"terms/{hub}/index.html"),
+                    label or f"{cat}の用語一覧",
+                )
 
     return items
 
@@ -668,12 +671,15 @@ def build_related_links_html(
         add_auto(href, gl["label"])
 
     from tools.build_glossary_pages import field_hub_slug
+    from tools.knowledge_hub_seo import field_hub_page_exists
 
-    hub = field_hub_slug(page.get("category") or "")
-    add_auto(
-        rel_href(rel_path, f"terms/{hub}/index.html"),
-        f"{page.get('category', '')}の用語一覧",
-    )
+    cat = page.get("category") or ""
+    if field_hub_page_exists(cat):
+        hub = field_hub_slug(cat)
+        add_auto(
+            rel_href(rel_path, f"terms/{hub}/index.html"),
+            f"{cat}の用語一覧",
+        )
 
     for href_rel, title in guide_links_for_page(page.get("category") or "", guides):
         add_auto(rel_href(rel_path, href_rel), title)

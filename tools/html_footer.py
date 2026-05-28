@@ -5,6 +5,7 @@
 - 新規の手書き HTML では </body> 直前に analytics_snippet(Path('相対パス')) と同等の2行を置くか、
   生成ページでは site_page_footer の直後に analytics が付くので head に GA を書かない。
 - ヘッダー・フッターは index.html の topnav / site-footer と同型（site-pages.css の site-shell）。
+- ヘッダー・フッターの契約: docs/site-chrome.md（フッター遷移でヘッダー構造が変わらないこと）
 """
 
 from __future__ import annotations
@@ -94,36 +95,67 @@ LEARNING_NAV_ITEMS: list[tuple[str, str, str, str]] = [
     ),
 ]
 
-# site_page_header(current=...) で学習ナビの active を付ける
-# 過去問一覧（q）はフッター「過去問一覧」と対応。ヘッダー「過去問」は SPA 演習用のため active にしない。
+# site_page_header(current=...) で学習ナビの active を付ける。
+# ヘッダー「過去問」は SPA 演習（#past）。フッター「過去問一覧」（q/index.html）とは別コンテンツのため q は含めない。
 LEARNING_NAV_ACTIVE_BY_PAGE: dict[str, str] = {
     "terms": "tnav-glossary",
-    "q": "tnav-past",
     "practice": "tnav-orig",
     "ichimon": "tnav-ichimondou",
 }
+
+# ヘッダー・フッターが同じ静的一覧を指す項目では、フッター側 aria-current を抑制（二重ハイライト防止）
+FOOTER_SUPPRESS_CURRENT_WHEN_HEADER: frozenset[str] = frozenset(LEARNING_NAV_ACTIVE_BY_PAGE.keys())
 
 
 def _in_q_section(rel_path: Path) -> bool:
     return bool(rel_path.parts) and rel_path.parts[0] == "q"
 
 
+def html_rel_href(from_file: str, to_site_rel: str) -> str:
+    """HTML 文書 from_file から site 相対 to_site_rel への相対 href。"""
+    to = to_site_rel.lstrip("/")
+    if to.startswith("..") or "://" in to:
+        return to_site_rel
+    from_s = [p for p in from_file.split("/") if p]
+    to_s = [p for p in to.split("/") if p]
+    if from_s == to_s:
+        return to_s[-1]
+    from_dir = from_s[:-1] if from_s and from_s[-1].endswith(".html") else from_s
+    to_dir = to_s[:-1] if to_s and to_s[-1].endswith(".html") else to_s
+    if from_dir == to_dir and to_s:
+        return to_s[-1]
+    if to_s == ["index.html"] and not to_dir:
+        if not from_dir:
+            return "index.html"
+        return "/".join([".."] * len(from_dir) + ["index.html"])
+    i = 0
+    while i < len(from_dir) and i < len(to_dir) and from_dir[i] == to_dir[i]:
+        i += 1
+    if i == 0 and len(to_s) == 1:
+        ups = len(from_dir)
+    else:
+        ups = len(from_dir) - i
+    downs = to_s[i:]
+    out = "/".join([".."] * ups + downs)
+    return out or "."
+
+
 def footer_href(rel_path: Path, site_rel: str) -> str:
     """rel_path: ROOT からの相対パス（例 q/past/y2025/q01/index.html）。site_rel: index.html / q/index.html 等。"""
     site_rel = site_rel.lstrip("/")
+    if site_rel.startswith(".."):
+        return site_rel
     parent = rel_path.parent
     parts = parent.parts
     if parent.as_posix() == "q" and site_rel == "q/index.html":
         return "index.html"
-    if site_rel == "terms/index.html" and parts and parts[0] == "terms":
-        if len(parts) == 1:
-            return "index.html"
-        return "/".join([".."] * (len(parts) - 1)) + "/index.html"
     if parts and parts[0] == "terms" and len(parts) == 1 and site_rel.startswith("field-") and site_rel.endswith("/index.html"):
         return site_rel
-    if len(parts) >= 3 and parts[0] == "q" and parts[1] == "past" and site_rel == "q/index.html":
-        prefix = "/".join([".."] * (len(parts) - 1))
-        return prefix + "/index.html"
+    if parts and parts[0] == "q" and site_rel.startswith("q/"):
+        q_rel = site_rel[2:]
+        depth = len(parts) - 1
+        prefix = "/".join([".."] * depth)
+        return f"{prefix}/{q_rel}" if prefix else q_rel
     if (
         len(parts) >= 4
         and parts[0] == "q"
@@ -133,18 +165,7 @@ def footer_href(rel_path: Path, site_rel: str) -> str:
     ):
         up = len(parts) - 3
         return ("/".join([".."] * up) + "/index.html") if up else "index.html"
-    if parts and parts[0] == "q" and site_rel.startswith("q/"):
-        q_rel = site_rel[2:]
-        depth = len(parts) - 1
-        prefix = "/".join([".."] * depth)
-        return f"{prefix}/{q_rel}" if prefix else q_rel
-    up = len(parts)
-    if len(parts) >= 3 and parts[0] == "q" and parts[1] == "past" and site_rel.startswith("q/") and site_rel.count("/") == 1:
-        up = len(parts) - 1
-    prefix = "/".join([".."] * up)
-    if not prefix:
-        return site_rel
-    return prefix + "/" + site_rel
+    return html_rel_href(rel_path.as_posix(), site_rel)
 
 
 def analytics_snippet(rel_path: Path) -> str:
@@ -156,6 +177,48 @@ def analytics_snippet(rel_path: Path) -> str:
         f'<script>window.__GA4_MEASUREMENT_ID__="{mid}";</script>\n'
         f'<script defer src="{src}"></script>'
     )
+
+
+def static_q_site_header(*, root_href: str, breadcrumb_items: list[tuple[str, str | None]]) -> str:
+    """CSV 未配置時の q/index プレースホルダー用（宅建マスター互換）。"""
+    lis: list[str] = []
+    for text, href in breadcrumb_items:
+        if href:
+            lis.append(f'<li><a href="{html.escape(href)}">{html.escape(text)}</a></li>')
+        else:
+            lis.append(f'<li aria-current="page">{html.escape(text)}</li>')
+    crumbs = "\n      ".join(lis)
+    return f"""<header class="q-static-header">
+  <p class="q-static-brand"><a href="{html.escape(root_href)}">{html.escape(brand_name())}</a>（{html.escape(exam_name())}）</p>
+  <nav aria-label="パンくず">
+    <ol class="q-breadcrumb">
+      {crumbs}
+    </ol>
+  </nav>
+</header>"""
+
+
+def static_q_footer_block(rel_path: Path) -> str:
+    """CSV 未配置時の q/index プレースホルダー用フッター + GA4。"""
+
+    def h(dest: str) -> str:
+        return html.escape(footer_href(rel_path, dest))
+
+    return f"""<footer class="q-static-footer">
+  <nav class="q-static-footer-nav" aria-label="サイトの他ページ">
+    <a href="{h("index.html")}">トップ</a>
+    <a href="{h("about.html")}">このサイトについて</a>
+    <a href="{h("q/index.html")}">過去問一覧</a>
+    <a href="{h("terms/index.html")}">用語集</a>
+    <a href="{h("articles/index.html")}">試験ガイド</a>
+    <a href="{h("related-sites.html")}">関連リンク</a>
+    <a href="{h("privacy.html")}">プライバシー</a>
+    <a href="{html.escape(FORM_URL)}" target="_blank" rel="noopener noreferrer">お問い合わせ</a>
+  </nav>
+  <p><small>{html.escape(FOOTER_DISCLAIMER)}</small></p>
+  <p><small>{html.escape(SITE_COPYRIGHT)}</small></p>
+</footer>
+{analytics_snippet(rel_path)}"""
 
 
 def _breadcrumb_ol(rel_path: Path, items: list[tuple[str, str | None]]) -> str:
@@ -180,7 +243,7 @@ def _topnav_logo(rel_path: Path) -> str:
     name = html.escape(brand_name())
     exam = html.escape(exam_name())
     return f"""<a class="topnav-logo" href="{root}" aria-label="{name}、{exam}対策のトップへ">
-          <div class="topnav-logo-mark" title="{name}">{mark}</div>
+          <div class="topnav-logo-mark" title="サービス略称（差し替え）">{mark}</div>
           <span class="topnav-logo-stack">
             <span class="topnav-logo-text">{name}</span>
             <span class="topnav-logo-sub">{exam}</span>
@@ -189,14 +252,9 @@ def _topnav_logo(rel_path: Path) -> str:
 
 
 def _learning_nav_href(rel_path: Path, dest: str) -> str:
-    """学習ナビのリンク先（#hash は index.html 基準、それ以外は site 相対パス）。"""
+    """学習ナビのリンク先（#hash は SPA トップ、それ以外は site 相対パス）。"""
     if dest.startswith("#"):
-        return footer_href(rel_path, "index.html") + dest
-    if dest.startswith("q/") and _in_q_section(rel_path):
-        q_rel = dest[2:]
-        depth = len(rel_path.parent.parts) - 1
-        prefix = "/".join([".."] * depth)
-        return f"{prefix}/{q_rel}" if prefix else q_rel
+        return "/" + dest
     return footer_href(rel_path, dest)
 
 
@@ -205,10 +263,7 @@ def _learning_nav_links(rel_path: Path, *, current: str | None = None) -> str:
     active_id = LEARNING_NAV_ACTIVE_BY_PAGE.get(current or "")
     links: list[str] = []
     for nav_id, label, dest, icon in LEARNING_NAV_ITEMS:
-        link_dest = dest
-        if nav_id == "tnav-past" and _in_q_section(rel_path):
-            link_dest = "q/index.html"
-        href = html.escape(_learning_nav_href(rel_path, link_dest))
+        href = html.escape(_learning_nav_href(rel_path, dest))
         active = nav_id == active_id
         cls = "topnav-link active" if active else "topnav-link"
         cur = ' aria-current="page"' if active else ""
@@ -255,7 +310,10 @@ def site_shell_footer(
     title = html.escape(f"{brand_name()}（{exam_name()}対策）トップへ")
     links: list[str] = []
     for label, dest, key in SITE_FOOTER_NAV:
-        is_current = bool(current and key == current)
+        suppress_footer_current = bool(
+            current and key == current and key in FOOTER_SUPPRESS_CURRENT_WHEN_HEADER
+        )
+        is_current = bool(current and key == current and not suppress_footer_current)
         cur = ' aria-current="page"' if is_current else ""
         if dest.startswith("http"):
             href = dest
@@ -273,7 +331,7 @@ def site_shell_footer(
     <div class="site-footer-scroll">
       <div class="site-footer-inner">
         <a class="site-footer-brand" href="{root}" title="{title}">
-          <span class="site-footer-logo-mark" title="{name}">{mark}</span>
+          <span class="site-footer-logo-mark" title="サービス略称（差し替え）">{mark}</span>
           <span class="site-footer-site-name">{name}</span>
         </a>
         <span class="site-footer-sep" aria-hidden="true"></span>

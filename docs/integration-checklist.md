@@ -79,6 +79,59 @@ python3 tools/import_base_questions_to_ichimon_csv.py --keep-manual
 python3 tools/build_all.py
 ```
 
+### 1.6 HTML 図解（用語・問題解説）
+
+| 項目 | 正 |
+|------|-----|
+| **データ** | `data/term_diagrams/{id}.json` |
+| **参照** | CSV 任意列 `diagram_id`（用語・過去問・実践・一問一答） |
+| **公開形態** | **記事内埋め込み**（図解専用の本番 URL は作らない） |
+| **用語** | `build_glossary_pages.py` → 定義の直後 |
+| **問題** | 契約のみ（[term-diagrams.md](./term-diagrams.md) §6）。未実装時は CSV に ID を書かない |
+| **同期** | `tools/term_diagram.py`, `site-pages.css`, 関連 `build_*.py` はマニフェスト対象 |
+| **検証** | `validate_csv.py` … 存在しない `diagram_id` は ERROR |
+| **デザイン** | `site-pages.css` の `.term-diagram-*` のみ（[term-diagrams.md](./term-diagrams.md) §6）。インライン色・サイト別 CSS 分叉は禁止 |
+
+### 1.7 ヘッダー・フッター（Site chrome）
+
+| 項目 | 正 |
+|------|-----|
+| **生成** | ヘッダー `site_page_header()`、フッター `site_page_footer()` のみ（[site-chrome.md](./site-chrome.md)） |
+| **手書き topnav 禁止** | 生成 `q/`・`terms/`・`articles/` および apply 対象静的 HTML |
+| **ヘッダー `current`** | active は `terms` / `practice` / `ichimon` のみ。**`q` は active にしない**（過去問一覧はフッター専用） |
+| **フッター `current`** | `site-config.json` の `footer[].key` と一致 |
+| **混同注意** | ヘッダー「過去問」= **`/#past`（SPA 演習）**。フッター「過去問一覧」= **`q/index.html`（静的一覧）**。別コンテンツ（[site-chrome.md](./site-chrome.md) §3） |
+| **検証** | `validate_site_integration.py` … chrome + **`tnav-past` → `/#past`** |
+
+新規サイト: `build_all` のみ。既存サイト: テンプレ同期 → 本番 `build_all`。ヘッダー構造の変更は `html_footer.py` 1 か所。
+
+### 1.8 レスポンシブ UI
+
+| 項目 | 正 |
+|------|-----|
+| **CSS 正本** | 静的 → `site-pages.css`（§「全ページ共通レスポンシブ」）。SPA → `index.html` インライン |
+| **viewport** | 全公開 HTML: `width=device-width, initial-scale=1.0` |
+| **CSS リンク** | 静的ページ: `site-pages.css` + `site-theme.css`（`apply_site_config`） |
+| **モバイル閾値** | 静的 **≤760px** / SPA **≤700px**（[responsive-layout.md](./responsive-layout.md) §2） |
+| **表** | `.seo-info-table` はモバイルでカード化。データ表は横スクロール |
+| **禁止** | サイト別 `*-mobile.css`、旧 `site-page-header` |
+| **検証** | `validate_site_integration.py` … CSS 行数・レスポンシブ節・viewport |
+| **目視** | 375px / 768px … [responsive-layout.md §6.2](./responsive-layout.md) |
+
+非レスポンシブサイトの典型: **旧 `site-pages.css`（~1.6k 行）未同期** → `sync_from_template` + `build_all`。
+
+### 1.9 知識ハブ3種（比較・数値・誤答）の拡充
+
+| 項目 | 正 |
+|------|-----|
+| **本番目標** | **各 50〜100 件**（`comparisons.csv` / `numbers.csv` / `mistakes.csv`） |
+| **新規作成** | `scaffold_knowledge_hub_article.py --append` → 執筆 → `build_glossary_pages.py` |
+| **正本** | [knowledge-hub-article-templates.md](./knowledge-hub-article-templates.md) |
+| **検証** | `validate_csv.py` + `tools/knowledge_hub_rules.py` |
+| **Cursor** | `.cursor/rules/knowledge-hub-content.mdc` |
+
+50 件未満は WARN（ビルドは通る）。`related_terms` 未登録・JSON 不正は ERROR。
+
 ---
 
 ## 2. テンプレで直す手順（標準・1コマンド）
@@ -121,6 +174,7 @@ python3 tools/validate_site_integration.py
 | `/q/practice/index.html` | タブから過去問ハブへ遷移 |
 | `/terms/index.html` | 定義列が JS 適用後も非空 |
 | `/` | フッター「過去問一覧」→ `/q/index.html`（実践ではない） |
+| **375px 幅** | `/`, `articles/index.html`, `terms/index.html`, `q/index.html` … 横スクロールなし（[responsive-layout.md §6.2](./responsive-layout.md)） |
 
 ---
 
