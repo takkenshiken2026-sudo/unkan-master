@@ -345,6 +345,7 @@ PATTERN_TEMPLATE_MARKERS = (
 def _mistake_pair_terms(row: dict[str, str]) -> tuple[str, str]:
     title = _strip_angle_suffix(row.get("title", ""))
     terms = _topic_terms(row)
+    slug = row.get("slug", "")
     if "：" in title:
         _, tail = title.split("：", 1)
         for suffix in ("の混同誤り", "の典型誤答", "の混同", "の誤り", "の誤認"):
@@ -355,9 +356,17 @@ def _mistake_pair_terms(row: dict[str, str]) -> tuple[str, str]:
             left, right = left.strip(), right.strip()
             if left and right and left != right:
                 return left, right
+    core = _core_topic(_clean_public_title(title))
+    related = [x.strip() for x in (row.get("related_terms") or "").split(";") if x.strip()]
+    if core:
+        pool = [t for t in related if t and t != core]
+        if not pool:
+            pool = [t for t in terms if t and t != core]
+        if pool:
+            alt = pool[_variant_index(slug, len(pool))]
+            return core, alt
     if len(terms) >= 2 and terms[0] != terms[1]:
         return terms[0], terms[1]
-    core = _core_topic(title)
     alt = terms[0] if terms and terms[0] != core else f"{core}の関連制度"
     return core, alt
 
@@ -1094,13 +1103,13 @@ def _dedupe_compare_titles(rows: list[dict[str, str]]) -> None:
             label = _reader_disambig(row, slug)
             if "：" in base:
                 head, tail = base.split("：", 1)
-                tail = tail.replace("の比較", "").strip()
+                tail = _core_topic(tail) or tail.strip()
                 if label and label not in tail and label != head:
                     new_base = f"{head}：{label}と{tail}の比較"
                 else:
                     new_base = base if base.endswith("比較") else f"{base}の比較"
             else:
-                topic = base.replace("の比較", "").strip() or base
+                topic = _core_topic(base) or base
                 new_base = f"{topic}：{label}の比較"
             row["title"] = f"{new_base}（{angle}）"
             _apply_compare_batch_angle(row)
@@ -1303,6 +1312,24 @@ def _resolve_title_collisions(rows: list[dict[str, str]]) -> None:
                 row["title"] = f"{title}（{label}）"
 
 
+def _dedupe_mistake_confusion(rows: list[dict[str, str]]) -> None:
+    by_batch: dict[int, list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        batch = _batch_num(row.get("slug", ""))
+        if batch is not None and batch >= 35 and "confusion_point" in row:
+            by_batch[batch].append(row)
+    for batch_rows in by_batch.values():
+        seen: set[str] = set()
+        for row in batch_rows:
+            cp = (row.get("confusion_point") or "").strip()
+            if cp in seen:
+                topic = _core_topic(_clean_public_title(_strip_angle_suffix(row.get("title", ""))))
+                angle = ANGLE_BY_BATCH.get(_batch_num(row.get("slug", "")) or 0, "試験頻出")
+                row["confusion_point"] = _confusion_for_row(row, topic, angle)
+                cp = (row.get("confusion_point") or "").strip()
+            seen.add(cp)
+
+
 def diversify_hub_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     _resolve_title_collisions(rows)
     for row in rows:
@@ -1312,4 +1339,5 @@ def diversify_hub_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     _dedupe_compare_titles(rows)
     _dedupe_mistake_titles(rows)
     _dedupe_numbers_titles(rows)
+    _dedupe_mistake_confusion(rows)
     return rows
