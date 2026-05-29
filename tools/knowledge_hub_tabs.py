@@ -66,8 +66,10 @@ def knowledge_hub_tabs_html(*, current: str, **hrefs: str) -> str:
 
     note = (
         '<p class="q-study-modes-note">'
-        "用語の意味確認、似た制度の比較、数値・期限の早見、よくある誤答の確認を、このセクションでまとめて行えます。"
-        "タブから他のコンテンツへ移動できます。"
+        "知識ハブでは、用語の意味・似た制度の比較・数値・誤答パターンなど<strong>試験の知識</strong>を調べられます。"
+        "学習計画や申込手続きなど<strong>進め方</strong>は"
+        '<a href="../articles/index.html">試験ガイド</a>をご覧ください。'
+        "タブから各コンテンツへ移動できます。"
         "</p>"
     )
     nav = (

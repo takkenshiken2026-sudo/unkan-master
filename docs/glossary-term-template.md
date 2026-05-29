@@ -3,6 +3,7 @@
 `data/glossary_terms.csv` の1行から `terms/g-*.html` が生成されます。**本番では全用語を詳細記事として公開**します（定義1行だけの薄いページは不可）。
 
 - SEO・公開境界の正本: [seo-article-guidelines.md](./seo-article-guidelines.md)
+- **試験ガイドと用語解説の立ち位置:** [content-positioning.md](./content-positioning.md)
 - **編集品質（専門家×プロライター）:** [editorial-quality.md](./editorial-quality.md)
 - 品質監査: `python3 tools/audit_glossary_article_quality.py`
 - 演習 DB からの自動充填: `python3 tools/enrich_o4_glossary_details.py`
@@ -55,15 +56,16 @@ python3 tools/enrich_o4_glossary_details.py
 6. まず押さえる要点（`short_def`）
 7. 試験で押さえるポイント（`exam_points`）
 8. 定義と基本理解（`term_detail_body` + `related_terms` 混同比較表）
-9. 法令・根拠（`legal_basis`、値がある場合のみ）
-10. 選択肢で問われやすい点（`explanation`）
-11. よくある誤解・注意点（`common_mistakes`）
-12. 覚え方・整理のコツ（`memory_tip`）
-13. 例題で確認（`example_question` / `example_answer`）
-14. よくある質問（`faq_1` 〜 `faq_4` **必須・4件**）
-15. 記事の基本情報
-16. 公式情報の確認
-17. 関連用語・次に確認するページ
+9. **図解で理解する**（任意 — CSV の `diagram_id` → [term-diagrams.md](./term-diagrams.md)）
+10. 法令・根拠（`legal_basis`、値がある場合のみ）
+11. 選択肢で問われやすい点（`explanation`）
+12. よくある誤解・注意点（`common_mistakes`）
+13. 覚え方・整理のコツ（`memory_tip`）
+14. 例題で確認（`example_question` / `example_answer`）
+15. よくある質問（`faq_1` 〜 `faq_4` **必須・4件**）
+16. 記事の基本情報
+17. 公式情報の確認
+18. 関連用語・次に確認するページ
 
 ---
 

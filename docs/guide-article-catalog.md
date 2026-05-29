@@ -168,26 +168,26 @@
 | field-limit-case-study | 分野別対策 |
 | field-limit-past-question-focus | 分野別対策 |
 
-## 用語整理（6）
+## 用語ハブ活用法（6）
 
 | slug | genre |
 |------|-------|
-| glossary-study-method | 用語整理 |
-| important-terms-list | 用語整理 |
-| confusing-terms | 用語整理 |
-| related-terms-navigation | 用語整理 |
-| terms-with-past-questions | 用語整理 |
-| terms-importance-levels | 用語整理 |
+| glossary-study-method | 用語ハブ活用法 |
+| important-terms-list | 用語ハブ活用法 |
+| confusing-terms | 用語ハブ活用法 |
+| related-terms-navigation | 用語ハブ活用法 |
+| terms-with-past-questions | 用語ハブ活用法 |
+| terms-importance-levels | 用語ハブ活用法 |
 
 ## 数値・計算（5）
 
 | slug | genre |
 |------|-------|
-| numbers-and-deadlines | 用語整理 |
-| formula-memorization | 用語整理 |
-| calculation-drill | 用語整理 |
-| rate-and-percentage | 用語整理 |
-| numeric-trap-choices | 用語整理 |
+| numbers-and-deadlines | 用語ハブ活用法 |
+| formula-memorization | 用語ハブ活用法 |
+| calculation-drill | 用語ハブ活用法 |
+| rate-and-percentage | 用語ハブ活用法 |
+| numeric-trap-choices | 用語ハブ活用法 |
 
 ## 復習・苦手克服（6）
 

@@ -6,6 +6,20 @@
 - 試験ガイド CSV: [guide-article-template.md](./guide-article-template.md)
 - 用語詳細 CSV: [glossary-term-template.md](./glossary-term-template.md)
 - 機械判定: `tools/editorial_quality.py`（共通） / `tools/guide_article_rules.py` / `tools/glossary_term_rules.py`
+- **試験ガイドと用語解説の立ち位置:** [content-positioning.md](./content-positioning.md)
+
+---
+
+## コンテンツの役割分担（試験ガイド vs 用語解説）
+
+| | 試験ガイド | 用語詳細・知識ハブ |
+|---|------------|-------------------|
+| **問い** | どう進めるか | 〇〇とは／違いは |
+| **単位** | 1検索意図（計画・手続） | 1語・1比較・1数値セット |
+| **書くこと** | 手順・計画・演習の回し方 | 定義・試験論点・誤解 |
+| **書かないこと** | 用語の定義を主題にしない | 学習スケジュール・申込手順 |
+
+詳細な振り分け表・内部リンクルールは [content-positioning.md](./content-positioning.md) を参照。
 
 ---
 
@@ -43,7 +57,8 @@
 
 ### 公開ページの役割
 
-検索意図を **1記事1つ** に絞り、制度・手続・学習設計・過去問の使い方など **行動まで落とし込む** 長文記事です。
+検索意図を **1記事1つ** に絞り、制度・手続・学習設計・過去問の使い方など **行動まで落とし込む** 長文記事です。  
+**用語の定義・比較表・数値一覧は知識ハブ（`/terms/`）に書き、ガイドからリンクする** — [content-positioning.md](./content-positioning.md)。
 
 ### 文字数（`content_status` が `published` の行）
 
@@ -77,6 +92,8 @@
 ## 用語詳細（glossary_terms.csv）
 
 ### 全用語が詳細記事（ERROR で強制）
+
+**1用語1ページの辞書記事。** 学習計画・申込手順は試験ガイドへ誘導し、本文に長く書かない — [content-positioning.md](./content-positioning.md)。
 
 | 列 | ERROR（必須） |
 |----|---------------|

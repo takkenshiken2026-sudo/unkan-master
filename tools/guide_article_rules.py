@@ -110,6 +110,14 @@ def check_guide_row(
     if published and len(internal) < 1:
         warn("related_links", "関連記事（内部 slug）を1件以上入れると回遊と専門性の補強になります")
 
+    if published and row.get("genre") == "用語ハブ活用法":
+        for _h, bcol, body in sections:
+            if "terms/" not in body and "用語解説" not in body and len(body) > 200:
+                warn(
+                    bcol,
+                    "用語ハブ活用法ジャンルでは用語の定義よりハブの使い方を書き、terms/ または試験ガイドへの導線を入れてください",
+                )
+
     if not published:
         _ = line
         return issues
