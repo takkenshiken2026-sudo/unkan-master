@@ -235,9 +235,28 @@ def extract_choice_verdict_clauses(
     return out
 
 
+def extract_fullwidth_number_clauses(exp: str) -> dict[int, str]:
+    """１．…２．… 形式を各肢へ割り当て。"""
+    out: dict[int, str] = {}
+    parts = re.split(r"([１２３４５６７８])[．.]", norm(exp))
+    i = 1
+    while i < len(parts) - 1:
+        ch = parts[i]
+        if ch in "１２３４５６７８":
+            num = "１２３４５６７８".index(ch) + 1
+            body = norm(parts[i + 1])
+            if body and len(body) > len(out.get(num, "")):
+                out[num] = body
+        i += 2
+    return out
+
+
 def extract_marker_clauses(exp: str) -> dict[int, str]:
-    """①誤、②正、③の「…」などの直後・直前の句を拾う。"""
+    """①誤、②正、③の「…」、１．…２．… などの直後・直前の句を拾う。"""
     out: dict[int, str] = split_wrong_inline_list(exp)
+    for num, body in extract_fullwidth_number_clauses(exp).items():
+        if body and len(body) > len(out.get(num, "")):
+            out[num] = body
     for m in re.finditer(
         r"([^、。；;]{2,48}?)[（(]([①②③④⑤])\s*誤[）)]",
         exp,
@@ -436,7 +455,12 @@ def polish_note(note: str, n: int, opt: str, correct: int, category: str) -> str
 
 
 def stem_asks_inappropriate(stem: str) -> bool:
-    return "不適切" in stem and "適切" in stem
+    return bool(
+        re.search(
+            r"適切でない|不適切|誤っている|誤りである|正しくない|誤っているもの",
+            stem,
+        )
+    )
 
 
 def law_terms(text: str) -> list[str]:
@@ -607,7 +631,11 @@ def build_row_fields(row: dict) -> tuple[str, str, str]:
 
     wrong_map: dict[int, str] = {}
     correct_opt = texts.get(correct, "")
+    fw_clauses = extract_fullwidth_number_clauses(exp)
     for n in wrong_nums:
+        if fw_clauses.get(n) and len(fw_clauses[n]) >= MIN_WRONG_NOTE_LEN:
+            wrong_map[n] = fw_clauses[n]
+            continue
         parts: list[str] = []
         if re.match(r"^[A-E]", texts[n].strip()):
             combo = combo_choice_note(n, texts[n], exp, correct, correct_opt)
@@ -670,6 +698,9 @@ def build_row_fields(row: dict) -> tuple[str, str, str]:
         if markers.get(correct):
             parts.append(markers[correct])
         parts.extend(buckets.get(correct, []))
+        fw_clause = extract_fullwidth_number_clauses(exp).get(correct, "")
+        if fw_clause:
+            parts.insert(0, fw_clause)
         correct_body = " ".join(dict.fromkeys(parts)) or extract_correct_body(exp, correct)
         if not correct_body:
             correct_body = exp[:500]
