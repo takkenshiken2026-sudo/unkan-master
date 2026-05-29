@@ -73,7 +73,8 @@ from tools.html_footer import (  # noqa: E402
     site_page_wrap_close,
     site_page_wrap_open,
 )
-from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html  # noqa: E402
+from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html
+from tools.knowledge_index_summary import hub_index_summary  # noqa: E402
 from tools.seo_utils import content_date_from_row, meta_updated_html  # noqa: E402
 from tools.site_config import brand_name, exam_name, clean_origin  # noqa: E402
 
@@ -194,10 +195,11 @@ def load_compare_rows() -> list[dict]:
 def compare_index_item_dict(entry: dict) -> dict:
     tags = parse_term_tags(entry.get("tags") or "")
     subjects = " / ".join(entry.get("col_labels") or [])
+    summary = hub_index_summary(entry)
     search_bits = [
         entry["title"],
         entry.get("category") or "",
-        entry.get("summary") or "",
+        summary,
         subjects,
         *tags,
     ]
@@ -205,7 +207,7 @@ def compare_index_item_dict(entry: dict) -> dict:
         "title": entry["title"],
         "category": entry.get("category") or "",
         "tags": tags,
-        "summary": entry.get("summary") or "",
+        "summary": summary,
         "subjects": subjects,
         "href": compare_index_href(entry["slug_file"]),
         "search": " ".join(x for x in search_bits if x),
@@ -218,7 +220,7 @@ def render_compare_index_tbody(entries: list[dict]) -> str:
     for item in items:
         href = html.escape(compare_index_href(item["slug_file"]))
         href_attr = f' data-entry-href="{href}"'
-        summary = html.escape(item.get("summary") or "")
+        summary = html.escape(hub_index_summary(item))
         rows.append(
             "<tr class=\"terms-idx-table-row compare-idx-table-row\">"
             f'<td class="terms-idx-td-term compare-idx-td-title" data-label="項目"{href_attr} tabindex="0">'

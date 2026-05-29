@@ -737,14 +737,14 @@ def raw_to_seed(raw: tuple) -> dict:
     }
 
 
-def main() -> int:
+def deduped_raw_terms() -> list[tuple]:
+    """全分野の用語シード（用語名で重複除去済み）。"""
     all_raw = list(TERMS_RAW)
     all_raw.extend(vehicle_terms())
     all_raw.extend(traffic_terms())
     all_raw.extend(labor_terms())
     all_raw.extend(practice_terms())
 
-    # dedupe by term name
     seen: set[str] = set()
     deduped: list[tuple] = []
     for r in all_raw:
@@ -752,6 +752,11 @@ def main() -> int:
             continue
         seen.add(r[0])
         deduped.append(r)
+    return deduped
+
+
+def main() -> int:
+    deduped = deduped_raw_terms()
 
     seeds = [raw_to_seed(r) for r in deduped]
     term_names = [s["term"] for s in seeds]

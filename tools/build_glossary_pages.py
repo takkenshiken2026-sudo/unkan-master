@@ -35,6 +35,7 @@ from tools.html_footer import (
     site_page_wrap_open,
 )
 from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html
+from tools.knowledge_index_summary import glossary_index_definition, load_glossary_seed_map
 from tools.site_config import (
     brand_name,
     category_order,
@@ -260,31 +261,23 @@ def _is_generic_index_snippet(text: str, term: str) -> bool:
     return any(t.endswith(suffix) for suffix in _GENERIC_SNIPPET_SUFFIXES)
 
 
+_GLOSSARY_SEED_MAP: dict[str, dict] | None = None
+
+
+def _glossary_seed_lookup() -> dict[str, dict]:
+    global _GLOSSARY_SEED_MAP
+    if _GLOSSARY_SEED_MAP is None:
+        try:
+            _GLOSSARY_SEED_MAP = load_glossary_seed_map()
+        except Exception:
+            _GLOSSARY_SEED_MAP = {}
+    return _GLOSSARY_SEED_MAP
+
+
 def terms_index_snippet(entry: dict) -> str:
-    """一覧・検索用の定義抜粋。enrich テンプレ文は definition から実義を拾う。"""
-    term = (entry.get("term") or "").strip()
-    short = (entry.get("short_def") or "").strip()
-    definition = (entry.get("definition") or "").strip()
-
-    if definition:
-        m = re.search(r"まず「([^」]+)」", definition)
-        if m:
-            clause = m.group(1).strip()
-            if clause and not _is_generic_index_snippet(clause, term):
-                if clause.startswith(term):
-                    return clause if clause.endswith("。") else f"{clause}。"
-                body = clause.rstrip("。")
-                return f"{term}は、{body}。" if body else short
-
-    if short and not _is_generic_index_snippet(short, term):
-        return short
-
-    if definition:
-        for part in re.split(r"(?<=[。！？])", definition):
-            part = part.strip()
-            if part and part != short and not _is_generic_index_snippet(part, term):
-                return part[:200]
-    return short
+    """一覧・検索用の定義。詳細記事の定義・出題ポイントから要約（テンプレ文は除外）。"""
+    seed = _glossary_seed_lookup().get((entry.get("term") or "").strip())
+    return glossary_index_definition(entry, seed=seed)
 
 
 def render_terms_index_tbody(entries: list[dict]) -> str:

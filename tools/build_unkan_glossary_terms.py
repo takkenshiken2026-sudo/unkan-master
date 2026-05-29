@@ -120,19 +120,29 @@ def _normalize_example_answer(answer: str) -> str:
 
 
 def _normalize_short_def(short_def: str, term: str) -> str:
+    text = (short_def or "").strip()
+    if len(text) >= 12 and "運行管理者試験（貨物）で押さえる" not in text:
+        return text if text.endswith("。") else f"{text}。"
     return _ensure_min(
         short_def,
         12,
-        f"運行管理者試験（貨物）で押さえる{term}の要点",
+        f"{term}の意味と試験での押さえ方。",
     )
 
 
 def _normalize_definition(definition: str, term: str, category: str) -> str:
-    return _ensure_min(
-        definition,
-        50,
-        f"{term}は「{category}」の重要論点として、条文・告示・実務のいずれかで位置づけられる。",
-    )
+    text = (definition or "").strip()
+    tail = f"{term}は「{category}」の重要論点として、条文・告示・実務のいずれかで位置づけられる。"
+    if len(text) >= 50 and tail not in text:
+        return text if text.endswith("。") else f"{text}。"
+    if text and tail not in text:
+        pad = tail
+        if not text.endswith("。"):
+            text += "。"
+        combined = text + pad
+        if len(combined) >= 50:
+            return combined
+    return _ensure_min(definition, 50, tail)
 
 
 def _normalize_common_mistakes(common_mistakes: str, term: str) -> str:

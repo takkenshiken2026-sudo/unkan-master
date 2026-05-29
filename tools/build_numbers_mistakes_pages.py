@@ -73,7 +73,8 @@ from tools.html_footer import (  # noqa: E402
     site_page_wrap_close,
     site_page_wrap_open,
 )
-from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html  # noqa: E402
+from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html
+from tools.knowledge_index_summary import hub_index_summary  # noqa: E402
 from tools.seo_utils import content_date_from_row, meta_updated_html  # noqa: E402
 from tools.site_config import brand_name, clean_origin, exam_name  # noqa: E402
 
@@ -230,7 +231,7 @@ def hub_index_href(spec: HubSpec, slug_file: str) -> str:
 
 def hub_index_item_dict(spec: HubSpec, entry: dict) -> dict:
     tags = parse_term_tags(entry.get("tags") or "")
-    summary = entry.get("summary") or ""
+    summary = hub_index_summary(entry)
     detail = entry.get(spec.index_detail_field) or ""
     search_bits = [entry["title"], entry.get("category") or "", summary, detail, *tags]
     return {
@@ -302,7 +303,7 @@ def render_index_tbody(spec: HubSpec, entries: list[dict]) -> str:
     for item in items:
         href = html.escape(hub_index_href(spec, item["slug_file"]))
         href_attr = f' data-entry-href="{href}"'
-        summary = html.escape(item.get("summary") or "")
+        summary = html.escape(hub_index_summary(item))
         rows.append(
             f'<tr class="terms-idx-table-row {spec.index_table_class}-row">'
             f'<td class="terms-idx-td-term {spec.index_table_class}-td-title" data-label="{html.escape(spec.index_col1)}"{href_attr} tabindex="0">'
