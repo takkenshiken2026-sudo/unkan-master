@@ -9,9 +9,9 @@ from dataclasses import dataclass
 
 from tools.editorial_quality import placeholder_issues, split_semicolon
 
-# 本番ボリューム目標（各 CSV 独立）
-HUB_PRODUCTION_TARGET_MIN = 50
-HUB_PRODUCTION_TARGET_MAX = 100
+# 本番ボリューム目標（各 CSV 独立）— S30〜S44 展開後は 150 件/種
+HUB_PRODUCTION_TARGET_MIN = 150
+HUB_PRODUCTION_TARGET_MAX = 153
 
 HUB_LABELS: dict[str, str] = {
     "compare": "比較・整理表",
