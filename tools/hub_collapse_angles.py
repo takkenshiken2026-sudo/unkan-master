@@ -10,9 +10,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from tools.hub_diversify_content import ANGLE_BY_BATCH
+from tools.hub_diversify_content import ANGLE_BY_BATCH, BATCH_EARLY_LABEL
 
-ANGLE_LABELS = frozenset(ANGLE_BY_BATCH.values())
+ANGLE_LABELS = frozenset(ANGLE_BY_BATCH.values()) | frozenset(BATCH_EARLY_LABEL.values())
+MIN_ANGLE_COLLAPSE_BATCH = 31
 BATCH_SLUG_PREFIX = re.compile(r"^s(\d+)-")
 BATCH_SLUG_SUFFIX = re.compile(r"-s(\d+)$")
 TEMPLATE_SUMMARY_MARKERS = (
@@ -32,7 +33,7 @@ def batch_number(slug: str) -> int | None:
 
 def topic_group_key(slug: str) -> str | None:
     b = batch_number(slug)
-    if b is None or b < 35:
+    if b is None or b < MIN_ANGLE_COLLAPSE_BATCH:
         return None
     if BATCH_SLUG_PREFIX.match(slug):
         return BATCH_SLUG_PREFIX.sub("", slug)

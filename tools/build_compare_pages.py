@@ -66,6 +66,7 @@ from tools.knowledge_hub_seo import (
 )
 from tools.html_footer import (  # noqa: E402
     ROBOTS_INDEX_FOLLOW,
+    analytics_snippet,
     breadcrumb_html,
     shell_body_class,
     site_page_footer,
@@ -73,16 +74,16 @@ from tools.html_footer import (  # noqa: E402
     site_page_wrap_close,
     site_page_wrap_open,
 )
-from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html
-from tools.knowledge_index_summary import hub_index_summary  # noqa: E402
+from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html  # noqa: E402
 from tools.seo_utils import content_date_from_row, meta_updated_html  # noqa: E402
+from tools.hub_collapse_angles import redirect_page_html  # noqa: E402
 from tools.site_config import brand_name, exam_name, clean_origin  # noqa: E402
 
 COMPARE_CSV = ROOT / "data" / "comparisons.csv"
 COMPARE_DIR = ROOT / "terms" / "compare"
 BASE_DEFAULT = clean_origin()
 
-COMPARE_INDEX_JS_VER = "20260529-compare-columns"
+COMPARE_INDEX_JS_VER = "20260527-compare-index"
 COMPARE_INDEX_SEARCH_PLACEHOLDER = "例：過去問、模擬試験、公式情報…"
 PRESERVED_COMPARE_GLOB = "c-*.html"
 
@@ -195,11 +196,10 @@ def load_compare_rows() -> list[dict]:
 def compare_index_item_dict(entry: dict) -> dict:
     tags = parse_term_tags(entry.get("tags") or "")
     subjects = " / ".join(entry.get("col_labels") or [])
-    summary = hub_index_summary(entry)
     search_bits = [
         entry["title"],
         entry.get("category") or "",
-        summary,
+        entry.get("summary") or "",
         subjects,
         *tags,
     ]
@@ -207,7 +207,7 @@ def compare_index_item_dict(entry: dict) -> dict:
         "title": entry["title"],
         "category": entry.get("category") or "",
         "tags": tags,
-        "summary": summary,
+        "summary": entry.get("summary") or "",
         "subjects": subjects,
         "href": compare_index_href(entry["slug_file"]),
         "search": " ".join(x for x in search_bits if x),
@@ -220,7 +220,7 @@ def render_compare_index_tbody(entries: list[dict]) -> str:
     for item in items:
         href = html.escape(compare_index_href(item["slug_file"]))
         href_attr = f' data-entry-href="{href}"'
-        summary = html.escape(hub_index_summary(item))
+        summary = html.escape(item.get("summary") or "")
         rows.append(
             "<tr class=\"terms-idx-table-row compare-idx-table-row\">"
             f'<td class="terms-idx-td-term compare-idx-td-title" data-label="項目"{href_attr} tabindex="0">'
@@ -650,13 +650,33 @@ def glossary_term_lookup() -> dict[str, str]:
     return make_term_lookup(entries)
 
 
+def load_compare_redirects() -> dict[str, str]:
+    raw_path = ROOT / "data" / "hub_redirects.json"
+    if not raw_path.is_file():
+        return {}
+    try:
+        raw = json.loads(raw_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    section = raw.get("compare") if isinstance(raw.get("compare"), dict) else {}
+    return {str(k): str(v) for k, v in section.items()}
+
+
 def build_all(*, base_url: str = BASE_DEFAULT) -> int:
     entries = load_compare_rows()
     term_lookup = glossary_term_lookup()
     guides = load_guide_slugs()
+    redirects = load_compare_redirects()
 
     COMPARE_DIR.mkdir(parents=True, exist_ok=True)
-    for stale in COMPARE_DIR.glob(PRESERVED_COMPARE_GLOB):
+    canonical_files = {entry["slug_file"] for entry in entries}
+    redirect_files = {f"{old}.html" for old in redirects}
+
+    for stale in COMPARE_DIR.glob("*.html"):
+        if stale.name == "index.html":
+            continue
+        if stale.name in canonical_files or stale.name in redirect_files:
+            continue
         stale.unlink()
 
     for entry in entries:
@@ -667,12 +687,27 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
             encoding="utf-8",
         )
 
+    for old_slug, new_slug in redirects.items():
+        target = f"{new_slug}.html"
+        out_file = COMPARE_DIR / f"{old_slug}.html"
+        rel_path = out_file.relative_to(ROOT)
+        out_file.write_text(
+            redirect_page_html(
+                target,
+                title=old_slug,
+                analytics_html=analytics_snippet(rel_path),
+            ),
+            encoding="utf-8",
+        )
+
     (COMPARE_DIR / "index.html").write_text(
         build_compare_index(entries, base_url),
         encoding="utf-8",
     )
 
     print(f"Wrote {len(entries)} compare pages under {COMPARE_DIR}")
+    if redirects:
+        print(f"Wrote {len(redirects)} compare redirect pages under {COMPARE_DIR}")
     print(f"Wrote {COMPARE_DIR / 'index.html'}")
     return len(entries)
 

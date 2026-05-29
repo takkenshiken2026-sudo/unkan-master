@@ -8,6 +8,7 @@ import json
 from collections import defaultdict
 
 from tools.hub_collapse_angles import (
+    MIN_ANGLE_COLLAPSE_BATCH,
     _merge_compare_rows,
     _merge_confusion,
     _merge_summary,
@@ -179,7 +180,7 @@ def nuance_from_slug(slug: str) -> str | None:
 
 def series_slug_key(slug: str) -> str | None:
     b = batch_number(slug)
-    if b is None or b < 35:
+    if b is None or b < MIN_ANGLE_COLLAPSE_BATCH:
         return None
     stem = _slug_stem(slug)
     nuance = nuance_from_slug(slug)
