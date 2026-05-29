@@ -139,7 +139,7 @@
 <td class="terms-idx-td-term" data-label="用語"${hrefAttr} tabindex="0"><div class="terms-idx-term-cell"><a href="${escapeHtml(href)}">${highlightText(item.term, query)}</a></div></td>
 <td class="terms-idx-td-importance" data-label="重要度"${hrefAttr}>${importanceBadge(item)}</td>
 <td class="terms-idx-td-cat" data-label="分野"${hrefAttr}>${escapeHtml(item.category)}</td>
-<td class="terms-idx-td-snippet" data-label="定義（抜粋）"${hrefAttr}>${item.shortDef ? highlightText(item.shortDef, query) : ''}</td>
+<td class="terms-idx-td-snippet" data-label="定義"${hrefAttr}>${item.shortDef ? highlightText(item.shortDef, query) : ''}</td>
 </tr>`;
   }
 

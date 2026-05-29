@@ -78,7 +78,7 @@ from tools.seo_utils import content_date_from_row, meta_updated_html  # noqa: E4
 from tools.site_config import brand_name, clean_origin, exam_name  # noqa: E402
 
 BASE_DEFAULT = clean_origin()
-HUB_INDEX_JS_VER = "20260527-knowledge-hub-index"
+HUB_INDEX_JS_VER = "20260529-knowledge-hub-columns"
 
 
 @dataclass(frozen=True)
@@ -230,14 +230,14 @@ def hub_index_href(spec: HubSpec, slug_file: str) -> str:
 
 def hub_index_item_dict(spec: HubSpec, entry: dict) -> dict:
     tags = parse_term_tags(entry.get("tags") or "")
-    detail = entry.get(spec.index_detail_field) or entry.get("summary") or ""
-    search_bits = [entry["title"], entry.get("category") or "", entry.get("summary") or "", detail, *tags]
+    summary = entry.get("summary") or ""
+    detail = entry.get(spec.index_detail_field) or ""
+    search_bits = [entry["title"], entry.get("category") or "", summary, detail, *tags]
     return {
         "title": entry["title"],
         "category": entry.get("category") or "",
         "tags": tags,
-        "summary": entry.get("summary") or "",
-        "subjects": detail,
+        "summary": summary,
         "href": hub_index_href(spec, entry["slug_file"]),
         "search": " ".join(x for x in search_bits if x),
     }
@@ -302,13 +302,13 @@ def render_index_tbody(spec: HubSpec, entries: list[dict]) -> str:
     for item in items:
         href = html.escape(hub_index_href(spec, item["slug_file"]))
         href_attr = f' data-entry-href="{href}"'
-        detail = html.escape(item.get(spec.index_detail_field) or item.get("summary") or "")
+        summary = html.escape(item.get("summary") or "")
         rows.append(
             f'<tr class="terms-idx-table-row {spec.index_table_class}-row">'
             f'<td class="terms-idx-td-term {spec.index_table_class}-td-title" data-label="{html.escape(spec.index_col1)}"{href_attr} tabindex="0">'
             f'<div class="terms-idx-term-cell"><a href="{href}">{html.escape(item["title"])}</a></div></td>'
             f'<td class="terms-idx-td-cat" data-label="分野"{href_attr}>{html.escape(item.get("category") or "")}</td>'
-            f'<td class="terms-idx-td-snippet {spec.index_table_class}-td-detail" data-label="{html.escape(spec.index_col3)}"{href_attr}>{detail}</td>'
+            f'<td class="terms-idx-td-snippet {spec.index_table_class}-td-detail" data-label="{html.escape(spec.index_col3)}"{href_attr}>{summary}</td>'
             "</tr>"
         )
     return "\n".join(rows)
@@ -689,7 +689,7 @@ NUMBERS_SPEC = HubSpec(
     article_body_class="numbers-article-page",
     hub_label="数値・期限早見表",
     index_col1="項目",
-    index_col3="代表的な数値・期限",
+    index_col3="概要",
     index_detail_field="highlight",
     search_placeholder="例：8日、20%、30年、18歳…",
     js_prefix="numbers-idx",
@@ -722,8 +722,8 @@ MISTAKES_SPEC = HubSpec(
     index_body_class="mistakes-index-page",
     article_body_class="mistakes-article-page",
     hub_label="よくある誤答",
-    index_col1="パターン",
-    index_col3="混同しやすい点",
+    index_col1="項目",
+    index_col3="概要",
     index_detail_field="confusion_point",
     search_placeholder="例：35条、媒介、先取特権、税率…",
     js_prefix="mistakes-idx",

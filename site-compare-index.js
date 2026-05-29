@@ -121,11 +121,10 @@
     const href = resolveEntryHref(item.href);
     const hrefAttr = ` data-entry-href="${escapeHtml(href)}"`;
     const summary = item.summary || '';
-    const subjects = item.subjects || '';
     return `<tr class="terms-idx-table-row compare-idx-table-row">
-<td class="terms-idx-td-term compare-idx-td-title" data-label="比較"${hrefAttr} tabindex="0"><div class="terms-idx-term-cell"><a href="${escapeHtml(href)}">${highlightText(item.title, query)}</a></div></td>
+<td class="terms-idx-td-term compare-idx-td-title" data-label="項目"${hrefAttr} tabindex="0"><div class="terms-idx-term-cell"><a href="${escapeHtml(href)}">${highlightText(item.title, query)}</a></div></td>
 <td class="terms-idx-td-cat" data-label="分野"${hrefAttr}>${escapeHtml(item.category)}</td>
-<td class="terms-idx-td-snippet compare-idx-td-subjects" data-label="比較対象"${hrefAttr}>${highlightText(subjects || summary, query)}</td>
+<td class="terms-idx-td-snippet compare-idx-td-summary" data-label="概要"${hrefAttr}>${highlightText(summary, query)}</td>
 </tr>`;
   }
 

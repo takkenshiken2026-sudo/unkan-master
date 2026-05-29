@@ -216,7 +216,7 @@ def split_semicolon(s: str) -> list[str]:
 
 
 TERMS_INDEX_CSS_VER = "20260524-terms-table-14px"
-TERMS_INDEX_JS_VER = "20260521-terms-snippet"
+TERMS_INDEX_JS_VER = "20260529-terms-columns"
 TERMS_INDEX_SEARCH_PLACEHOLDER = "例：ストレスチェック、ラインケア、うつ病…"
 
 # CSV enrich 時の分野テンプレ（一覧の定義抜粋には出さない）
@@ -303,7 +303,7 @@ def render_terms_index_tbody(entries: list[dict]) -> str:
             f"</div></td>"
             f'<td class="terms-idx-td-cat" data-label="分野"{href_attr}>'
             f'{html.escape(item.get("category") or "")}</td>'
-            f'<td class="terms-idx-td-snippet" data-label="定義（抜粋）"{href_attr}>'
+            f'<td class="terms-idx-td-snippet" data-label="定義"{href_attr}>'
             f"{short_def}</td>"
             "</tr>"
         )
@@ -1238,7 +1238,7 @@ def build_terms_index(entries: list[dict], base_url: str) -> str:
           <thead><tr>
             <th scope="col" class="terms-idx-th-term">用語</th>
             <th scope="col" class="terms-idx-th-cat">分野</th>
-            <th scope="col" class="terms-idx-th-def">定義（抜粋）</th>
+            <th scope="col" class="terms-idx-th-def">定義</th>
           </tr></thead>
           <tbody id="terms-idx-flat-body">
 {tbody_html}

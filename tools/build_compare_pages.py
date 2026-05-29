@@ -81,7 +81,7 @@ COMPARE_CSV = ROOT / "data" / "comparisons.csv"
 COMPARE_DIR = ROOT / "terms" / "compare"
 BASE_DEFAULT = clean_origin()
 
-COMPARE_INDEX_JS_VER = "20260527-compare-index"
+COMPARE_INDEX_JS_VER = "20260529-compare-columns"
 COMPARE_INDEX_SEARCH_PLACEHOLDER = "例：過去問、模擬試験、公式情報…"
 PRESERVED_COMPARE_GLOB = "c-*.html"
 
@@ -219,16 +219,15 @@ def render_compare_index_tbody(entries: list[dict]) -> str:
         href = html.escape(compare_index_href(item["slug_file"]))
         href_attr = f' data-entry-href="{href}"'
         summary = html.escape(item.get("summary") or "")
-        subjects = html.escape(" / ".join(item.get("col_labels") or []))
         rows.append(
             "<tr class=\"terms-idx-table-row compare-idx-table-row\">"
-            f'<td class="terms-idx-td-term compare-idx-td-title" data-label="比較"{href_attr} tabindex="0">'
+            f'<td class="terms-idx-td-term compare-idx-td-title" data-label="項目"{href_attr} tabindex="0">'
             f'<div class="terms-idx-term-cell"><a href="{href}">{html.escape(item["title"])}</a>'
             f"</div></td>"
             f'<td class="terms-idx-td-cat" data-label="分野"{href_attr}>'
             f'{html.escape(item.get("category") or "")}</td>'
-            f'<td class="terms-idx-td-snippet compare-idx-td-subjects" data-label="比較対象"{href_attr}>'
-            f"{subjects}</td>"
+            f'<td class="terms-idx-td-snippet compare-idx-td-summary" data-label="概要"{href_attr}>'
+            f"{summary}</td>"
             "</tr>"
         )
     return "\n".join(rows)
@@ -609,9 +608,9 @@ def build_compare_index(entries: list[dict], base_url: str) -> str:
       <div class="terms-idx-table-wrap">
         <table class="terms-idx-table compare-idx-table">
           <thead><tr>
-            <th scope="col" class="terms-idx-th-term">比較</th>
+            <th scope="col" class="terms-idx-th-term">項目</th>
             <th scope="col" class="terms-idx-th-cat">分野</th>
-            <th scope="col" class="terms-idx-th-def">比較対象</th>
+            <th scope="col" class="terms-idx-th-def">概要</th>
           </tr></thead>
           <tbody id="compare-idx-flat-body">
 {tbody_html}

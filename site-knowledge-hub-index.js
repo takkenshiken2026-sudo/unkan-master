@@ -127,11 +127,10 @@
     const href = resolveEntryHref(item.href);
     const hrefAttr = ` data-entry-href="${escapeHtml(href)}"`;
     const summary = item.summary || '';
-    const subjects = item.subjects || '';
     return `<tr class="terms-idx-table-row ${tableClass}-row">
 <td class="terms-idx-td-term ${tableClass}-td-title" data-label="${escapeHtml(col1)}"${hrefAttr} tabindex="0"><div class="terms-idx-term-cell"><a href="${escapeHtml(href)}">${highlightText(item.title, query)}</a></div></td>
 <td class="terms-idx-td-cat" data-label="分野"${hrefAttr}>${escapeHtml(item.category)}</td>
-<td class="terms-idx-td-snippet ${tableClass}-td-detail" data-label="${escapeHtml(col3)}"${hrefAttr}>${highlightText(subjects || summary, query)}</td>
+<td class="terms-idx-td-snippet ${tableClass}-td-detail" data-label="${escapeHtml(col3)}"${hrefAttr}>${highlightText(summary, query)}</td>
 </tr>`;
   }
 
