@@ -56,6 +56,9 @@ def split_semicolon(s: str) -> list[str]:
     return [x.strip() for x in (s or "").split(";") if x.strip()]
 
 
+MIN_GLOSSARY_INDEX_LEN = 12
+
+
 def clamp_prose(text: str, max_len: int = 160) -> str:
     one = re.sub(r"\s+", " ", text).strip()
     if not one:
@@ -136,6 +139,42 @@ def _compose_from_exam_points(term: str, exam_points: str) -> str:
     return f"{term}は、{p0}。"
 
 
+def _finalize_glossary_index(text: str, term: str, entry: dict) -> str:
+    out = clamp_prose(text, 160) if text else ""
+    if len(out) >= MIN_GLOSSARY_INDEX_LEN:
+        return out
+
+    composed = _compose_from_exam_points(term, entry.get("exam_points") or "")
+    if composed and len(composed) >= MIN_GLOSSARY_INDEX_LEN:
+        return composed
+
+    defn = _clean_definition_text(entry.get("definition") or "", term)
+    if defn and not _is_vague_definition(defn) and len(defn) >= MIN_GLOSSARY_INDEX_LEN:
+        return clamp_prose(defn, 160)
+
+    pts = [_clean_exam_point(p) for p in split_semicolon(entry.get("exam_points") or "")]
+    pts = [p for p in pts if len(p) >= 2]
+    if term and pts:
+        p0 = pts[0]
+        if len(pts) >= 2:
+            two = f"{term}は、{p0}。試験では{pts[1]}も押さえます。"
+            if len(two) >= MIN_GLOSSARY_INDEX_LEN:
+                return two
+        one = f"{term}は、{p0}。運行管理者試験で頻出の用語です。"
+        if len(one) >= MIN_GLOSSARY_INDEX_LEN:
+            return one
+
+    if out:
+        padded = f"{term}は、{out.rstrip('。')}。"
+        if len(padded) >= MIN_GLOSSARY_INDEX_LEN:
+            return padded
+
+    if defn:
+        return clamp_prose(defn, 160)
+
+    return f"{term}の意味と試験での押さえ方を整理した用語です。"
+
+
 def glossary_index_definition(
     entry: dict,
     *,
@@ -146,32 +185,40 @@ def glossary_index_definition(
     if not term:
         return ""
 
+    work_entry = dict(entry)
+    if seed:
+        work_entry = {**entry, **{k: v for k, v in seed.items() if v}}
+
     if seed:
         defn = _clean_definition_text(seed.get("definition") or "", term)
         short = norm(seed.get("short_def"))
         if defn and not _is_vague_definition(defn):
-            return clamp_prose(defn, 160)
+            return _finalize_glossary_index(defn, term, work_entry)
         if short and not _is_generic_index_snippet(short, term):
-            return clamp_prose(short, 120)
+            return _finalize_glossary_index(short, term, work_entry)
 
     defn = _clean_definition_text(entry.get("definition") or "", term)
     short = norm(entry.get("short_def"))
     if defn and not _is_vague_definition(defn) and not _is_generic_index_snippet(defn, term):
-        return clamp_prose(defn, 160)
+        return _finalize_glossary_index(defn, term, work_entry)
     if short and not _is_generic_index_snippet(short, term) and not _is_vague_definition(short):
-        return clamp_prose(short, 120)
+        return _finalize_glossary_index(short, term, work_entry)
     body_def = _definition_from_detail_body(entry.get("term_detail_body") or "")
     if body_def and not _is_generic_index_snippet(body_def, term):
-        return clamp_prose(body_def, 160)
+        return _finalize_glossary_index(body_def, term, work_entry)
 
     composed = _compose_from_exam_points(term, entry.get("exam_points") or "")
     if composed:
-        return composed
+        return _finalize_glossary_index(composed, term, work_entry)
 
     legal = norm(entry.get("legal_basis"))
     if legal:
         first = legal.split("、")[0].split(";")[0].strip()
-        return f"{term}は、{first}などに基づく制度・手続に関する用語です。"
+        return _finalize_glossary_index(
+            f"{term}は、{first}などに基づく制度・手続に関する用語です。",
+            term,
+            work_entry,
+        )
 
     return ""
 

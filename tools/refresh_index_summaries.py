@@ -32,15 +32,15 @@ MISTAKES_CSV = ROOT / "data" / "mistakes.csv"
 
 
 def read_csv(path: Path) -> tuple[list[str], list[dict]]:
-    text = path.read_text(encoding="utf-8-sig")
-    reader = csv.DictReader(text.splitlines())
-    fields = list(reader.fieldnames or [])
-    return fields, list(reader)
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        fields = list(reader.fieldnames or [])
+        return fields, list(reader)
 
 
 def write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
     with path.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
+        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
         w.writeheader()
         for row in rows:
             w.writerow(row)
