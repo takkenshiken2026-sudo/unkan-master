@@ -40,6 +40,11 @@ def exam_name() -> str:
     return str(CONFIG.get("examName") or "◯◯試験")
 
 
+def extended_correct_answers() -> bool:
+    """past/practice の correct が multi・combination 等を許容するサイト。"""
+    return bool(CONFIG.get("extendedCorrectAnswers"))
+
+
 def is_template_site() -> bool:
     """exam-site-shell サンプル（プレースホルダー運用）かどうか。"""
     origin = clean_origin().lower()

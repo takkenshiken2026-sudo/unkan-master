@@ -19,6 +19,7 @@ from tools.editorial_quality import (
     readability_issues,
     split_semicolon,
 )
+from tools.related_links import parse_related_link_token
 from tools.site_config import is_template_site
 
 GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
@@ -121,9 +122,9 @@ def check_guide_row(
 
     related = split_semicolon(norm(row.get("related_links")))
     internal = [
-        x.split(":", 1)[0].strip()
+        parse_related_link_token(x)[0]
         for x in related
-        if x and not x.split(":", 1)[0].strip().startswith(("http://", "https://"))
+        if x and not parse_related_link_token(x)[0].startswith(("http://", "https://"))
     ]
     if published and len(internal) < 1:
         warn("related_links", "関連記事（内部 slug）を1件以上入れると回遊と専門性の補強になります")

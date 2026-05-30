@@ -30,7 +30,9 @@ from tools.knowledge_hub_rules import (
     check_numbers_row,
     production_count_message,
 )
-from tools.site_config import category_to_field_map, guide_genre_labels
+from tools.correct_answer_format import is_valid_correct
+from tools.related_links import parse_related_link_token
+from tools.site_config import category_to_field_map, extended_correct_answers, guide_genre_labels
 from tools.term_diagram import DIAGRAM_ID_RE, diagram_id_exists
 
 
@@ -153,8 +155,14 @@ class Validator:
         return category
 
     def validate_choices_and_correct(self, path: Path, row: dict[str, str], line: int, *, allow_invalidated: bool) -> None:
-        for i in range(1, 5):
-            self.require_text(path, row, line, f"choice_{i}")
+        choices = [self.norm(row.get(f"choice_{i}")) for i in range(1, 9)]
+        max_choice = max([i for i, value in enumerate(choices, start=1) if value] or [4])
+        if not choices[0] or not choices[1]:
+            self.error(path, line, "choice_1 と choice_2 は必須です")
+            return
+        for i in range(1, max_choice):
+            if not choices[i - 1]:
+                self.error(path, line, f"choice_{i} が空です")
         invalidated = allow_invalidated and self.truthy(row.get("is_invalidated"))
         correct = self.norm(row.get("correct"))
         if invalidated and not correct:
@@ -162,13 +170,19 @@ class Validator:
         if not correct:
             self.error(path, line, "correct が空です")
             return
+        if extended_correct_answers():
+            if not is_valid_correct(correct, max_choice=max_choice):
+                self.error(
+                    path,
+                    line,
+                    f"correct の形式が不正です: {correct!r}（単一数字・カンマ区切り・A-2;B-3 等）",
+                )
+            return
         try:
             n = int(correct)
         except ValueError:
             self.error(path, line, f"correct は 1〜5 の整数で入力してください: {correct!r}")
             return
-        choices = [self.norm(row.get(f"choice_{i}")) for i in range(1, 6)]
-        max_choice = max([i for i, value in enumerate(choices, start=1) if value] or [4])
         if not 1 <= n <= max_choice:
             self.error(path, line, f"correct は 1〜{max_choice} の範囲で入力してください: {n}")
 
@@ -415,7 +429,7 @@ class Validator:
             related = self.norm(row.get("related_links"))
             if related:
                 for item in split_semicolon(related):
-                    target = item.split(":", 1)[0].strip()
+                    target, _label = parse_related_link_token(item)
                     if target.startswith(("http://", "https://")):
                         continue
                     if not target:
@@ -452,7 +466,7 @@ class Validator:
                 internal_related = 0
                 if related:
                     for item in split_semicolon(related):
-                        target = item.split(":", 1)[0].strip()
+                        target, _label = parse_related_link_token(item)
                         if target and not target.startswith(("http://", "https://")):
                             internal_related += 1
                 if internal_related < 2:

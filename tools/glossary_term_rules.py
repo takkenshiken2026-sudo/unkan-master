@@ -126,10 +126,13 @@ def check_glossary_row(
         if col not in row:
             err(f"必須列がありません: {col}")
 
+    answer_symbols = frozenset({"○", "〇", "×", "✕", "╳"})
     for col, min_len in GLOSSARY_MIN_LENGTHS.items():
         text = norm(row.get(col))
         if not text:
             err(f"{col} は必須です（全用語を詳細記事として公開）")
+            continue
+        if col == "example_answer" and text in answer_symbols:
             continue
         if len(text) < min_len:
             err(f"{col} は {min_len} 文字以上にしてください（現在 {len(text)} 文字）")

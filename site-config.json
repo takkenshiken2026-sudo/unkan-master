@@ -8,6 +8,7 @@
   "copyright": "",
   "footerDisclaimer": "学習用のコンテンツです。出題・法令の正確な内容は公式情報で必ず確認してください。",
   "officialOrganization": "公益財団法人 運行管理者試験センター",
+  "extendedCorrectAnswers": true,
   "seoCopy": {
     "mockExam": "模試・模擬試験",
     "studyModes": "過去問・実践演習・一問一答"
@@ -200,7 +201,8 @@
         "貨物自動車運送事業法関係",
         "事業法関係",
         "貨物事業法",
-        "事業法"
+        "事業法",
+        "契約・実務"
       ],
       "legacyGlossaryCat": "jigyo"
     },
@@ -220,7 +222,8 @@
       "aliases": [
         "道路交通法関係",
         "道交法関係",
-        "道交法"
+        "道交法",
+        "法令・制度"
       ],
       "legacyGlossaryCat": "traffic"
     },
@@ -239,7 +242,8 @@
       "name": "実務上の知識及び能力",
       "aliases": [
         "実務上の知識及び能力",
-        "実務"
+        "実務",
+        "設備・その他"
       ],
       "legacyGlossaryCat": "practice"
     }

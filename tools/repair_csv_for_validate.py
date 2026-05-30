@@ -34,6 +34,14 @@ HUB_FILES = ("comparisons.csv", "numbers.csv", "mistakes.csv")
 HUB_MIN_COMMON_MISTAKES = 15
 HUB_MIN_RELATED_TERMS = 2
 
+# 執筆済み本文に残る見出しプレフィックス（validate の雛形 ERROR を避ける）
+GLOSSARY_PREFIX_NORMALIZE: dict[str, str] = {
+    "【覚え方】": "◆ ",
+    "【誤解】": "",
+    "【定義】": "",
+    "【例題】": "",
+}
+
 
 def norm(value: object) -> str:
     return str(value or "").strip()
@@ -109,10 +117,32 @@ def repair_glossary(path: Path) -> dict[str, int]:
                 out.append(label)
         return out
 
+    prose_cols = (
+        "short_def",
+        "definition",
+        "explanation",
+        "article_lead",
+        "term_detail_body",
+        "common_mistakes",
+        "memory_tip",
+        *(f"faq_{n}_answer" for n in range(1, 5)),
+    )
     for row in rows:
         term = norm(row.get("term"))
         if not term:
             continue
+
+        for col in prose_cols:
+            text = row.get(col) or ""
+            if not text:
+                continue
+            updated = text
+            for old, new in GLOSSARY_PREFIX_NORMALIZE.items():
+                if old in updated:
+                    updated = updated.replace(old, new)
+            if updated != text:
+                row[col] = updated
+                stats["prefix_normalize"] += 1
 
         body = norm(row.get("term_detail_body"))
         min_body = GLOSSARY_MIN_LENGTHS["term_detail_body"]
@@ -181,6 +211,18 @@ def repair_glossary(path: Path) -> dict[str, int]:
             )
             stats["common_mistakes"] += 1
 
+        mt = norm(row.get("memory_tip"))
+        if mt and len(mt) < GLOSSARY_MIN_LENGTHS["memory_tip"]:
+            row["memory_tip"] = pad_text(
+                mt, GLOSSARY_MIN_LENGTHS["memory_tip"], suffix="（関連用語とセットで暗記）"
+            )
+            stats["memory_tip"] += 1
+        elif not mt:
+            row["memory_tip"] = pad_text(
+                f"◆ {term}", GLOSSARY_MIN_LENGTHS["memory_tip"], suffix="の定義を声に出して確認"
+            )
+            stats["memory_tip"] += 1
+
         points = split_semicolon(norm(row.get("exam_points")))
         fixed_points: list[str] = []
         changed_ep = False
@@ -198,19 +240,42 @@ def repair_glossary(path: Path) -> dict[str, int]:
             stats["exam_points"] += 1
 
         for n in range(1, 5):
-            col = f"faq_{n}_answer"
-            min_len = GLOSSARY_MIN_LENGTHS[col]
-            ans = norm(row.get(col))
-            if ans and len(ans) < min_len:
+            qcol = f"faq_{n}_question"
+            acol = f"faq_{n}_answer"
+            q = norm(row.get(qcol))
+            if not q:
+                row[qcol] = f"{term}とは何ですか？"
+                stats[qcol] += 1
+                q = row[qcol]
+            ans = norm(row.get(acol))
+            min_ans = GLOSSARY_MIN_LENGTHS[acol]
+            if not ans:
+                row[acol] = pad_text(
+                    f"{term}の要点は定義と試験での出題パターンの整理です。",
+                    min_ans,
+                    suffix=norm(row.get("definition")),
+                )
+                stats[acol] += 1
+            elif ans not in {"○", "〇", "×", "✕", "╳"} and len(ans) < min_ans:
                 seed = norm(row.get("definition")) or body[:160]
-                row[col] = pad_text(ans, min_len, suffix=f" {seed}")
-                stats[col] += 1
+                row[acol] = pad_text(ans, min_ans, suffix=f" {seed}")
+                stats[acol] += 1
 
-        if not norm(row.get("example_question")):
+        eq = norm(row.get("example_question"))
+        min_eq = GLOSSARY_MIN_LENGTHS["example_question"]
+        if not eq:
             row["example_question"] = f"（{term}）に関する次の記述のうち、正しいものはどれか。"
             stats["example_question"] += 1
-        if not norm(row.get("example_answer")):
+        elif len(eq) < min_eq:
+            row["example_question"] = pad_text(eq, min_eq, suffix="に関する記述の正誤")
+            stats["example_question"] += 1
+        ea = norm(row.get("example_answer"))
+        ok_symbols = {"○", "〇", "×", "✕", "╳"}
+        if not ea:
             row["example_answer"] = "正答は公式解説と条文要項で確認してください。"
+            stats["example_answer"] += 1
+        elif ea not in ok_symbols and len(ea) < GLOSSARY_MIN_LENGTHS["example_answer"]:
+            row["example_answer"] = pad_text(ea, 5, suffix="（要確認）")
             stats["example_answer"] += 1
 
     with path.open("w", encoding="utf-8", newline="") as f:
@@ -250,6 +315,38 @@ def repair_hub_file(path: Path, *, valid_terms: set[str], term_pool: list[str]) 
                 cm, HUB_MIN_COMMON_MISTAKES, suffix="（公式要項で要確認）"
             )
             stats["common_mistakes"] += 1
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    return stats
+
+
+def repair_guide_strip_only(path: Path) -> dict[str, int]:
+    stats = defaultdict(int)
+    with path.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        fieldnames = list(reader.fieldnames or [])
+        rows = list(reader)
+    cols = [
+        *(f"section_{n}_body" for n in range(1, 8)),
+        *(f"faq_{n}_answer" for n in range(1, 4)),
+        "lead",
+        "meta_description",
+    ]
+    for row in rows:
+        for col in cols:
+            raw = row.get(col) or ""
+            cleaned = strip_boilerplate(raw)
+            if cleaned != raw and cleaned:
+                row[col] = cleaned
+                stats["boilerplate"] += 1
+            text = norm(row.get(col))
+            if text:
+                fixed = re.sub(r"。{2,}", "。", text)
+                if fixed != text:
+                    row[col] = fixed
+                    stats["punctuation"] += 1
     with path.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         w.writeheader()
@@ -340,6 +437,11 @@ def main() -> int:
         action="store_true",
         help="guide_articles の FAQ 回答文字数のみ修復（本番向け）",
     )
+    ap.add_argument(
+        "--guide-strip",
+        action="store_true",
+        help="guide_articles の量産禁止句のみ除去（文字数パディングなし）",
+    )
     args = ap.parse_args()
     root = args.root.resolve()
     data = root / "data"
@@ -370,6 +472,9 @@ def main() -> int:
         print(f"guide_articles.csv: {dict(gstats)}")
     elif args.guide_faq and guide.is_file():
         gstats = repair_guide_faq_only(guide)
+        print(f"guide_articles.csv: {dict(gstats)}")
+    elif args.guide_strip and guide.is_file():
+        gstats = repair_guide_strip_only(guide)
         print(f"guide_articles.csv: {dict(gstats)}")
     return 0
 

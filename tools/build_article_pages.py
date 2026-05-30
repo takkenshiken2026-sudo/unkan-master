@@ -248,10 +248,10 @@ def parse_related_links(
 ) -> str:
     links: list[str] = []
     seen: set[str] = set()
+    from tools.related_links import parse_related_link_token
+
     for item in split_semicolon(value):
-        target, label = item, item
-        if ":" in item:
-            target, label = [x.strip() for x in item.split(":", 1)]
+        target, label = parse_related_link_token(item)
         if not target:
             continue
         if target in by_slug and target not in seen:
