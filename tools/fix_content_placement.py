@@ -43,6 +43,7 @@ from tools.migrate_guide_to_hub import (  # noqa: E402
     migrate_compare_guides,
     migrate_numbers_guides,
 )
+from tools.migrate_hub_admin_to_guide import migrate_hub_admin_to_guide  # noqa: E402
 
 BRIDGE_GENRE = "用語ハブ活用法"
 BRIDGE_NOTE = "配置整理: 定義本文は用語解説へ集約。本記事は導線用"
@@ -272,6 +273,12 @@ def cmd_migrate_to_hub(*, dry_run: bool, exam_label: str) -> int:
     return 0
 
 
+def cmd_migrate_from_hub(*, dry_run: bool) -> int:
+    removed, redirected = migrate_hub_admin_to_guide(site_root=ROOT, dry_run=dry_run)
+    print(f"migrated from hub: removed={removed} redirects={redirected}")
+    return 0
+
+
 def cmd_audit() -> int:
     guides = list(csv.DictReader(GUIDE_CSV.open(encoding="utf-8-sig"))) if GUIDE_CSV.is_file() else []
     glossary = list(csv.DictReader(GLOSSARY_CSV.open(encoding="utf-8-sig"))) if GLOSSARY_CSV.is_file() else []
@@ -294,6 +301,11 @@ def main() -> int:
     parser.add_argument("--draft-duplicates", action="store_true")
     parser.add_argument("--clear-glossary-misplaced", action="store_true")
     parser.add_argument("--migrate-to-hub", action="store_true", help="Move compare/numbers guides to hub CSV")
+    parser.add_argument(
+        "--migrate-from-hub",
+        action="store_true",
+        help="Move exam admin rows from numbers.csv to guide (with redirects)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--confidence",
@@ -322,6 +334,8 @@ def main() -> int:
         return cmd_clear_glossary_misplaced(dry_run=args.dry_run)
     if args.migrate_to_hub:
         return cmd_migrate_to_hub(dry_run=args.dry_run, exam_label=args.exam_label)
+    if args.migrate_from_hub:
+        return cmd_migrate_from_hub(dry_run=args.dry_run)
     parser.print_help()
     return 1
 

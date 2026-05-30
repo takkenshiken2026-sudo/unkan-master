@@ -49,6 +49,47 @@ COMPARE_TITLE = re.compile(
 
 NUMBERS_LIST_TITLE = re.compile(r"数値.*一覧|数字.*一覧|期限.*一覧|早見表.*(?:まとめ|一覧)")
 
+# numbers.csv に置くべきでない試験申込・日程・手数料案内（試験ガイドへ）
+HUB_EXAM_ADMIN_TITLE = re.compile(
+    r"(?:"
+    r"試験日程|"
+    r"(?:\d{4}年度)?(?:試験)?日程(?:確認)?|"
+    r"受験(?:手数料|料)|"
+    r"試験申込|申込期間|申し込み(?:方法|期間)|"
+    r"(?:Web|システム利用)手数料"
+    r")"
+)
+
+HUB_EXAM_ADMIN_SUMMARY = re.compile(
+    r"試験日程|受験(?:手数料|料)|申込期間|申込方法|確認方法|"
+    r"Web手数料|システム利用料|年度.*日程|年度.*手数料"
+)
+
+# 試験科目の数値・法令期限 — numbers に残す
+NUMBERS_HUB_KEEP_TITLE = re.compile(
+    r"保存期間|記録.*保存|届出.*許可|配置.*基準|規模基準|点検記録"
+)
+
+NUMBERS_HUB_KEEP_SLUGS = frozenset({"shikenryo-yohaku"})
+
+SITE_GUIDE_ADMIN_TARGETS: dict[str, dict[str, str]] = {
+    "mentalhealth-master": {"schedule": "schedule"},
+    "boiler-master.jp": {"schedule": "schedule-application", "fee": "exam-fee-checklist"},
+    "chintaikanrishi-master": {"schedule": "schedule-application"},
+    "eisei2shu-master": {"schedule": "shiken-nittei"},
+}
+
+GUIDE_ADMIN_FALLBACK: dict[str, list[str]] = {
+    "schedule": [
+        "exam-schedule",
+        "schedule-application",
+        "schedule",
+        "shiken-nittei",
+        "takken-shiken-schedule-2026",
+    ],
+    "fee": ["exam-fees", "exam-fee-checklist"],
+}
+
 MIN_GLOSSARY_BODY = 80
 
 
@@ -321,3 +362,95 @@ def glossary_href(row: dict[str, str]) -> str:
         return f"/terms/{slug}.html"
     term = norm(row.get("term"))
     return f"/terms/index.html?q={term}" if term else "/terms/index.html"
+
+
+def hub_exam_admin_kind(row: dict[str, str]) -> str | None:
+    """試験ガイド移管先の種別: schedule | fee。"""
+    title = norm(row.get("title"))
+    slug = norm(row.get("slug"))
+    summary = norm(row.get("summary"))
+    text = f"{title} {slug} {summary}"
+    if re.search(r"受験(?:手数料|料)|手数料|tesuryo|ryokin|juken-\d", text, re.I):
+        if not re.search(r"日程.*確認|確認方法.*日程", title):
+            return "fee"
+    if re.search(r"日程|nittei|申込.*期間|moshikomi-kikan|shiken-\d{4}", text, re.I):
+        return "schedule"
+    if re.search(r"申込|確認方法", text):
+        return "schedule"
+    return None
+
+
+def is_hub_exam_admin_row(row: dict[str, str]) -> bool:
+    slug = norm(row.get("slug"))
+    if slug in NUMBERS_HUB_KEEP_SLUGS:
+        return False
+    title = norm(row.get("title"))
+    if NUMBERS_HUB_KEEP_TITLE.search(title):
+        return False
+    summary = norm(row.get("summary"))
+    if HUB_EXAM_ADMIN_TITLE.search(title):
+        return True
+    if HUB_EXAM_ADMIN_SUMMARY.search(summary) and re.search(r"確認|申込|手数料|日程", summary):
+        return True
+    return False
+
+
+def resolve_guide_admin_slug(
+    kind: str,
+    guides: list[dict[str, str]],
+    *,
+    site_name: str = "",
+) -> str | None:
+    published = {norm(g.get("slug")) for g in guides if is_published_guide(g)}
+    overrides = SITE_GUIDE_ADMIN_TARGETS.get(site_name, {})
+    candidates: list[str] = []
+    if kind in overrides:
+        candidates.append(overrides[kind])
+    candidates.extend(GUIDE_ADMIN_FALLBACK.get(kind, []))
+    for slug in candidates:
+        if slug and slug in published:
+            return slug
+    return None
+
+
+def audit_numbers_rows(
+    numbers: list[dict[str, str]],
+    guides: list[dict[str, str]],
+    *,
+    site_name: str = "",
+) -> list[RuleFinding]:
+    findings: list[RuleFinding] = []
+    for row in numbers:
+        slug = norm(row.get("slug"))
+        title = norm(row.get("title"))
+        if not is_hub_exam_admin_row(row):
+            continue
+        kind = hub_exam_admin_kind(row)
+        if not kind:
+            continue
+        target = resolve_guide_admin_slug(kind, guides, site_name=site_name)
+        if not target:
+            findings.append(
+                RuleFinding(
+                    "WARN",
+                    "numbers_should_be_guide",
+                    slug,
+                    title,
+                    f"試験申込・日程・手数料案内。試験ガイドへ移す（移管先 slug 未解決: {kind}）",
+                    target="guide",
+                    confidence="high",
+                )
+            )
+            continue
+        findings.append(
+            RuleFinding(
+                "WARN",
+                "numbers_should_be_guide",
+                slug,
+                title,
+                f"試験申込・日程・手数料案内。試験ガイド「{target}」へ移す",
+                target=f"guide:{target}",
+                confidence="high",
+            )
+        )
+    return findings

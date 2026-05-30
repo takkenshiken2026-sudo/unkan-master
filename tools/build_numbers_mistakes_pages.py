@@ -885,7 +885,10 @@ def build_hub(
         )
 
     for old_slug, new_slug in redirects.items():
-        target = f"{new_slug}.html"
+        if new_slug.startswith("/") or new_slug.startswith("../"):
+            target = new_slug
+        else:
+            target = f"{new_slug}.html"
         out_file = spec.out_dir / f"{old_slug}.html"
         rel_path = out_file.relative_to(ROOT)
         out_file.write_text(

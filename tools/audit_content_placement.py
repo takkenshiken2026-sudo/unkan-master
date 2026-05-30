@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
 from tools.content_placement_rules import (  # noqa: E402
     audit_glossary_rows,
     audit_guide_rows,
+    audit_numbers_rows,
     load_hub_rows,
 )
 
@@ -79,6 +80,21 @@ def audit_site(site_root: Path) -> list[PlacementFinding]:
                 level=item.level,
                 kind=item.kind,
                 source="glossary",
+                slug=item.slug,
+                title=item.title,
+                message=item.message,
+                target=item.target,
+                glossary_term=item.glossary_term,
+                glossary_slug=item.glossary_slug,
+            )
+        )
+    numbers = hub.get("numbers.csv") or []
+    for item in audit_numbers_rows(numbers, guides, site_name=site_root.name):
+        out.append(
+            PlacementFinding(
+                level=item.level,
+                kind=item.kind,
+                source="numbers",
                 slug=item.slug,
                 title=item.title,
                 message=item.message,

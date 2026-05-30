@@ -349,7 +349,36 @@ def slug_topic(slug: str) -> str:
     }
     if slug in mapping:
         return mapping[slug]
-    return slug.replace("-", " ")
+    return "本記事のテーマ"
+
+
+def topic_from_row(row: dict[str, str]) -> str:
+    """記事タイトルまたはカタログ定義から日本語トピック名を得る（slug 英語化を避ける）。"""
+    slug = (row.get("slug") or "").strip()
+    if slug in SLUG_TITLE_TOPIC:
+        return SLUG_TITLE_TOPIC[slug]
+    title = (row.get("title") or "").strip()
+    if title and not placeholder_hits(title):
+        t = re.sub(r"^【[^】]+】", "", title)
+        if "｜" in t:
+            t = t.split("｜", 1)[-1].strip()
+        elif "|" in t:
+            t = t.split("|", 1)[-1].strip()
+        for prefix in (
+            f"{content_exam_label()}の",
+            f"{title_exam_prefix()}の",
+            f"{brand_name()}の",
+            "◯◯試験の",
+        ):
+            if t.startswith(prefix):
+                t = t[len(prefix) :].strip()
+                break
+        m = re.match(r"^[\u3040-\u30ff\u4e00-\u9fffA-Za-z0-9]{1,12}の", t)
+        if m and len(m.group(0)) <= 14:
+            t = t[len(m.group(0)) :].strip()
+        if len(t) >= 4 and not re.fullmatch(r"[a-z0-9 -]+", t, re.I):
+            return t
+    return slug_topic(slug)
 
 
 def section_body(heading: str, topic: str) -> str:
@@ -425,7 +454,7 @@ def fix_row(row: dict[str, str]) -> None:
         dup = "公式情報を先に確認し、このサイトの演習と用語解説で弱点を補強する流れを推奨します。"
         if lead.count(dup) > 1:
             row["lead"] = lead.replace(dup + " ", "", 1).strip()
-    topic = slug_topic(row["slug"])
+    topic = topic_from_row(row)
     md = row.get("meta_description") or ""
     if len(md) < 70 or placeholder_hits(md):
         row["meta_description"] = (
@@ -447,7 +476,7 @@ def fix_row(row: dict[str, str]) -> None:
 
 
 def enrich_row(row: dict[str, str], *, publish: bool) -> None:
-    topic = slug_topic(row["slug"])
+    topic = topic_from_row(row)
     slug = row["slug"]
     if slug in AFFILIATE_SLUGS:
         tags = row.get("tags", "")
@@ -473,7 +502,7 @@ def enrich_row(row: dict[str, str], *, publish: bool) -> None:
     row["user_intent"] = (
         f"本記事を読むと、{content_exam_label()}の{topic}について、"
         f"公式情報で確認すべき点と、このサイトでの学習の進め方が分かります。"
-        f"読了後は action_items に沿って演習・用語確認まで進められる状態を目指します。"
+        f"読了後は行動チェックリストに沿って演習・用語確認まで進められる状態を目指します。"
     )
     if len([x for x in (row.get("action_items") or "").split(";") if x.strip()]) < 3:
         row["action_items"] = (

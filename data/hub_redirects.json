@@ -241,7 +241,9 @@
     "s34-kon-jigyoyo-kisei-num": "s31-kon-jigyoyo-kisei-num",
     "s32-kon-sennin-todoke-num": "s31-kon-sennin-todoke-num",
     "s33-kon-sennin-todoke-num": "s31-kon-sennin-todoke-num",
-    "s34-kon-sennin-todoke-num": "s31-kon-sennin-todoke-num"
+    "s34-kon-sennin-todoke-num": "s31-kon-sennin-todoke-num",
+    "juken-tesuryou": "/articles/exam-fees.html",
+    "shiken-2026": "/articles/exam-schedule.html"
   },
   "mistakes": {
     "s40-kon-unkan-kanri-mis": "s35-kon-unkan-kanri-mis",
