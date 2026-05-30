@@ -23,9 +23,7 @@ from tools.knowledge_hub_rules import HUB_MIN_LENGTHS  # noqa: E402
 
 DATA = ROOT / "data"
 OUT = ROOT / "reports" / "hub_audit"
-REGISTRY = Path("/Users/otedaiki/Projects/exam-site-shell/docs/hub_numbers_verified.json")
-if not REGISTRY.is_file():
-    REGISTRY = Path("/Users/otedaiki/Projects/docs/hub_numbers_verified.json")
+REGISTRY = Path("/Users/otedaiki/Projects/docs/hub_numbers_verified.json")
 HUB_FILES = ("comparisons.csv", "numbers.csv", "mistakes.csv")
 DIGIT_RE = re.compile(r"\d")
 

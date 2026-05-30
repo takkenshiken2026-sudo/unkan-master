@@ -21,12 +21,20 @@
 
 | 種別 | CSV | 目標件数 | 検証 |
 |------|-----|----------|------|
-| 比較・整理表 | `comparisons.csv` | **50〜100 件** | `validate_csv.py`（50 件未満で WARN） |
-| 数値・期限早見表 | `numbers.csv` | **50〜100 件** | 同上 |
-| よくある誤答 | `mistakes.csv` | **50〜100 件** | 同上 |
+| 比較・整理表 | `comparisons.csv` | **150〜153 件** | `validate_csv.py` + `knowledge_hub_rules.py` |
+| 数値・期限早見表 | `numbers.csv` | **150〜153 件** | 同上 |
+| よくある誤答 | `mistakes.csv` | **150〜153 件** | 同上 |
 
-テンプレ同梱のサンプル行（各数件）は**執筆例**です。本番サイトでは上記目標まで **新規行を追加** してください。  
+S30 原本10件 + S31–S44 追加分（角度別記事）を `write_*_hub_data.py` で統合出力します。  
+角度折りたたみは `MIN_ANGLE_COLLAPSE_BATCH=99`（本番150件を維持）。  
 行品質の機械チェック: `tools/knowledge_hub_rules.py`（JSON 列・`related_terms`・FAQ 等）。
+
+一括確認:
+
+```bash
+python3 ~/Projects/scripts/_hub_sync_and_verify.py
+python3 ~/Projects/scripts/_hub_numbers_bulk_verify_pending.py
+```
 
 **新規追加の推奨手順:**
 
