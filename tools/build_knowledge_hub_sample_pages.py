@@ -85,7 +85,7 @@ def build_samples_index(base_url: str) -> str:
     page_header = site_page_header(idx_path, current="terms", wide=True)
     page_footer = site_page_footer(idx_path, current="terms", wide=True)
     page_breadcrumb = breadcrumb_html(idx_path, [("トップ", "index.html"), ("執筆サンプル", None)])
-    tabs_html = knowledge_hub_tabs_html(current="terms", **knowledge_hub_tab_hrefs(here="samples"))
+    tabs_html = knowledge_hub_tabs_html(current="samples", **knowledge_hub_tab_hrefs(here="samples"))
 
     cards = [
         (
@@ -290,6 +290,11 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
     sample_entry = dict(GLOSSARY_WRITING_SAMPLE)
     glossary_path = ROOT / "terms" / sample_entry["slug_file"]
     glossary_rel = glossary_path.relative_to(ROOT)
+    term_kwargs: dict = {}
+    import inspect
+
+    if "by_term" in inspect.signature(build_term_html).parameters:
+        term_kwargs["by_term"] = by_term or {sample_entry["term"]: sample_entry}
     glossary_html = build_term_html(
         sample_entry,
         glossary_rel,
@@ -297,7 +302,7 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
         gl_lookup or term_lookup,
         entries or [sample_entry],
         guides,
-        by_term=by_term or {sample_entry["term"]: sample_entry},
+        **term_kwargs,
     )
     banner = sample_banner_html(
         samples_href="samples/index.html",

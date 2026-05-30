@@ -97,7 +97,7 @@ def build_diagram_samples_index() -> str:
             ("図解サンプル", None),
         ],
     )
-    tabs_html = knowledge_hub_tabs_html(current="terms", **knowledge_hub_tab_hrefs(here="diagram-samples"))
+    tabs_html = knowledge_hub_tabs_html(current="diagram-samples", **knowledge_hub_tab_hrefs(here="diagram-samples"))
 
     cards = []
     for diagram_id, title, desc in DIAGRAM_SAMPLE_CARDS:

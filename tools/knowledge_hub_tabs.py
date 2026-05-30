@@ -15,8 +15,31 @@ HUB_TABS: tuple[tuple[str, str], ...] = (
 )
 
 
+def articles_guide_href(*, here: str) -> str:
+    """試験ガイド index への相対 href（terms 配下の深さに応じる）。"""
+    if here == "terms":
+        return "../articles/index.html"
+    if here in ("compare", "numbers", "mistakes", "field", "samples", "diagram-samples"):
+        return "../../articles/index.html"
+    return "../../articles/index.html"
+
+
 def knowledge_hub_tab_hrefs(*, here: str) -> dict[str, str]:
-    """here: terms / compare / numbers / mistakes（samples 等は terms 配下の sibling として扱う）。"""
+    """here: terms / compare / numbers / mistakes / field（分野ハブ）。"""
+    if here == "field":
+        return {
+            "terms_href": "../index.html",
+            "compare_href": "../compare/index.html",
+            "numbers_href": "../numbers/index.html",
+            "mistakes_href": "../mistakes/index.html",
+        }
+    if here in ("samples", "diagram-samples"):
+        return {
+            "terms_href": "../index.html",
+            "compare_href": "../compare/index.html",
+            "numbers_href": "../numbers/index.html",
+            "mistakes_href": "../mistakes/index.html",
+        }
     if here not in HUB_SECTIONS:
         return {
             "terms_href": "../index.html",
@@ -43,19 +66,20 @@ def knowledge_hub_tabs_html(*, current: str, **hrefs: str) -> str:
     """current: HUB_SECTIONS のいずれか。hrefs 未指定時は here=current の相対パスを使う。"""
     if not hrefs:
         hrefs = knowledge_hub_tab_hrefs(here=current)
-    valid = {tab_id for tab_id, _ in HUB_TABS}
+    valid = {tab_id for tab_id, _ in HUB_TABS} | {"field", "samples", "diagram-samples"}
     if current not in valid:
         raise ValueError(f"unknown tab current: {current!r}")
 
-    defaults = knowledge_hub_tab_hrefs(here=current)
+    tab_here = "terms" if current == "field" else current
+    defaults = knowledge_hub_tab_hrefs(here=tab_here if current != "field" else "field")
     merged = {**defaults, **hrefs}
 
     items: list[str] = []
     for tab_id, label in HUB_TABS:
-        cls = "q-hub-tab is-current" if tab_id == current else "q-hub-tab"
+        cls = "q-hub-tab is-current" if tab_id == current or (current == "field" and tab_id == "terms") else "q-hub-tab"
         href_key = "terms_href" if tab_id == "terms" else f"{tab_id}_href"
         href = merged.get(href_key, defaults.get(href_key, "#"))
-        if tab_id == current:
+        if tab_id == current or (current == "field" and tab_id == "terms"):
             inner = f'<span class="q-hub-tab-label" aria-current="page">{html.escape(label)}</span>'
         else:
             inner = (
@@ -68,7 +92,7 @@ def knowledge_hub_tabs_html(*, current: str, **hrefs: str) -> str:
         '<p class="q-study-modes-note">'
         "知識ハブでは、用語の意味・似た制度の比較・数値・誤答パターンなど<strong>試験の知識</strong>を調べられます。"
         "学習計画や申込手続きなど<strong>進め方</strong>は"
-        '<a href="../articles/index.html">試験ガイド</a>をご覧ください。'
+        '<a href="' + html.escape(articles_guide_href(here=current if current in ("field", "samples", "diagram-samples") else current)) + '">試験ガイド</a>をご覧ください。'
         "タブから各コンテンツへ移動できます。"
         "</p>"
     )

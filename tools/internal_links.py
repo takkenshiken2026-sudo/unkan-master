@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import html
 import re
+from pathlib import Path
 from typing import Any
 
 MIN_AUTO_LINK_TERM_LEN = 2
@@ -21,10 +22,23 @@ GUIDE_HUB_LINKS: tuple[tuple[str, str], ...] = (
 )
 
 TERM_NEXT_HUB_LINKS: tuple[tuple[str, str], ...] = (
-    ("../compare/index.html", "比較・整理表"),
-    ("../numbers/index.html", "数値・期限早見表"),
-    ("../mistakes/index.html", "よくある誤答"),
+    ("compare/index.html", "比較・整理表"),
+    ("numbers/index.html", "数値・期限早見表"),
+    ("mistakes/index.html", "よくある誤答"),
 )
+
+
+def term_hub_link_prefix(rel_path: Path) -> str:
+    """terms 配下ページから compare/numbers/mistakes への相対 prefix。"""
+    parts = rel_path.parts
+    if len(parts) >= 3 and parts[-1] == "index.html":
+        return "../"
+    return ""
+
+
+def term_next_hub_links(rel_path: Path) -> tuple[tuple[str, str], ...]:
+    prefix = term_hub_link_prefix(rel_path)
+    return tuple((f"{prefix}{href}", label) for href, label in TERM_NEXT_HUB_LINKS)
 
 
 def split_semicolon(value: str) -> list[str]:
