@@ -11,6 +11,16 @@ def norm(value: object) -> str:
     return str(value or "").strip()
 
 
+def collect_choice_texts(row: dict, *, max_slots: int = 8) -> list[str]:
+    """choice_1..N の非空選択肢を順に返す（最大 max_slots 列）。"""
+    out: list[str] = []
+    for i in range(1, max_slots + 1):
+        text = norm(row.get(f"choice_{i}"))
+        if text:
+            out.append(text)
+    return out
+
+
 def detect_correct_format(raw: str) -> str:
     """正答文字列の型（single / multi / combination / truefalse_group）。"""
     raw = norm(raw)
@@ -25,6 +35,55 @@ def detect_correct_format(raw: str) -> str:
     if re.fullmatch(r"\d+", raw):
         return "single"
     return ""
+
+
+def parse_correct_js_index(raw: str, *, extended: bool = False, max_choice: int = 5) -> int | None:
+    """exam-site-data-past.js 用の 0 始まり正答インデックス。multi は先頭肢（レガシー互換）。"""
+    raw = norm(raw)
+    if not raw:
+        return None
+    if extended:
+        if not is_valid_correct(raw, max_choice=max_choice):
+            return None
+        fmt = detect_correct_format(raw)
+        if fmt == "multi":
+            n = int(raw.split(",")[0].strip())
+            return n - 1 if 1 <= n <= max_choice else None
+        if fmt == "single":
+            n = int(raw)
+            return n - 1 if 1 <= n <= max_choice else None
+        return None
+    try:
+        n = int(raw)
+    except ValueError:
+        return None
+    if 1 <= n <= max_choice:
+        return n - 1
+    return None
+
+
+def parse_correct_page_value(raw: str, *, extended: bool = False, max_choice: int = 5) -> int | str | None:
+    """過去問 HTML 用。1 始まり整数、multi のカンマ区切り、または複合型の生文字列。"""
+    raw = norm(raw)
+    if not raw:
+        return None
+    if extended:
+        if not is_valid_correct(raw, max_choice=max_choice):
+            return None
+        fmt = detect_correct_format(raw)
+        if fmt in {"multi", "combination", "truefalse_group"}:
+            return raw
+        if fmt == "single":
+            n = int(raw)
+            return n if 1 <= n <= max_choice else None
+        return None
+    try:
+        n = int(raw)
+    except ValueError:
+        return None
+    if 1 <= n <= max_choice:
+        return n
+    return None
 
 
 def is_valid_correct(raw: str, *, max_choice: int = 5) -> bool:

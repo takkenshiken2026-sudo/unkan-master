@@ -11,6 +11,24 @@ def norm(value: object) -> str:
     return (value or "").strip() if value is not None else ""
 
 
+def _correct_choice_index(correct: object) -> int | None:
+    """page['correct'] が int または multi の '1,3' 等のとき、先頭肢番号を返す。"""
+    if correct is None:
+        return None
+    if isinstance(correct, int):
+        return correct
+    raw = norm(correct)
+    if not raw:
+        return None
+    if raw.isdigit():
+        return int(raw)
+    if "," in raw:
+        head = raw.split(",", 1)[0].strip()
+        if head.isdigit():
+            return int(head)
+    return None
+
+
 def text_to_html(text: str) -> str:
     if not text:
         return ""
@@ -99,8 +117,10 @@ def infer_wrong_choice_note(
     opt = norm(choice_text)
     correct = page.get("correct")
     correct_text = ""
-    if correct and 1 <= correct <= len(page.get("opts") or []):
-        correct_text = page["opts"][correct - 1]
+    cor_idx = _correct_choice_index(correct)
+    opts = page.get("opts") or []
+    if cor_idx is not None and 1 <= cor_idx <= len(opts):
+        correct_text = opts[cor_idx - 1]
     correct_body = norm(row.get("explanation_correct")) or norm(row.get("explanation")) or ""
     category = norm(page.get("category") or "")
 
@@ -418,7 +438,9 @@ def build_explanation_html(page: dict, row: dict) -> str:
 
     correct = page.get("correct")
     if correct and not page.get("is_invalidated"):
-        opt_text = page["opts"][correct - 1] if 1 <= correct <= len(page["opts"]) else ""
+        cor_idx = _correct_choice_index(correct)
+        opts = page.get("opts") or []
+        opt_text = opts[cor_idx - 1] if cor_idx and 1 <= cor_idx <= len(opts) else ""
         parts.append(
             '<section class="q-exp-section" aria-labelledby="q-exp-correct-h">'
             '<h3 id="q-exp-correct-h" class="q-exp-h3">正解の理由</h3>'

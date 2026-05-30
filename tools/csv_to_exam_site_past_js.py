@@ -14,7 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.site_config import category_to_field_map
+from tools.correct_answer_format import collect_choice_texts, is_valid_correct, parse_correct_js_index
+from tools.site_config import category_to_field_map, extended_correct_answers
 
 DATA_CSV = ROOT / "data" / "past_questions.csv"
 PRACTICE_CSV = ROOT / "data" / "practice_questions.csv"
@@ -50,17 +51,10 @@ def build_plain_text(row: dict) -> str:
     return "\n\n".join(parts) if parts else "（問題文なし）"
 
 
-def parse_correct(raw: str) -> int | None:
-    raw = norm(raw)
-    if not raw:
-        return None
-    try:
-        n = int(raw)
-    except ValueError:
-        return None
-    if 1 <= n <= 5:
-        return n - 1
-    return None
+def parse_correct(raw: str, *, max_choice: int) -> int | None:
+    return parse_correct_js_index(
+        raw, extended=extended_correct_answers(), max_choice=max_choice
+    )
 
 
 def row_to_obj(row: dict, line_no: int) -> dict | None:
@@ -73,13 +67,18 @@ def row_to_obj(row: dict, line_no: int) -> dict | None:
     if not field:
         raise ValueError(f"line {line_no}: 未対応の category={cat!r}")
 
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
+    opts = collect_choice_texts(row)
+    min_choices = 2 if extended_correct_answers() else 4
+    if len(opts) < min_choices:
         raise ValueError(f"line {line_no}: 選択肢欠け year={year} no={qno}")
+    max_choice = len(opts)
 
     inv = norm(row.get("is_invalidated", "")).upper() == "TRUE"
-    cor = parse_correct(row.get("correct"))
+    cor_raw = norm(row.get("correct"))
+    cor = parse_correct(cor_raw, max_choice=max_choice)
     if cor is None and not inv:
+        if extended_correct_answers() and is_valid_correct(cor_raw, max_choice=max_choice):
+            return None
         raise ValueError(f"line {line_no}: 正答なし year={year} no={qno}")
 
     text = build_plain_text(row)
@@ -117,12 +116,17 @@ def practice_row_to_obj(row: dict, line_no: int) -> dict | None:
     if not field:
         raise ValueError(f"practice_questions.csv line {line_no}: 未対応の category={cat!r}")
 
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
+    opts = collect_choice_texts(row)
+    min_choices = 2 if extended_correct_answers() else 4
+    if len(opts) < min_choices:
         raise ValueError(f"practice_questions.csv line {line_no}: 選択肢欠け no={qno}")
+    max_choice = len(opts)
 
-    cor = parse_correct(row.get("correct"))
+    cor_raw = norm(row.get("correct"))
+    cor = parse_correct(cor_raw, max_choice=max_choice)
     if cor is None:
+        if extended_correct_answers() and is_valid_correct(cor_raw, max_choice=max_choice):
+            return None
         raise ValueError(f"practice_questions.csv line {line_no}: 正答なし no={qno}")
 
     text = build_plain_text(row)

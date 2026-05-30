@@ -24,10 +24,11 @@ def main() -> int:
     run([py, "tools/csv_to_exam_site_past_js.py"])
     run([py, "tools/csv_to_exam_site_ichimondou_js.py"])
     run([py, "tools/build_past_question_pages.py"])
-    run([py, "tools/build_practice_ichimon_pages.py"])
     run([py, "tools/build_article_pages.py"])
     run([py, "tools/build_glossary_pages.py"])
     run([py, "tools/build_hub_retire_redirects.py"])
+    # 用語ページ生成後に一問一答を組み立て（terms へのリンクを正す）
+    run([py, "tools/build_practice_ichimon_pages.py"])
     run([py, "tools/build_sitemap.py"])
     run([py, "tools/validate_sitemap.py"])
     run([py, "tools/validate_generated_seo.py"])

@@ -38,6 +38,23 @@ def sample_robots_meta() -> str:
     return '<meta name="robots" content="noindex, follow">'
 
 
+def patch_writing_sample_page(page_html: str, banner: str) -> str:
+    """執筆サンプル用に noindex 化し、記事先頭にバナーを差し込む。"""
+    out = page_html
+    for robots in (
+        '<meta name="robots" content="index, follow">',
+        '<meta name="robots" content="index,follow">',
+    ):
+        out = out.replace(robots, sample_robots_meta())
+    marker = '<article class="seo-article-card article-body">'
+    if marker in out:
+        return out.replace(marker, banner + "\n  " + marker, 1)
+    marker = '<h1 class="article-title">'
+    if marker in out:
+        return out.replace(marker, banner + "\n    " + marker, 1)
+    return out + "\n" + banner
+
+
 COMPARE_WRITING_SAMPLE: dict = {
     "title": "【執筆サンプル】35条説明と37条書面の違い",
     "category": "契約・実務",

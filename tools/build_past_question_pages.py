@@ -68,17 +68,23 @@ def norm(s: str | None) -> str:
     return (s or "").strip()
 
 
-def parse_correct(raw: str) -> int | None:
-    raw = norm(raw)
-    if not raw:
-        return None
-    try:
-        n = int(raw)
-    except ValueError:
-        return None
-    if 1 <= n <= 5:
-        return n
-    return None
+def parse_correct(raw: str, *, max_choice: int = 5) -> int | str | None:
+    """一問一答ビルド等からの互換 API。"""
+    from tools.correct_answer_format import (
+        is_valid_correct,
+        parse_correct_page_value,
+    )
+    from tools.site_config import extended_correct_answers
+
+    cor_raw = norm(raw)
+    cor = parse_correct_page_value(
+        cor_raw, extended=extended_correct_answers(), max_choice=max_choice
+    )
+    if cor is None and extended_correct_answers() and is_valid_correct(
+        cor_raw, max_choice=max_choice
+    ):
+        return cor_raw
+    return cor
 
 
 def build_stem_html(row: dict) -> str:
@@ -216,14 +222,15 @@ def load_glossary_lookup() -> dict[str, str]:
         term = norm(row.get("term"))
         if not term:
             continue
+        reading = norm(row.get("reading"))
         legacy_slug = norm(row.get("slug"))
         if legacy_slug:
-            slug_file = f"{legacy_slug}.html"
+            slug_file = legacy_slug if legacy_slug.endswith(".html") else f"{legacy_slug}.html"
             if slug_file in used:
                 raise ValueError(f"glossary_terms.csv: slug が重複しています: {legacy_slug}")
             used[slug_file] = term
         else:
-            slug_file = f"{term_slug(term, used)}.html"
+            slug_file = f"{term_slug(term, reading, used)}.html"
         entries.append({"term": term, "slug_file": slug_file})
     lookup = make_term_lookup(entries)
     return {k: f"../terms/{v}" for k, v in lookup.items()}
@@ -555,13 +562,27 @@ def load_rows() -> list[dict]:
 def page_dict(row: dict, line_no: int) -> dict:
     year = int(row["exam_year"])
     qno = int(row["question_no"])
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
+    from tools.correct_answer_format import collect_choice_texts
+
+    opts = collect_choice_texts(row)
+    from tools.site_config import extended_correct_answers
+
+    min_choices = 2 if extended_correct_answers() else 4
+    if len(opts) < min_choices:
         raise ValueError(f"line {line_no}: 選択肢欠け {year}-{qno}")
+    max_choice = len(opts)
     inv = norm(row.get("is_invalidated", "")).upper() == "TRUE"
-    cor = parse_correct(row.get("correct"))
+    from tools.correct_answer_format import is_valid_correct, parse_correct_page_value
+
+    cor_raw = norm(row.get("correct"))
+    cor = parse_correct_page_value(
+        cor_raw, extended=extended_correct_answers(), max_choice=max_choice
+    )
     if cor is None and not inv:
-        raise ValueError(f"line {line_no}: 正答なし {year}-{qno}")
+        if extended_correct_answers() and is_valid_correct(cor_raw, max_choice=max_choice):
+            cor = cor_raw
+        else:
+            raise ValueError(f"line {line_no}: 正答なし {year}-{qno}")
     wareki = norm(row.get("exam_wareki"))
     cat = norm(row.get("category"))
     typ = norm(row.get("type")) or "single"
@@ -965,6 +986,23 @@ def main() -> int:
     q_index = ROOT / "q" / "index.html"
     q_index.parent.mkdir(parents=True, exist_ok=True)
     q_index.write_text(build_q_index(pages, base), encoding="utf-8")
+
+    try:
+        from tools.past_question_seo import build_past_root_hub_html  # noqa: WPS433
+        from tools.site_config import brand_name, clean_origin, exam_name
+
+        years = sorted({int(p["year"]) for p in pages})
+        past_hub = ROOT / "q" / "past" / "index.html"
+        past_hub.parent.mkdir(parents=True, exist_ok=True)
+        past_hub.write_text(
+            build_past_root_hub_html(
+                years, pages, clean_origin(), brand_name(), exam_name()
+            ),
+            encoding="utf-8",
+        )
+        print(f"Wrote {past_hub}")
+    except ImportError:
+        pass
 
     # sitemap.xml は tools/build_sitemap.py が生成
 

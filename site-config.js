@@ -107,7 +107,8 @@ window.SITE_CONFIG = {
         "貨物自動車運送事業法関係",
         "事業法関係",
         "貨物事業法",
-        "事業法"
+        "事業法",
+        "契約・実務"
       ],
       "legacyGlossaryCat": "jigyo"
     },
@@ -127,7 +128,8 @@ window.SITE_CONFIG = {
       "aliases": [
         "道路交通法関係",
         "道交法関係",
-        "道交法"
+        "道交法",
+        "法令・制度"
       ],
       "legacyGlossaryCat": "traffic"
     },
@@ -146,7 +148,8 @@ window.SITE_CONFIG = {
       "name": "実務上の知識及び能力",
       "aliases": [
         "実務上の知識及び能力",
-        "実務"
+        "実務",
+        "設備・その他"
       ],
       "legacyGlossaryCat": "practice"
     }

@@ -27,7 +27,7 @@ from tools.build_glossary_pages import (  # noqa: E402
     make_term_lookup,
     term_slug,
 )
-from tools.archive.build_knowledge_hub_sample_pages import patch_writing_sample_page  # noqa: E402
+from tools.knowledge_hub_writing_samples import patch_writing_sample_page  # noqa: E402
 from tools.html_footer import (  # noqa: E402
     breadcrumb_html,
     shell_body_class,

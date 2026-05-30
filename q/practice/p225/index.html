@@ -17,7 +17,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../../site-pages.css?v=20260526-q-index-mobile">
 <link rel="stylesheet" href="../../../site-theme.css">
-<link rel="stylesheet" href="../../../q-page-quiz.css">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -69,9 +68,9 @@
           </span>
         </a>
         <nav class="topnav-links" aria-label="メインナビゲーション">
-          <a class="topnav-link" id="tnav-ichimondou" href="../../ichimon/index.html"><svg viewBox="0 0 16 16"><path d="M8 2v12M4 4h8M4 8h8M4 12h8"/></svg>一問一答</a>
+          <a class="topnav-link" id="tnav-ichimondou" href="/#ichimondou"><svg viewBox="0 0 16 16"><path d="M8 2v12M4 4h8M4 8h8M4 12h8"/></svg>一問一答</a>
           <a class="topnav-link" id="tnav-past" href="/#past"><svg viewBox="0 0 16 16"><path d="M3 2h10v12H3z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>過去問</a>
-          <a class="topnav-link active" id="tnav-orig" href="../../practice/index.html" aria-current="page"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>実践演習</a>
+          <a class="topnav-link active" id="tnav-orig" href="/#orig" aria-current="page"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>実践演習</a>
           <a class="topnav-link" id="tnav-dash" href="/#dash"><svg viewBox="0 0 16 16"><path d="M2 13L5 8l3 2 3-5 3 2"/></svg>記録・分析</a>
           <a class="topnav-link" id="tnav-review" href="/#review"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>復習</a>
           <a class="topnav-link" id="tnav-glossary" href="../../../terms/index.html"><svg viewBox="0 0 16 16"><rect x="2.5" y="2" width="11" height="12" rx="1.5"/><path d="M5 6h6M5 9h4"/></svg>用語解説</a>
@@ -95,20 +94,34 @@
     <h2 id="q-stem-h" class="q-h2">問題</h2>
     <div class="q-stem"><p>道路交通法関係に関する次の記述のうち、適切なものには「適」を、適切でないものには「不適」を記入しなさい。法令上の原則に基づいて判断しなさい。</p></div>
   </section>
-  <section class="q-block q-quiz" aria-labelledby="q-opts-h">
+  <section class="q-block" aria-labelledby="q-opts-h">
     <h2 id="q-opts-h" class="q-h2">選択肢</h2>
-    <form class="q-quiz-form" data-quiz-type="truefalse_group" data-quiz-correct="適-1,3;不適-2,4" onsubmit="return false;"><p class="q-quiz-hint-locked">各記述について、「適」または「不適」を選び、「採点する」を押してください。</p><div class="q-quiz-subgroups"><div class="q-quiz-subgroup"><p class="q-quiz-subgroup__title">記述 1</p><p class="q-quiz-subgroup__statement">交通整理のない交差点で交差道路が優先道路等の場合、徐行しなければならない。</p><ul class="q-quiz-subgroup__opts"><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-1" value="適"><span>適</span></label></li><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-1" value="不適"><span>不適</span></label></li></ul></div><div class="q-quiz-subgroup"><p class="q-quiz-subgroup__title">記述 2</p><p class="q-quiz-subgroup__statement">優先道路と交差するときは、必ず一時停止しなければならない。</p><ul class="q-quiz-subgroup__opts"><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-2" value="適"><span>適</span></label></li><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-2" value="不適"><span>不適</span></label></li></ul></div><div class="q-quiz-subgroup"><p class="q-quiz-subgroup__title">記述 3</p><p class="q-quiz-subgroup__statement">荷主が過積載運転を要求し反復のおそれがある場合、警察署長は運送引受け禁止を命ずることができる。</p><ul class="q-quiz-subgroup__opts"><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-3" value="適"><span>適</span></label></li><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-3" value="不適"><span>不適</span></label></li></ul></div><div class="q-quiz-subgroup"><p class="q-quiz-subgroup__title">記述 4</p><p class="q-quiz-subgroup__statement">荷主が過積載を要求しても、道路交通法上の措置はない。</p><ul class="q-quiz-subgroup__opts"><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-4" value="適"><span>適</span></label></li><li><label class="q-quiz-subgroup__opt-label"><input type="radio" name="q-stmt-4" value="不適"><span>不適</span></label></li></ul></div></div><div class="q-quiz-actions"><button type="button" class="q-grade-btn">採点する</button><button type="button" class="q-reset-btn">リセット</button></div><div class="q-grade-result" role="status" aria-live="polite"></div></form>
+    <ol class="q-opts"><li class="q-opt"><span class="q-opt-num">（1）</span> 交通整理のない交差点で交差道路が優先道路等の場合、徐行しなければならない。</li><li class="q-opt"><span class="q-opt-num">（2）</span> 優先道路と交差するときは、必ず一時停止しなければならない。</li><li class="q-opt"><span class="q-opt-num">（3）</span> 荷主が過積載運転を要求し反復のおそれがある場合、警察署長は運送引受け禁止を命ずることができる。</li><li class="q-opt"><span class="q-opt-num">（4）</span> 荷主が過積載を要求しても、道路交通法上の措置はない。</li></ol>
   </section>
-  <section class="q-block q-answer q-quiz-locked q-quiz-relock" aria-labelledby="q-ans-h">
+  <section class="q-block q-answer" aria-labelledby="q-ans-h">
     <h2 id="q-ans-h" class="q-h2">正答</h2>
-    <p>正答は <strong>記述1=適 / 記述2=不適 / 記述3=適 / 記述4=不適</strong> です。</p>
+    <p>正答は <strong>（適-1,3;不適-2,4）</strong> です。</p>
   </section>
-  <section class="q-block q-quiz-locked q-quiz-relock" aria-labelledby="q-exp-h">
+  <section class="q-block" aria-labelledby="q-exp-h">
     <h2 id="q-exp-h" class="q-h2">解説</h2>
-    <div class="q-exp"><p>１と３は、それぞれ「優先道路」「荷主への命令」の原則に合っている。２と４は、要件や判断基準が原則と異なるため不適切である。</p></div>
+    <div class="q-exp">
+    <section class="q-exp-section" aria-labelledby="q-exp-correct-h"><h3 id="q-exp-correct-h" class="q-exp-h3">正解の理由</h3>
+    <p>１と３は、それぞれ「優先道路」「荷主への命令」の原則に合っている。２と４は、要件や判断基準が原則と異なるため不適切である。</p>
+    </section>
+    <section class="q-exp-section" aria-labelledby="q-exp-wrong-h"><h3 id="q-exp-wrong-h" class="q-exp-h3">他の選択肢</h3><ul class="q-exp-choice-list"><li class="q-exp-choice-item"><p class="q-exp-choice-head"><span class="q-exp-choice-num">（1）</span> <span class="q-exp-choice-text">交通整理のない交差点で交差道路が優先道路等の場合、徐行しなければならない。</span></p><p class="q-exp-choice-note">「交通整理のない交差点で交差道路が優先道路等の場合、徐行しなければならない。」は、一見もっともらしく見える場合がありますが、正答（適-1,3;不適-2,4）「」と比べると、学習・制度・実務の観点で「最も問題がある」記述ではありません。<br>
+<br>
+「最も適切でない」形式では、正しそうな肢が複数あることがあります。各肢の主語・客体・数字・期限・手続の順序が設問条件と合うかを確認し、最も不適切な一つだけを選びます。</p></li><li class="q-exp-choice-item"><p class="q-exp-choice-head"><span class="q-exp-choice-num">（2）</span> <span class="q-exp-choice-text">優先道路と交差するときは、必ず一時停止しなければならない。</span></p><p class="q-exp-choice-note">「優先道路と交差するときは、必ず一時停止しなければならない。」は、一見もっともらしく見える場合がありますが、正答（適-1,3;不適-2,4）「」と比べると、学習・制度・実務の観点で「最も問題がある」記述ではありません。<br>
+<br>
+「最も適切でない」形式では、正しそうな肢が複数あることがあります。各肢の主語・客体・数字・期限・手続の順序が設問条件と合うかを確認し、最も不適切な一つだけを選びます。</p></li><li class="q-exp-choice-item"><p class="q-exp-choice-head"><span class="q-exp-choice-num">（3）</span> <span class="q-exp-choice-text">荷主が過積載運転を要求し反復のおそれがある場合、警察署長は運送引受け禁止を命ずることができる。</span></p><p class="q-exp-choice-note">「荷主が過積載運転を要求し反復のおそれがある場合、警察署長は運送引受け禁止を命ずることができる。」は、一見もっともらしく見える場合がありますが、正答（適-1,3;不適-2,4）「」と比べると、学習・制度・実務の観点で「最も問題がある」記述ではありません。<br>
+<br>
+「最も適切でない」形式では、正しそうな肢が複数あることがあります。各肢の主語・客体・数字・期限・手続の順序が設問条件と合うかを確認し、最も不適切な一つだけを選びます。</p></li><li class="q-exp-choice-item"><p class="q-exp-choice-head"><span class="q-exp-choice-num">（4）</span> <span class="q-exp-choice-text">荷主が過積載を要求しても、道路交通法上の措置はない。</span></p><p class="q-exp-choice-note">「荷主が過積載を要求しても、道路交通法上の措置はない。」は、一見もっともらしく見える場合がありますが、正答（適-1,3;不適-2,4）「」と比べると、学習・制度・実務の観点で「最も問題がある」記述ではありません。<br>
+<br>
+「最も適切でない」形式では、正しそうな肢が複数あることがあります。各肢の主語・客体・数字・期限・手続の順序が設問条件と合うかを確認し、最も不適切な一つだけを選びます。</p></li></ul></section>
+    <section class="q-exp-section" aria-labelledby="q-exp-tip-h"><h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3><p>この問題で間違えた場合は、設問文の求め方（「正しいもの」「誤っているもの」「最も適切でないもの」）を最初に線引きしてください。正答・誤答それぞれについて、用語の定義と制度の前提を用語解説で確認し、復習リストや実践演習・一問一答と組み合わせて、同分野の過去問を解き直すと定着しやすくなります。</p></section>
+    </div>
   </section>
   <section class="q-block q-similar" aria-labelledby="q-similar-h"><h2 id="q-similar-h" class="q-h2">類似の問題</h2><p class="q-similar-lead">同じ分野・タグや問題文のキーワードが近い問題です。解き直しや確認に使えます。</p><ul class="q-similar-list"><li class="q-similar-item"><a class="q-similar-card" href="../../../q/past/y20082/q13/index.html"><span class="q-similar-card-head"><span class="q-similar-mode">過去問</span><span class="q-similar-title">20082年 第13問</span></span><span class="q-similar-cat">道路交通法関係</span><p class="q-similar-preview">道路交通法に定める用語の意義について、次の記述のうち、誤っているものはどれか。</p></a></li><li class="q-similar-item"><a class="q-similar-card" href="../../../q/past/y20082/q14/index.html"><span class="q-similar-card-head"><span class="q-similar-mode">過去問</span><span class="q-similar-title">20082年 第14問</span></span><span class="q-similar-cat">道路交通法関係</span><p class="q-similar-preview">駐車を禁止する場所 ( 公安委員会の定めるところにより警察署長の許可を受けたときを除く。）に関する次の記述のう…</p></a></li><li class="q-similar-item"><a class="q-similar-card" href="../../../q/past/y20082/q15/index.html"><span class="q-similar-card-head"><span class="q-similar-mode">過去問</span><span class="q-similar-title">20082年 第15問</span></span><span class="q-similar-cat">道路交通法関係</span><p class="q-similar-preview">追越しに関する次の記述のうち、誤っているものはどれか。</p></a></li><li class="q-similar-item"><a class="q-similar-card" href="../../../q/past/y20082/q16/index.html"><span class="q-similar-card-head"><span class="q-similar-mode">過去問</span><span class="q-similar-title">20082年 第16問</span></span><span class="q-similar-cat">道路交通法関係</span><p class="q-similar-preview">車両等の運転者が道路交通法令の規定に違反した場合の措置に関する次の文中、Ａ・Ｂ・Ｃ・Ｄに入るべき語句の組合せと…</p></a></li></ul></section>
-  <section class="q-block q-related" aria-labelledby="q-related-h"><h2 id="q-related-h" class="q-h2">関連ページ</h2><div class="related-box"><div class="related-links"><a class="related-link" href="../../../q/practice/index.html">実践演習一覧</a><a class="related-link" href="../../../q/practice/p224/index.html">実践演習 第224問</a><a class="related-link" href="../../../q/practice/p226/index.html">実践演習 第226問</a><a class="related-link" href="../../../terms/field-traffic/index.html">道路交通法関係の用語一覧</a><a class="related-link" href="../../../articles/past-question-strategy/index.html">過去問の使い方と復習の進め方</a><a class="related-link" href="../../../articles/study-plan/index.html">運行管理者試験の学習計画の立て方</a><a class="related-link" href="../../../q/index.html">過去問一覧</a><a class="related-link" href="../../../q/ichimon/index.html">一問一答一覧</a></div></div></section>
+  <section class="q-block q-related" aria-labelledby="q-related-h"><h2 id="q-related-h" class="q-h2">関連ページ</h2><div class="related-box"><div class="related-links"><a class="related-link" href="../../../q/practice/index.html">実践演習一覧</a><a class="related-link" href="../../../q/practice/p224/index.html">実践演習 第224問</a><a class="related-link" href="../../../q/practice/p226/index.html">実践演習 第226問</a><a class="related-link" href="../../../terms/field-traffic/index.html">道路交通法関係の用語一覧</a><a class="related-link" href="../../../articles/field-traffic-basics/index.html">運行管理者試験の道路交通法関係の基礎の押さえ方</a><a class="related-link" href="../../../articles/field-traffic-frequent-topics/index.html">運行管理者試験の道路交通法関係の頻出論点</a><a class="related-link" href="../../../q/index.html">過去問一覧</a><a class="related-link" href="../../../q/ichimon/index.html">一問一答一覧</a></div></div></section>
   <p class="q-app-link"><a href="../../../index.html#orig">アプリで演習する</a></p>
 </main>
 <footer class="site-footer" role="contentinfo">
@@ -138,6 +151,5 @@
 <script>window.__GA4_MEASUREMENT_ID__="G-N0F8L2Q698";</script>
 <script defer src="../../../site-analytics.js"></script>
 </div>
-<script src="../../../q-page-quiz.js" defer></script>
 </body>
 </html>

@@ -124,7 +124,12 @@ class PublicContentValidator:
             start = max(0, match.start() - 12)
             end = min(len(plain), match.end() + 12)
             context = plain[start:end].replace("\n", " ")
-            if "http://" in context or "https://" in context:
+            if (
+                "http://" in context
+                or "https://" in context
+                or "%2F%2F" in context
+                or "www." in context
+            ):
                 continue
             self.error(
                 path,

@@ -170,11 +170,15 @@ def load_ichimon_rows() -> list[dict]:
 def practice_page_dict(row: dict, line_no: int) -> dict:
     if norm(row.get("is_invalidated", "")).upper() == "TRUE":
         raise ValueError(f"practice line {line_no}: 無効行はスキップ対象")
+    from tools.correct_answer_format import collect_choice_texts
+    from tools.site_config import extended_correct_answers
+
     qno = int(row["question_no"])
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
-    if not all(opts):
+    opts = collect_choice_texts(row)
+    min_choices = 2 if extended_correct_answers() else 4
+    if len(opts) < min_choices:
         raise ValueError(f"practice line {line_no}: 選択肢欠け no={qno}")
-    cor = parse_correct(row.get("correct"))
+    cor = parse_correct(row.get("correct"), max_choice=len(opts))
     if cor is None:
         raise ValueError(f"practice line {line_no}: 正答なし no={qno}")
     cat = norm(row.get("category"))
