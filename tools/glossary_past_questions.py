@@ -102,7 +102,7 @@ def past_questions_section_html(hits: list[dict], rel_path: Path, *, section_num
     for h in hits:
         href = html.escape(f"{prefix}{h['href_rel']}")
         label = html.escape(f"{h['year']}年 第{h['qno']}問（{h['category']}）")
-        links.append(f'<li><a class="related-link" href="{href}">{label}</a></li>')
+        links.append(f'<a class="related-link" href="{href}">{label}</a>')
     num_html = (
         f'<span class="section-heading-num">{section_num}</span>' if section_num is not None else ""
     )
@@ -110,6 +110,6 @@ def past_questions_section_html(hits: list[dict], rel_path: Path, *, section_num
         '<section class="seo-article-section" aria-labelledby="term-past-title">'
         f'<h2 id="term-past-title">{num_html}関連する過去問</h2>'
         "<p>この用語が本文・解説に登場する過去問です。リンクから問題と解説を確認できます。</p>"
-        f'<ul class="term-past-list">{"".join(links)}</ul>'
+        f'<div class="related-links term-past-list">{"".join(links)}</div>'
         "</section>"
     )

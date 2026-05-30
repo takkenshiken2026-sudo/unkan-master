@@ -1,0 +1,671 @@
+/* seo-editorial.css — 試験ガイド・用語解説・知識ハブ詳細の読みやすさ調整レイヤー
+ *
+ * 調整方針:
+ *   - 本文・見出し・補助ブロックの色・サイズ・行間は --seo-* 変数で集中管理
+ *   - site-pages.css / site-theme.css はサイト共通のまま触らない
+ *   - アクセントは「番号付き見出しの左ライン」「引用ブロック」「強調（strong）」
+ *
+ * 対象: build 生成の SEO 記事詳細（guide / term / compare / numbers / mistakes）
+ * 正本ドキュメント: docs/seo-editorial-typography.md
+ */
+
+body.guide-article-page,
+body.term-article-page,
+body.compare-article-page,
+body.numbers-article-page,
+body.mistakes-article-page,
+body.seo-editorial-preview-page {
+  /* --- タイポグラフィ --- */
+  --seo-font-body: var(--font, "Noto Sans JP", sans-serif);
+  --seo-font-heading: var(--seo-font-body);
+  --seo-fs-body: 16px;
+  --seo-fs-lead: 16px;
+  --seo-fs-h1: 24px;
+  --seo-fs-h2: clamp(1.125rem, 1.6vw + 0.95rem, 1.3125rem);
+  --seo-fs-h3: 19px;
+  --seo-fs-table: 16px;
+  --seo-fs-caption: 0.8125rem;
+  --seo-line-body: 1.88;
+  --seo-line-lead: 1.95;
+  --seo-line-heading: 1.45;
+  --seo-letter-body: 0.01em;
+  --seo-font-weight: 500;
+  --seo-font-weight-heading: 700;
+  --seo-font-weight-strong: 700;
+  --seo-font-weight-faq: 700;
+
+  /* --- 色（本文階層） --- */
+  --seo-text-title: #141414;
+  --seo-text-body: #2a2a2a;
+  --seo-text-lead: #242424;
+  --seo-text-muted: #5f6368;
+  --seo-text-caption: #757575;
+
+  /* --- アクセント（見出し左ライン・番号・引用・強調） --- */
+  --seo-accent: #2563a8;
+  --seo-accent-soft: #eef4fb;
+  --seo-strong: var(--seo-accent);
+  --seo-link-inline: #1a4f8c;
+  --seo-link-card-border: color-mix(in srgb, var(--seo-accent) 22%, var(--seo-panel-border));
+  --seo-link-card-hover-bg: var(--seo-accent-soft);
+
+  /* --- カード・パネル --- */
+  --seo-card-bg: #ffffff;
+  --seo-card-border: rgba(0, 0, 0, 0.08);
+  --seo-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+  --seo-panel-bg: #f7f8f9;
+  --seo-panel-border: rgba(0, 0, 0, 0.07);
+  --seo-callout-bg: var(--bg2, #f4f4f5);
+  --seo-callout-border: var(--accent-border, rgba(0, 0, 0, 0.12));
+  --seo-callout-side: var(--accent, #333333);
+  --seo-callout-text: var(--seo-text-body);
+  --seo-callout-title: var(--seo-text-title);
+  --seo-callout-radius: 0;
+  --seo-card-radius: 0;
+  --seo-callout-padding: 18px 20px;
+  --seo-callout-margin: 24px 0;
+  --seo-toc-bg: #fafbfc;
+  --seo-divider: rgba(0, 0, 0, 0.1);
+
+  /* --- 表 --- */
+  --seo-table-border: rgba(0, 0, 0, 0.16);
+  --seo-table-head-bg: #dde1e6;
+  --seo-table-head-text: #141414;
+  --seo-table-cell-bg: #ffffff;
+  --seo-table-cell-alt-bg: #eceef1;
+  --seo-table-cell-text: #141414;
+
+  /* --- 余白 --- */
+  --seo-section-gap: 2.5rem;
+  --seo-paragraph-gap: 1.05em;
+
+  /* 目次アンカー：sticky ヘッダー下に見出しが少し余白を空けて着地 */
+  --seo-scroll-anchor-gutter: clamp(24px, 2.5vw, 40px);
+  --seo-scroll-anchor-offset: calc(var(--site-sticky-top, 56px) + var(--seo-scroll-anchor-gutter));
+}
+
+body.term-article-page,
+body.compare-article-page,
+body.numbers-article-page,
+body.mistakes-article-page {
+  /* 知識ハブタブ（topnav 直下に sticky）分を加算 */
+  --seo-hub-tabs-sticky-h: var(--q-hub-links-sticky-h, 50px);
+  --seo-scroll-anchor-offset: calc(
+    var(--site-sticky-top, 56px) + var(--seo-hub-tabs-sticky-h) + var(--seo-scroll-anchor-gutter)
+  );
+}
+
+/* 目次・ページ内リンクの着地位置 */
+body.guide-article-page .seo-article-card :is(h2, h3)[id],
+body.term-article-page .seo-article-card :is(h2, h3)[id],
+body.compare-article-page .seo-article-card :is(h2, h3)[id],
+body.numbers-article-page .seo-article-card :is(h2, h3)[id],
+body.mistakes-article-page .seo-article-card :is(h2, h3)[id],
+body.seo-editorial-preview-page .seo-article-card :is(h2, h3)[id] {
+  scroll-margin-top: var(--seo-scroll-anchor-offset);
+}
+
+/* 記事カード */
+body.guide-article-page .seo-editorial.seo-article-card,
+body.term-article-page .seo-editorial.seo-article-card,
+body.compare-article-page .seo-editorial.seo-article-card,
+body.numbers-article-page .seo-editorial.seo-article-card,
+body.mistakes-article-page .seo-editorial.seo-article-card,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card {
+  background: var(--seo-card-bg);
+  border-color: var(--seo-card-border);
+  box-shadow: var(--seo-card-shadow);
+  border-radius: var(--seo-card-radius);
+  font-weight: var(--seo-font-weight);
+}
+
+/* 太字指定の上書き（本文系は Medium、見出しは Bold） */
+.seo-editorial.seo-article-card .article-lead,
+.seo-editorial.seo-article-card p,
+.seo-editorial.seo-article-card li,
+.seo-editorial.seo-article-card td,
+.seo-editorial.seo-article-card th,
+.seo-editorial.seo-article-card a,
+.seo-editorial.seo-article-card blockquote,
+.seo-editorial.seo-article-card .seo-toc a,
+.seo-editorial.seo-article-card .section-heading-num,
+.seo-editorial.seo-article-card .meta-category,
+.seo-editorial.seo-article-card .related-box-title,
+.seo-editorial.seo-article-card .related-link {
+  font-weight: var(--seo-font-weight);
+}
+
+.seo-editorial.seo-article-card .article-title {
+  font-weight: var(--seo-font-weight-heading);
+  font-size: var(--seo-fs-h1);
+}
+
+.seo-editorial.seo-article-card h2,
+.seo-editorial.seo-article-card h3,
+.seo-editorial.seo-article-card .term-subheading {
+  font-weight: var(--seo-font-weight-heading);
+}
+
+.seo-editorial.seo-article-card h3,
+.seo-editorial.seo-article-card .term-subheading {
+  font-size: var(--seo-fs-h3);
+}
+
+/* タイトル・リード */
+.seo-editorial .article-title {
+  font-family: var(--seo-font-heading);
+  font-size: var(--seo-fs-h1);
+  color: var(--seo-text-title);
+  line-height: var(--seo-line-heading);
+  border-bottom-color: var(--seo-divider);
+}
+
+.seo-editorial .article-lead {
+  font-family: var(--seo-font-body);
+  font-size: var(--seo-fs-lead);
+  line-height: var(--seo-line-lead);
+  color: var(--seo-text-lead);
+  font-weight: var(--seo-font-weight);
+}
+
+/* 本文 */
+.seo-editorial.article-body,
+.seo-editorial .article-body {
+  font-family: var(--seo-font-body);
+  font-size: var(--seo-fs-body);
+  letter-spacing: var(--seo-letter-body);
+}
+
+.seo-editorial p,
+.seo-editorial li {
+  color: var(--seo-text-body);
+  line-height: var(--seo-line-body);
+  font-size: var(--seo-fs-body);
+}
+
+.seo-editorial .seo-article-section ul:not(.term-past-list) {
+  margin: 0.75em 0 1em;
+  padding-left: 1.35em;
+  list-style: disc;
+}
+
+.seo-editorial .seo-article-section ul:not(.term-past-list) li + li {
+  margin-top: 0.35em;
+}
+
+.seo-editorial p {
+  margin-bottom: var(--seo-paragraph-gap);
+}
+
+/* 強調（strong）とリンク */
+.seo-editorial.seo-article-card strong {
+  color: var(--seo-strong);
+  font-weight: var(--seo-font-weight-strong);
+}
+
+/* 本文中のインラインリンク（用語自動リンク等） */
+.seo-editorial.seo-article-card .seo-article-section a,
+.seo-editorial.seo-article-card .article-lead a,
+.seo-editorial.seo-article-card blockquote a,
+.seo-editorial.seo-article-card .seo-key-points-box a {
+  color: var(--seo-link-inline);
+  font-weight: var(--seo-font-weight-heading);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, var(--seo-link-inline) 45%, transparent);
+}
+
+.seo-editorial.seo-article-card .seo-article-section a:hover,
+.seo-editorial.seo-article-card .article-lead a:hover,
+.seo-editorial.seo-article-card blockquote a:hover,
+.seo-editorial.seo-article-card .seo-key-points-box a:hover {
+  color: var(--seo-accent);
+  text-decoration-color: var(--seo-accent);
+  opacity: 1;
+}
+
+.seo-editorial.seo-article-card .seo-quality-panel .quality-source-list a {
+  color: var(--seo-link-inline);
+  font-weight: var(--seo-font-weight-heading);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.seo-editorial.seo-article-card .seo-quality-panel .quality-source-list a:hover {
+  color: var(--seo-accent);
+  opacity: 1;
+}
+
+.seo-editorial.seo-article-card blockquote strong {
+  color: var(--seo-strong);
+}
+
+/* 見出し（番号付き H2 / H3 のみ左ライン + 番号塗り） */
+.seo-editorial h2 {
+  font-family: var(--seo-font-heading);
+  font-size: var(--seo-fs-h2);
+  line-height: var(--seo-line-heading);
+  color: var(--seo-text-title);
+  margin-top: var(--seo-section-gap);
+}
+
+.seo-editorial .seo-article-section h2:has(.section-heading-num) {
+  padding-left: 10px;
+  border-left: 3px solid var(--seo-accent);
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.seo-editorial h3,
+.seo-editorial .term-subheading {
+  font-family: var(--seo-font-heading);
+  font-size: var(--seo-fs-h3);
+  color: var(--seo-text-title);
+  padding-left: 10px;
+  border-left: 3px solid var(--seo-accent);
+}
+
+.seo-editorial .section-heading-num {
+  background: var(--seo-accent);
+  color: #ffffff;
+  border-color: var(--seo-accent);
+}
+
+/* 目次 */
+.seo-editorial .seo-toc {
+  background: var(--seo-toc-bg);
+  border-color: var(--seo-panel-border);
+  border-radius: var(--seo-card-radius);
+}
+
+.seo-editorial .seo-toc h2 {
+  margin-top: 0;
+  font-size: var(--seo-fs-h2);
+  color: var(--seo-text-title);
+}
+
+.seo-editorial .seo-toc li {
+  color: var(--seo-text-body);
+  margin: 0.15em 0;
+}
+
+.seo-editorial .seo-toc a {
+  display: inline-block;
+  padding: 0.15em 0.35em;
+  margin: 0 -0.35em;
+  border-radius: 2px;
+  color: var(--seo-text-title);
+  font-weight: var(--seo-font-weight-heading);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--seo-accent) 35%, transparent);
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.seo-editorial .seo-toc a:hover {
+  color: var(--seo-accent);
+  background: var(--seo-link-card-hover-bg);
+  border-bottom-color: var(--seo-accent);
+}
+
+/* 要点ボックス・信頼性・行動ボックス（グレー背景 + サイトカラー左ライン） */
+.seo-editorial .seo-quality-panel,
+.seo-editorial .seo-action-box,
+.seo-editorial .seo-key-points-box {
+  background: var(--seo-callout-bg);
+  border: 1px solid var(--seo-callout-border);
+  border-left: 4px solid var(--seo-callout-side);
+  border-radius: var(--seo-callout-radius);
+  padding: var(--seo-callout-padding);
+  color: var(--seo-callout-text);
+}
+
+.seo-editorial .seo-quality-panel,
+.seo-editorial .seo-action-box {
+  margin: var(--seo-callout-margin);
+}
+
+.seo-editorial .seo-key-points-box {
+  margin: 0 0 var(--seo-callout-margin);
+}
+
+.seo-editorial .seo-quality-panel h2,
+.seo-editorial .seo-action-box h2,
+.seo-editorial .seo-key-points-box h2 {
+  margin-top: 0;
+  color: var(--seo-callout-title);
+}
+
+.seo-editorial .seo-key-points-box h2 {
+  margin-bottom: 0;
+  padding: 0;
+  border: none;
+  font-size: 19px;
+  font-weight: var(--seo-font-weight-heading);
+  line-height: var(--seo-line-heading);
+}
+
+.seo-editorial .seo-key-points-box p {
+  margin: 10px 0 0;
+  color: var(--seo-text-body);
+  line-height: var(--seo-line-body);
+  font-size: var(--seo-fs-body);
+}
+
+.seo-editorial .seo-key-points-list {
+  margin: 12px 0 0;
+  padding-left: 1.2em;
+  list-style: disc;
+}
+
+.seo-editorial .seo-key-points-list li {
+  color: var(--seo-text-body);
+  line-height: var(--seo-line-body);
+}
+
+.seo-editorial .seo-key-points-list li + li {
+  margin-top: 0.4em;
+}
+
+.seo-editorial .seo-key-points-box p:last-child,
+.seo-editorial .seo-key-points-box ul:last-child {
+  margin-bottom: 0;
+}
+
+.seo-editorial.seo-article-card .seo-action-box p,
+.seo-editorial.seo-article-card .seo-action-box li {
+  color: var(--seo-callout-text);
+}
+
+.seo-editorial.seo-article-card .seo-action-box strong {
+  color: var(--seo-strong);
+}
+
+.seo-editorial.seo-article-card .seo-quality-panel a,
+.seo-editorial.seo-article-card .seo-quality-panel .quality-source-list a {
+  color: var(--seo-table-cell-text);
+}
+
+.seo-editorial.seo-article-card .seo-quality-panel .seo-info-table th,
+.seo-editorial.seo-article-card .seo-quality-panel .seo-info-table td,
+.seo-editorial.seo-article-card .seo-quality-panel .seo-info-table li {
+  color: var(--seo-table-cell-text);
+}
+
+.seo-editorial.seo-article-card .seo-quality-panel .seo-info-table th {
+  color: var(--seo-table-head-text);
+}
+
+.seo-editorial .seo-quality-panel .seo-info-table {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.seo-editorial .term-definition-section {
+  background: var(--seo-panel-bg);
+  border-color: var(--seo-panel-border);
+  border-radius: var(--seo-card-radius);
+}
+
+.seo-editorial .term-definition-section h2 {
+  margin-top: 0;
+  color: var(--seo-text-title);
+}
+
+.seo-editorial .seo-action-box p:last-child,
+.seo-editorial .seo-action-box ol:last-child,
+.seo-editorial .seo-action-box ul:last-child {
+  margin-bottom: 0;
+}
+
+/* メタ情報 */
+.seo-editorial .meta-updated,
+.seo-editorial .term-compare-note {
+  color: var(--seo-text-caption);
+}
+
+.seo-editorial.seo-article-card blockquote {
+  background: var(--seo-accent-soft);
+  border-left: 4px solid var(--seo-accent);
+  border-radius: var(--seo-card-radius);
+  color: var(--seo-text-body);
+}
+
+.seo-editorial .term-faq-item {
+  border-top: 1px solid var(--seo-divider);
+  padding: 12px 0;
+}
+
+.seo-editorial .term-faq-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.seo-editorial.seo-article-card .term-faq-item summary {
+  color: var(--seo-text-title);
+  font-size: var(--seo-fs-h3);
+  font-weight: var(--seo-font-weight-faq);
+  line-height: var(--seo-line-heading);
+}
+
+.seo-editorial.seo-article-card .term-faq-item div {
+  color: var(--seo-text-body);
+  line-height: var(--seo-line-body);
+}
+
+/* 関連リンク・次に確認（カード型） */
+.seo-editorial .related-box {
+  background: var(--seo-panel-bg);
+  border: 1px solid var(--seo-panel-border);
+  border-radius: var(--seo-card-radius);
+  padding: var(--seo-callout-padding);
+  margin-top: var(--seo-callout-margin);
+}
+
+.seo-editorial.seo-article-card .related-box-title {
+  color: var(--seo-text-title);
+  font-size: 19px;
+  font-weight: var(--seo-font-weight-heading);
+  letter-spacing: normal;
+  margin-bottom: 14px;
+}
+
+.seo-editorial .related-box-title {
+  color: var(--seo-text-title);
+  font-size: 19px;
+  letter-spacing: normal;
+}
+
+.seo-editorial .related-links,
+.seo-editorial .term-related-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seo-editorial.seo-article-card .related-links .related-link,
+.seo-editorial.seo-article-card .term-related-links .related-link,
+.seo-editorial.seo-article-card .term-past-list .related-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px 12px 16px;
+  background: var(--seo-card-bg);
+  border: 1px solid var(--seo-link-card-border);
+  border-left: 3px solid var(--seo-accent);
+  border-radius: var(--seo-card-radius);
+  text-decoration: none;
+  color: var(--seo-text-title);
+  font-size: var(--seo-fs-body);
+  font-weight: var(--seo-font-weight-heading);
+  line-height: 1.45;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.seo-editorial.seo-article-card .related-links .related-link::after,
+.seo-editorial.seo-article-card .term-related-links .related-link::after,
+.seo-editorial.seo-article-card .term-past-list .related-link::after {
+  content: "→";
+  flex-shrink: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--seo-accent);
+  transition: transform 0.15s;
+}
+
+.seo-editorial.seo-article-card .related-links .related-link:hover,
+.seo-editorial.seo-article-card .term-related-links .related-link:hover,
+.seo-editorial.seo-article-card .term-past-list .related-link:hover {
+  background: var(--seo-link-card-hover-bg);
+  border-color: color-mix(in srgb, var(--seo-accent) 40%, var(--seo-panel-border));
+  color: var(--seo-accent);
+  opacity: 1;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--seo-accent) 12%, transparent);
+}
+
+.seo-editorial.seo-article-card .related-links .related-link:hover::after,
+.seo-editorial.seo-article-card .term-related-links .related-link:hover::after,
+.seo-editorial.seo-article-card .term-past-list .related-link:hover::after {
+  transform: translateX(3px);
+}
+
+.seo-editorial.seo-article-card .related-link-static {
+  display: block;
+  padding: 10px 14px;
+  color: var(--seo-text-muted);
+  font-size: var(--seo-fs-body);
+  background: var(--seo-card-bg);
+  border: 1px dashed var(--seo-divider);
+  border-radius: var(--seo-card-radius);
+}
+
+.seo-editorial .term-past-list {
+  margin: 0.75em 0 0;
+}
+
+/* 表 */
+.seo-editorial.seo-article-card table {
+  border: 1px solid var(--seo-table-border);
+  border-radius: var(--seo-card-radius);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.seo-editorial .seo-quality-panel .seo-info-table {
+  margin-top: 12px;
+  margin-bottom: 0;
+  background: var(--seo-table-cell-bg);
+  overflow: hidden;
+}
+
+.seo-editorial.seo-article-card th {
+  background: var(--seo-table-head-bg);
+  color: var(--seo-table-head-text);
+  border-bottom: 1px solid var(--seo-table-border);
+  border-right: 1px solid var(--seo-table-border);
+}
+
+.seo-editorial.seo-article-card td {
+  background: var(--seo-table-cell-bg);
+  color: var(--seo-table-cell-text);
+  border-bottom: 1px solid var(--seo-table-border);
+}
+
+.seo-editorial.seo-article-card tr:nth-child(even) td {
+  background: var(--seo-table-cell-alt-bg);
+}
+
+.seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td {
+  background: var(--seo-table-cell-bg);
+}
+
+.seo-editorial.seo-article-card tr:last-child th,
+.seo-editorial.seo-article-card tr:last-child td {
+  border-bottom: none;
+}
+
+.seo-editorial .seo-info-table th,
+.seo-editorial .seo-info-table td,
+.seo-editorial .term-compare-table th,
+.seo-editorial .term-compare-table td,
+.seo-editorial .compare-matrix-table th,
+.seo-editorial .compare-matrix-table td,
+.seo-editorial .numbers-matrix-table th,
+.seo-editorial .numbers-matrix-table td,
+.seo-editorial .mistakes-matrix-table th,
+.seo-editorial .mistakes-matrix-table td,
+.seo-editorial table th,
+.seo-editorial table td {
+  font-size: var(--seo-fs-table);
+}
+
+.seo-editorial .seo-info-table th {
+  color: var(--seo-table-head-text);
+}
+
+.seo-editorial .seo-info-table td {
+  color: var(--seo-table-cell-text);
+}
+
+.seo-editorial.seo-article-card table a {
+  color: var(--seo-table-cell-text);
+}
+
+/* 要点・関連記事見出し（site-pages.css の fs-sub / fs-small より優先） */
+body.guide-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
+body.term-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
+body.compare-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
+body.numbers-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
+body.mistakes-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card .seo-key-points-box h2 {
+  font-size: 19px;
+}
+
+body.guide-article-page .seo-editorial.seo-article-card .related-box-title,
+body.term-article-page .seo-editorial.seo-article-card .related-box-title,
+body.compare-article-page .seo-editorial.seo-article-card .related-box-title,
+body.numbers-article-page .seo-editorial.seo-article-card .related-box-title,
+body.mistakes-article-page .seo-editorial.seo-article-card .related-box-title,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-title {
+  font-size: 19px;
+  letter-spacing: normal;
+}
+
+@media (max-width: 760px) {
+  body.guide-article-page,
+  body.term-article-page,
+  body.compare-article-page,
+  body.numbers-article-page,
+  body.mistakes-article-page,
+  body.seo-editorial-preview-page {
+    --seo-section-gap: 2rem;
+    --seo-callout-padding: 16px 16px;
+    --seo-callout-margin: 20px 0;
+    --seo-scroll-anchor-gutter: 28px;
+  }
+
+  /* モバイル：ハブタブが2段になる（40px×2 + gap + padding ≒ 98px） */
+  body.term-article-page,
+  body.compare-article-page,
+  body.numbers-article-page,
+  body.mistakes-article-page {
+    --seo-hub-tabs-sticky-h: 98px;
+  }
+}
+
+@media (max-width: 480px) {
+  body.guide-article-page,
+  body.term-article-page,
+  body.compare-article-page,
+  body.numbers-article-page,
+  body.mistakes-article-page,
+  body.seo-editorial-preview-page {
+    --seo-scroll-anchor-gutter: 24px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* ダークモードは未対応。将来 --seo-* を上書きする場合はここに追加 */
+}

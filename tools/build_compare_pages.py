@@ -23,14 +23,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.build_glossary_pages import (  # noqa: E402
-    HEAD_FONTS,
     GLOSSARY_CSV,
     TERMS_INDEX_CSS_VER,
     custom_faq_items,
     faq_items_for_term,
-    faq_section_html,
     field_hub_slug,
     glossary_field_id,
+    load_glossary_entries,
     load_glossary_rows,
     load_guide_slugs,
     make_term_lookup,
@@ -40,27 +39,35 @@ from tools.build_glossary_pages import (  # noqa: E402
     ordered_term_categories,
     parse_term_tags,
     public_url,
-    rel_css,
-    rel_theme_css,
+    rel_editorial_css,
     multi_paragraph_html,
     semicolon_field_html,
     semicolon_list_html,
     split_semicolon,
     term_slug,
 )
+from tools.seo_editorial_chrome import (  # noqa: E402
+    seo_editorial_article_class,
+    seo_editorial_head_fonts,
+)
 from tools.glossary_past_questions import past_questions_section_html  # noqa: E402
 from tools.knowledge_hub_seo import (
+    faq_section_html as hub_faq_section_html,
     field_hub_page_exists,  # noqa: E402
     build_numbered_sections,
     find_past_questions_for_hub,
     hub_article_json_ld,
     hub_breadcrumb_json_ld,
     hub_detail_breadcrumb,
+    hub_compare_memory_body_html,
+    hub_compare_mistakes_body_html,
+    hub_compare_points_body_html,
+    hub_faq_items_resolved,
     hub_guide_links,
     hub_meta_line,
     hub_next_links_html,
     official_info_html,
-    seo_action_box_html,
+    seo_hub_key_points_box_html,
     seo_quality_panel_html,
     seo_toc_html,
 )
@@ -253,22 +260,23 @@ def compare_matrix_table_html(col_labels: list[str], compare_rows: list[dict]) -
     )
 
 
-def related_terms_links_html(related: str, term_lookup: dict[str, str]) -> str:
-    items: list[str] = []
-    seen: set[str] = set()
-    for label in split_semicolon(related):
-        href = term_lookup.get(label)
-        if href and href not in seen:
-            seen.add(href)
-            items.append(
-                f'<a class="related-link" href="../{html.escape(href)}">{html.escape(label)}</a>'
-            )
-    if not items:
-        return ""
-    return (
-        '<div class="related-box" aria-labelledby="compare-related-title">'
-        '<div id="compare-related-title" class="related-box-title">関連用語</div>'
-        f'<div class="related-links term-related-links">{"".join(items)}</div></div>'
+def related_terms_links_html(
+    related: str,
+    term_lookup: dict[str, str],
+    *,
+    glossary_entries: list[dict],
+    category: str,
+) -> str:
+    from tools.internal_links import related_terms_box_html
+
+    return related_terms_box_html(
+        related,
+        term_lookup,
+        entries=glossary_entries,
+        current={"category": category, "slug_file": "__hub_page__"},
+        href_prefix="../",
+        box_id="compare-related-title",
+        box_title="関連用語",
     )
 
 
@@ -278,6 +286,7 @@ def build_compare_detail_html(
     base_url: str,
     term_lookup: dict[str, str],
     guides: list[dict[str, str]],
+    glossary_entries: list[dict],
 ) -> str:
     title_text = entry["title"]
     category = entry.get("category") or ""
@@ -297,17 +306,12 @@ def build_compare_detail_html(
     )
     canonical = public_url(base_url, f"terms/compare/{entry['slug_file']}")
     updated = content_date_from_row(entry)
-    css_href = rel_css(rel_path)
-    theme_href = rel_theme_css(rel_path)
+    css_href = rel_editorial_css(rel_path)
 
     matrix_html = compare_matrix_table_html(col_labels, compare_rows)
-    points_html = semicolon_list_html(exam_points)
-    mistakes_html = semicolon_field_html(common_mistakes) or (
-        f"<p>{html.escape(common_mistakes)}</p>" if common_mistakes else ""
-    )
-    memory_html = (
-        f"<blockquote><p>{html.escape(memory_tip)}</p></blockquote>" if memory_tip else ""
-    )
+    points_html = hub_compare_points_body_html(entry)
+    mistakes_html = hub_compare_mistakes_body_html(entry)
+    memory_html = hub_compare_memory_body_html(entry)
 
     fallback_faq = faq_items_for_term(
         title_text,
@@ -315,8 +319,7 @@ def build_compare_detail_html(
         summary,
         exam_points or summary,
     )
-    faq_items = custom_faq_items(entry, fallback_faq)
-    faq_html = faq_section_html(faq_items)
+    faq_items = hub_faq_items_resolved(entry, fallback_faq)
 
     rel_path_breadcrumb = rel_path
     page_header = site_page_header(rel_path_breadcrumb, current="terms")
@@ -328,7 +331,12 @@ def build_compare_detail_html(
         category=category,
     )
     tabs_html = knowledge_hub_tabs_html(current="compare", **knowledge_hub_tab_hrefs(here="compare"))
-    rel_section = related_terms_links_html(related, term_lookup)
+    rel_section = related_terms_links_html(
+        related,
+        term_lookup,
+        glossary_entries=glossary_entries,
+        category=category,
+    )
     subjects_line = " / ".join(col_labels)
 
     info_rows = [
@@ -372,14 +380,15 @@ def build_compare_detail_html(
         body_toc.append(("term-past-title", "関連する過去問"))
 
     faq_section = ""
-    if faq_html:
-        faq_section = (
-            '<section class="seo-article-section" aria-labelledby="hub-sec-faq">'
-            f'<h2 id="hub-sec-faq">よくある質問</h2>{faq_html}</section>'
+    if faq_items:
+        faq_section = hub_faq_section_html(
+            faq_items,
+            heading_id="hub-sec-faq",
+            section_num=len(body_toc) + 1,
         )
 
     quality_html = seo_quality_panel_html(updated=updated)
-    action_html = seo_action_box_html(subject=title_text, hub_label="比較・整理表")
+    key_points_html = seo_hub_key_points_box_html(subject=title_text, hub_label="比較・整理表")
     official_html = official_info_html(subject=title_text)
     guide_links = hub_guide_links(category, guides)
     next_links = hub_next_links_html(
@@ -391,8 +400,8 @@ def build_compare_detail_html(
     )
 
     toc_items: list[tuple[str, str]] = [
+        ("key-points-title", "この記事の要点"),
         ("quality-panel-title", "この記事の信頼性について"),
-        ("action-box-title", "この記事でできること"),
         *body_toc,
     ]
     if faq_section:
@@ -440,9 +449,8 @@ def build_compare_detail_html(
 <script type="application/ld+json">
 {json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False, indent=2)}
 </script>
-{HEAD_FONTS}
-<link rel="stylesheet" href="{html.escape(css_href)}">
-<link rel="stylesheet" href="{html.escape(theme_href)}">
+{seo_editorial_head_fonts()}
+{css_href}
 </head>
 <body class="{shell_body_class('compare-article-page')}">
 {site_page_wrap_open()}
@@ -450,7 +458,7 @@ def build_compare_detail_html(
 <main class="seo-article-main">
   {page_breadcrumb}
   {tabs_html}
-  <article class="seo-article-card article-body">
+  <article class="{seo_editorial_article_class()}">
     <div class="article-meta">
       <span class="meta-category">比較・整理表</span>
       {meta_updated_html(updated)}
@@ -458,9 +466,9 @@ def build_compare_detail_html(
     </div>
     <h1 class="article-title">{html.escape(article_title)}</h1>
     {multi_paragraph_html(article_lead)}
+    {key_points_html}
     {toc_html}
     {quality_html}
-    {action_html}
     {content_sections_html}
     {faq_section}
     {info_table}
@@ -567,7 +575,7 @@ def build_compare_index(entries: list[dict], base_url: str) -> str:
 <script type="application/ld+json">
 {json.dumps(ld, ensure_ascii=False, indent=2)}
 </script>
-{HEAD_FONTS}
+{seo_editorial_head_fonts()}
 <link rel="stylesheet" href="../../site-pages.css?v={TERMS_INDEX_CSS_VER}">
 <link rel="stylesheet" href="../../site-theme.css">
 <script>document.documentElement.classList.add("js");</script>
@@ -665,6 +673,7 @@ def load_compare_redirects() -> dict[str, str]:
 def build_all(*, base_url: str = BASE_DEFAULT) -> int:
     entries = load_compare_rows()
     term_lookup = glossary_term_lookup()
+    glossary_entries = load_glossary_entries()
     guides = load_guide_slugs()
     redirects = load_compare_redirects()
 
@@ -683,7 +692,7 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
         out_file = COMPARE_DIR / entry["slug_file"]
         rel_path = out_file.relative_to(ROOT)
         out_file.write_text(
-            build_compare_detail_html(entry, rel_path, base_url, term_lookup, guides),
+            build_compare_detail_html(entry, rel_path, base_url, term_lookup, guides, glossary_entries),
             encoding="utf-8",
         )
 

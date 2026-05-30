@@ -37,12 +37,16 @@ from tools.site_config import (  # noqa: E402
     primary_external_link,
 )
 
+from tools.seo_editorial_chrome import (  # noqa: E402
+    seo_editorial_article_class,
+    seo_editorial_head_fonts,
+    seo_editorial_stylesheet_links,
+)
+
 ARTICLES_CSV = ROOT / "data" / "guide_articles.csv"
 ARTICLES_DIR = ROOT / "articles"
 GEN_MARKER = ".generated-by-exam-site"
-HEAD_FONTS = """<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">"""
+GUIDE_PAGES_CSS_VER = "20260527-guide"
 
 
 def norm(value: str | None) -> str:
@@ -80,49 +84,118 @@ def split_semicolon(value: str) -> list[str]:
     return [x.strip() for x in (value or "").split(";") if x.strip()]
 
 
+from tools.seo_body_markup import seo_section_body_html  # noqa: E402
+
+
 def paragraphs(text: str) -> str:
-    body = apply_vars(text)
-    if not body:
-        return ""
-    parts = [p.strip() for p in re.split(r"\n{2,}", body) if p.strip()] or [body]
-    return "\n".join(f"<p>{html.escape(p).replace(chr(10), '<br>')}</p>" for p in parts)
+    return seo_section_body_html(text, transform=apply_vars)
 
 
-def list_or_paragraph(text: str) -> str:
-    items = split_semicolon(apply_vars(text))
-    if len(items) >= 2:
-        return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in items) + "</ul>"
-    return paragraphs(text)
+def list_or_paragraph(
+    text: str,
+    *,
+    term_hrefs: dict[str, str] | None = None,
+    linked_terms: set[str] | None = None,
+) -> str:
+    return seo_section_body_html(
+        text,
+        transform=apply_vars,
+        term_hrefs=term_hrefs,
+        linked_terms=linked_terms,
+    )
 
 
-def section_html(article: dict[str, str], idx: int, display_num: int) -> str:
+def resolve_guide_section_body(article: dict[str, str], body: str) -> str:
+    """量産テンプレの冒頭をリード文ベースの本文に差し替える。"""
+    text = norm(body)
+    if not text or "の観点で整理します" not in text:
+        return body
+    lead = norm(article.get("lead"))
+    if not lead:
+        return body
+    paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    rest = [
+        p
+        for p in paras[1:]
+        if "このサイトでは過去問・用語解説・比較表を組み合わせ" not in p
+        and "間違えた問題は理由を短くメモし" not in p
+    ]
+    lead_paras = [p.strip() for p in re.split(r"\n\s*\n", lead) if p.strip()]
+    merged = lead_paras + rest
+    return "\n\n".join(merged)
+
+
+def section_html(
+    article: dict[str, str],
+    idx: int,
+    display_num: int,
+    *,
+    term_hrefs: dict[str, str] | None = None,
+    linked_terms: set[str] | None = None,
+) -> str:
     heading = apply_vars(article.get(f"section_{idx}_heading", ""))
-    body = article.get(f"section_{idx}_body", "")
+    body = resolve_guide_section_body(article, article.get(f"section_{idx}_body", ""))
     if not heading or not norm(body):
         return ""
     sid = f"article-sec-{idx}"
     return (
         f'<section class="seo-article-section" aria-labelledby="{sid}">'
         f'<h2 id="{sid}"><span class="section-heading-num">{display_num}</span>{html.escape(heading)}</h2>'
-        f"{list_or_paragraph(body)}</section>"
+        f"{list_or_paragraph(body, term_hrefs=term_hrefs, linked_terms=linked_terms)}</section>"
     )
 
 
-def sections_html(article: dict[str, str]) -> str:
+def sections_html(
+    article: dict[str, str],
+    *,
+    term_hrefs: dict[str, str] | None = None,
+    linked_terms: set[str] | None = None,
+) -> str:
     sections: list[str] = []
     display_num = 1
     for idx in range(1, 9):
-        html_text = section_html(article, idx, display_num)
+        html_text = section_html(
+            article,
+            idx,
+            display_num,
+            term_hrefs=term_hrefs,
+            linked_terms=linked_terms,
+        )
         if html_text:
             sections.append(html_text)
             display_num += 1
     return "\n".join(sections)
 
 
+def key_points_items(article: dict[str, str]) -> list[str]:
+    explicit = split_semicolon(apply_vars(article.get("key_points", "")))
+    if explicit:
+        return explicit[:5]
+    action = split_semicolon(apply_vars(article.get("action_items", "")))
+    if action:
+        return action[:5]
+    from_headings: list[str] = []
+    for idx in range(1, 9):
+        heading = apply_vars(article.get(f"section_{idx}_heading", ""))
+        body = norm(article.get(f"section_{idx}_body", ""))
+        if heading and body:
+            from_headings.append(heading)
+    return from_headings[:3]
+
+
+def key_points_box_html(article: dict[str, str]) -> str:
+    from tools.knowledge_hub_seo import seo_key_points_box_html
+
+    items = key_points_items(article)
+    intro = apply_vars(article.get("user_intent", ""))
+    return seo_key_points_box_html(items, intro=intro)
+
+
 def toc_html(article: dict[str, str], has_faq: bool) -> str:
     items: list[tuple[str, str]] = []
+    if key_points_items(article) or norm(apply_vars(article.get("user_intent", ""))):
+        items.append(("key-points-title", "この記事の要点"))
     items.append(("quality-panel-title", "この記事の信頼性について"))
-    items.append(("action-box-title", "この記事でできること"))
     for idx in range(1, 9):
         heading = apply_vars(article.get(f"section_{idx}_heading", ""))
         body = norm(article.get(f"section_{idx}_body", ""))
@@ -152,17 +225,20 @@ def faq_items(article: dict[str, str]) -> list[dict[str, str]]:
     return items
 
 
-def faq_html(items: list[dict[str, str]]) -> str:
-    if not items:
-        return ""
-    body = "".join(
-        '<details class="term-faq-item" open>'
-        f'<summary>{html.escape(item["question"])}</summary>'
-        f'<div>{html.escape(item["answer"])}</div>'
-        "</details>"
-        for item in items
-    )
-    return f'<section class="seo-article-section" aria-labelledby="article-sec-faq"><h2 id="article-sec-faq">よくある質問</h2>{body}</section>'
+def faq_html(items: list[dict[str, str]], *, section_num: int) -> str:
+    from tools.knowledge_hub_seo import faq_section_html
+
+    return faq_section_html(items, heading_id="article-sec-faq", section_num=section_num)
+
+
+def article_body_section_count(article: dict[str, str]) -> int:
+    count = 0
+    for idx in range(1, 9):
+        heading = apply_vars(article.get(f"section_{idx}_heading", ""))
+        body = norm(article.get(f"section_{idx}_body", ""))
+        if heading and body:
+            count += 1
+    return count
 
 
 def parse_related_links(
@@ -292,21 +368,6 @@ def quality_panel_html(article: dict[str, str]) -> str:
     )
 
 
-def action_box_html(article: dict[str, str]) -> str:
-    user_intent = apply_vars(article.get("user_intent", ""))
-    action_items = split_semicolon(apply_vars(article.get("action_items", "")))
-    if not user_intent and not action_items:
-        return ""
-    body = f"<p>{html.escape(user_intent)}</p>" if user_intent else ""
-    if action_items:
-        body += '<ol class="term-point-list">' + "".join(f"<li>{html.escape(item)}</li>" for item in action_items) + "</ol>"
-    return (
-        '<section class="seo-action-box" aria-labelledby="action-box-title">'
-        '<h2 id="action-box-title">この記事でできること</h2>'
-        f"{body}</section>"
-    )
-
-
 def article_info_table(article: dict[str, str]) -> str:
     rows = [
         ("ジャンル", apply_vars(article.get("genre", ""))),
@@ -324,7 +385,13 @@ def article_info_table(article: dict[str, str]) -> str:
     )
 
 
-def build_article_html(article: dict[str, str], by_slug: dict[str, dict[str, str]]) -> str:
+def build_article_html(
+    article: dict[str, str],
+    by_slug: dict[str, dict[str, str]],
+    *,
+    term_hrefs: dict[str, str] | None = None,
+    glossary_categories: list[str] | None = None,
+) -> str:
     slug = article["slug"]
     rel_path = Path("articles") / slug / "index.html"
     title = apply_vars(article["title"])
@@ -333,13 +400,39 @@ def build_article_html(article: dict[str, str], by_slug: dict[str, dict[str, str
     updated = content_date_from_row(article)
     genre = apply_vars(article.get("genre", "試験ガイド"))
     tags = split_semicolon(apply_vars(article.get("tags", "")))
-    sections = sections_html(article)
+    linked_terms: set[str] = set()
+    sections = sections_html(article, term_hrefs=term_hrefs, linked_terms=linked_terms)
     faqs = faq_items(article)
-    faq_section = faq_html(faqs)
+    faq_section = faq_html(faqs, section_num=article_body_section_count(article) + 1) if faqs else ""
     toc = toc_html(article, bool(faqs))
-    related = parse_related_links(article.get("related_links", ""), by_slug, article)
+    key_points_box = key_points_box_html(article)
+    from tools.build_glossary_pages import field_hub_slug  # noqa: E402
+    from tools.internal_links import (  # noqa: E402
+        guide_knowledge_hub_link_items,
+        merge_related_boxes,
+    )
+    from tools.knowledge_hub_seo import field_hub_page_exists  # noqa: E402
+
+    article_links = parse_related_links(article.get("related_links", ""), by_slug, article)
+    hub_items = guide_knowledge_hub_link_items(
+        {
+            "genre": genre,
+            "tags": apply_vars(article.get("tags", "")),
+            "title": title,
+        },
+        categories=glossary_categories or [],
+        field_hub_slug_fn=field_hub_slug,
+        field_hub_exists_fn=field_hub_page_exists,
+    )
+    hub_box = (
+        '<div class="related-box" aria-labelledby="guide-hub-links-title">'
+        '<div id="guide-hub-links-title" class="related-box-title">知識ハブ</div>'
+        f'<div class="related-links">{"".join(hub_items)}</div></div>'
+        if hub_items
+        else ""
+    )
+    related = merge_related_boxes(article_links, hub_box)
     quality_panel = quality_panel_html(article)
-    action_box = action_box_html(article)
     author = apply_vars(article.get("author_name", ""))
     reviewer = apply_vars(article.get("reviewer_name", ""))
     sources = parse_source_links(article.get("primary_sources", ""))
@@ -415,25 +508,24 @@ def build_article_html(article: dict[str, str], by_slug: dict[str, dict[str, str
 <script type="application/ld+json">
 {json.dumps(json_ld, ensure_ascii=False, indent=2)}
 </script>
-{HEAD_FONTS}
-<link rel="stylesheet" href="{html.escape(css_href(rel_path, "site-pages.css"))}">
-<link rel="stylesheet" href="{html.escape(css_href(rel_path, "site-theme.css"))}">
+{seo_editorial_head_fonts()}
+{seo_editorial_stylesheet_links(rel_path, site_pages_ver=GUIDE_PAGES_CSS_VER)}
 </head>
 <body class="{shell_body_class('guide-article-page')}">
 {site_page_wrap_open()}
 {site_page_header(rel_path, current="articles")}
 <main class="seo-article-main">
   {breadcrumb_html(rel_path, crumb_items)}
-  <article class="seo-article-card article-body">
+  <article class="{seo_editorial_article_class()}">
     <div class="article-meta">
       <span class="meta-category">{html.escape(genre)}</span>
       {meta_updated_html(updated)}
     </div>
     <h1 class="article-title">{html.escape(title)}</h1>
     <p class="article-lead">{html.escape(apply_vars(article.get("lead", "")))}</p>
+    {key_points_box}
     {toc}
     {quality_panel}
-    {action_box}
     {sections}
     {faq_section}
     {info_table}
@@ -561,7 +653,7 @@ def build_index_html(articles: list[dict[str, str]]) -> str:
 <script type="application/ld+json">
 {ld_json}
 </script>
-{HEAD_FONTS}
+{seo_editorial_head_fonts()}
 <link rel="stylesheet" href="../site-pages.css">
 <link rel="stylesheet" href="../site-theme.css">
 </head>
@@ -621,6 +713,20 @@ def clean_generated_dirs() -> None:
 def main() -> int:
     articles = load_articles()
     by_slug = {norm(a.get("slug")): a for a in articles if norm(a.get("slug"))}
+    term_hrefs: dict[str, str] | None = None
+    glossary_categories: list[str] = []
+    try:
+        from tools.build_glossary_pages import load_glossary_entries, make_term_lookup  # noqa: E402
+        from tools.internal_links import term_hrefs_for_auto_link  # noqa: E402
+
+        glossary_entries = load_glossary_entries()
+        if glossary_entries:
+            term_hrefs = term_hrefs_for_auto_link(make_term_lookup(glossary_entries))
+            glossary_categories = sorted(
+                {norm(e.get("category")) for e in glossary_entries if norm(e.get("category"))}
+            )
+    except Exception as exc:
+        print(f"Warning: glossary auto-link disabled: {exc}", file=sys.stderr)
     ARTICLES_DIR.mkdir(parents=True, exist_ok=True)
     clean_generated_dirs()
     for article in articles:
@@ -630,7 +736,15 @@ def main() -> int:
         out_dir = ARTICLES_DIR / slug
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / GEN_MARKER).write_text("generated\n", encoding="utf-8")
-        (out_dir / "index.html").write_text(build_article_html(article, by_slug), encoding="utf-8")
+        (out_dir / "index.html").write_text(
+            build_article_html(
+                article,
+                by_slug,
+                term_hrefs=term_hrefs,
+                glossary_categories=glossary_categories,
+            ),
+            encoding="utf-8",
+        )
     (ARTICLES_DIR / "index.html").write_text(build_index_html(articles), encoding="utf-8")
     print(f"Wrote {len(articles)} guide articles under {ARTICLES_DIR}")
     print(f"Wrote {ARTICLES_DIR / 'index.html'}")

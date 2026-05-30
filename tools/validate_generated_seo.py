@@ -58,8 +58,8 @@ class GeneratedSeoValidator:
     def validate_full_seo_page(self, path: Path, *, require_fact_checked: bool) -> None:
         text = self.text(path)
         required_markers = {
+            "要点ボックス": 'id="key-points-title"',
             "信頼性ブロック": 'id="quality-panel-title"',
-            "この記事でできること": 'id="action-box-title"',
             "記事の基本情報": 'id="article-info-title"',
             "公式情報の確認": 'id="official-info-title"',
         }
@@ -86,8 +86,8 @@ class GeneratedSeoValidator:
 
         if all(pos >= 0 for pos in positions.values()):
             ordered = [
-                ("信頼性ブロック", "この記事でできること"),
-                ("この記事でできること", "FAQ"),
+                ("要点ボックス", "信頼性ブロック"),
+                ("信頼性ブロック", "FAQ"),
                 ("FAQ", "記事の基本情報"),
                 ("記事の基本情報", "公式情報の確認"),
             ]

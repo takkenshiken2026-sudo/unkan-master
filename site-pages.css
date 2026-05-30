@@ -3585,7 +3585,9 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 .terms-index-panel .terms-idx-table .terms-idx-th-cat,
 .terms-index-panel .terms-idx-table .terms-idx-td-cat {
   width: 14%;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .terms-index-panel .terms-idx-table .terms-idx-th-def,
 .terms-index-panel .terms-idx-table .terms-idx-td-snippet {

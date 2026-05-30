@@ -30,6 +30,19 @@ EDITORIAL_PLACEHOLDER_MARKERS: tuple[str, ...] = (
     "プレースホルダ",
 )
 
+# 量産・scaffold 後の使い回し禁止（ERROR — published の section / FAQ）
+EDITORIAL_BOILERPLATE_PHRASES: tuple[str, ...] = (
+    "の観点で整理します",
+    "制度・数値・日程は年度や改正で変わるため、学習前と申込前には試験実施団体（公式）の最新情報を確認してください",
+    "非公式まとめは参考程度にし、最終判断は必ず公式要項に置きます",
+    "このサイトでは過去問・用語解説・比較表を組み合わせ",
+    "間違えた問題は理由を短くメモし、関連用語で定義と選択肢の論点を確認してから同分野へ戻ると定着しやすくなります",
+    "まず公式要項で最新の制度を確認してください。本サイトでは過去問演習と用語解説で",
+    "数値や期限は資格ごとに異なるため、本文の例は必ず公式情報と照合してください",
+    "に関する質問「",
+    "理解度を具体的に確かめられます",
+)
+
 # 薄い・AI丸投げっぽい定型（WARN）
 EDITORIAL_GENERIC_PHRASES: tuple[str, ...] = (
     "について説明します",
@@ -129,6 +142,25 @@ def placeholder_issues(text: str, column: str) -> list[EditorialIssue]:
             "ERROR",
             column,
             f"未執筆の雛形マーカーが残っています（{shown}）。専門家レベルの本文に差し替えてください",
+        )
+    ]
+
+
+def boilerplate_hits(text: str) -> list[str]:
+    return [p for p in EDITORIAL_BOILERPLATE_PHRASES if p in text]
+
+
+def boilerplate_issues(text: str, column: str) -> list[EditorialIssue]:
+    """量産テンプレ・記事間コピペの禁止句。"""
+    hits = boilerplate_hits(text)
+    if not hits:
+        return []
+    shown = "、".join(f"「{h[:24]}…」" if len(h) > 24 else f"「{h}」" for h in hits[:3])
+    return [
+        EditorialIssue(
+            "ERROR",
+            column,
+            f"機械的な共通文が含まれています（{shown}）。記事固有のオリジナル文に全面差し替えてください",
         )
     ]
 

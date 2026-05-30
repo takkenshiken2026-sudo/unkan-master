@@ -35,6 +35,10 @@ from tools.html_footer import (
     site_page_wrap_open,
 )
 from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html
+from tools.seo_editorial_chrome import (  # noqa: E402
+    seo_editorial_head_fonts,
+    seo_editorial_stylesheet_links,
+)
 from tools.knowledge_index_summary import glossary_index_definition, load_glossary_seed_map
 from tools.site_config import (
     brand_name,
@@ -182,6 +186,13 @@ def rel_css(rel_file: Path) -> str:
 def rel_theme_css(rel_file: Path) -> str:
     depth = len(rel_file.parent.parts)
     return "/".join([".."] * depth) + "/site-theme.css"
+
+
+def rel_editorial_css(rel_file: Path) -> str:
+    return seo_editorial_stylesheet_links(rel_file, site_pages_ver=TERMS_INDEX_CSS_VER)
+
+
+HEAD_FONTS = seo_editorial_head_fonts()
 
 
 def glossary_field_id(category: str) -> str | None:
@@ -680,7 +691,7 @@ def build_term_html(
     )
     canonical = public_url(base_url, f"terms/{slug_file}")
     root_idx = rel_to_root(rel_path)
-    css_href = rel_css(rel_path)
+    css_links = rel_editorial_css(rel_path)
     theme_href = rel_theme_css(rel_path)
 
     tags_list = split_semicolon(tags)
@@ -746,11 +757,16 @@ def build_term_html(
         f"{exam_name()}では、{category}分野の用語として、意味・根拠・似た用語との違いをセットで押さえると理解しやすくなります。"
     )
     points = study_points(explanation)
-    points_html = ""
-    if exam_points:
-        points_html = semicolon_list_html(exam_points)
-    elif points:
-        points_html = '<ol class="term-point-list">' + "".join(f"<li>{html.escape(p)}</li>" for p in points) + "</ol>"
+    from tools.knowledge_hub_seo import (  # noqa: E402
+        glossary_exam_points_body_html,
+        glossary_memory_body_html,
+        glossary_mistakes_body_html,
+        hub_prose_html,
+    )
+
+    points_html = glossary_exam_points_body_html(entry)
+    if not points_html and points:
+        points_html = hub_prose_html([p for p in points])
     entries_by_term = by_term or {e["term"]: e for e in entries}
     compare_html = peer_comparison_table_html(term, related, entries_by_term)
     detail_html = text_paragraphs(term_detail_body or definition)
@@ -825,20 +841,23 @@ def build_term_html(
         "</p></blockquote></section>"
     )
 
-    action_points = split_semicolon(exam_points)[:3]
-    action_items = "".join(f"<li>{html.escape(p)}</li>" for p in action_points if p)
-    if not action_items:
-        action_items = (
-            f"<li>{html.escape(term)}の定義と位置づけを確認する</li>"
-            "<li>試験で問われやすい条件や表現を整理する</li>"
-            "<li>頻出の誤り選択肢や混同しやすい点を復習する</li>"
-        )
-    action_items += "<li>関連する用語解説や過去問へ進む</li>"
-    can_do_html = (
-        '<section class="seo-action-box" aria-labelledby="action-box-title">'
-        '<h2 id="action-box-title">この記事でできること</h2>'
-        f"<p>この記事では、{html.escape(term)}の意味と試験での見方を、問題の解説に沿って整理します。</p>"
-        f"<ul>{action_items}</ul></section>"
+    key_points_source = split_semicolon(exam_points)[:5]
+    if not key_points_source:
+        key_points_source = points[:3]
+    if not key_points_source:
+        key_points_source = [
+            f"{term}の定義と位置づけを確認する",
+            "試験で問われやすい条件や表現を整理する",
+            "頻出の誤り選択肢や混同しやすい点を復習する",
+        ]
+    if not any("過去問" in item for item in key_points_source):
+        key_points_source = [*key_points_source, "関連する用語解説や過去問へ進む"]
+    from tools.knowledge_hub_seo import seo_key_points_box_html
+
+    key_points_intro = f"この記事では、{term}の意味と試験での見方を、問題の解説に沿って整理します。"
+    key_points_html = seo_key_points_box_html(
+        key_points_source[:5],
+        intro=key_points_intro,
     )
 
     content_sections: list[str] = []
@@ -860,8 +879,9 @@ def build_term_html(
     content_sections_html = "\n    ".join(content_sections)
 
     toc_items: list[tuple[str, str]] = [
+        ("key-points-title", "この記事の要点"),
         ("quality-panel-title", "この記事の信頼性について"),
-        ("action-box-title", "この記事でできること"),
+        
         *body_toc_items,
         ("term-sec-faq", "よくある質問"),
         ("article-info-title", "記事の基本情報"),
@@ -960,7 +980,7 @@ def build_term_html(
 {json.dumps(json_ld, ensure_ascii=False, indent=2)}
 </script>
 {HEAD_FONTS}
-<link rel="stylesheet" href="{html.escape(css_href)}">
+{css_links}
 <link rel="stylesheet" href="{html.escape(theme_href)}">
 </head>
 <body class="{shell_body_class('term-article-page')}">
@@ -978,8 +998,8 @@ def build_term_html(
     <h1 class="article-title">{html.escape(article_title or term + 'とは？意味・根拠・試験ポイントを整理')}</h1>
     <p class="article-lead"><strong>{html.escape(term)}</strong>について、定義・根拠・試験での押さえ方をまとめます。{html.escape(article_lead or lead)}</p>
     {toc_html}
+    {key_points_html}
     {quality_html}
-    {can_do_html}
     {content_sections_html}
     {article_section("faq", "よくある質問", faq_html)}
     {info_table}
@@ -1301,28 +1321,23 @@ def load_glossary_rows() -> list[dict]:
     return list(csv.DictReader(text.splitlines()))
 
 
-def main() -> int:
-    import argparse
-
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--base-url", default=BASE_DEFAULT)
-    args = ap.parse_args()
-    base = args.base_url.rstrip("/")
-
+def load_glossary_entries(*, strict: bool = True) -> list[dict]:
+    """CSV から slug_file 付き用語エントリ一覧を返す。"""
     rows = load_glossary_rows()
     used_slugs: dict[str, str] = {}
     entries: list[dict] = []
     for i, row in enumerate(rows, start=2):
         term = norm(row.get("term"))
         if not term:
-            raise ValueError(f"line {i}: term が空です")
+            if strict:
+                raise ValueError(f"line {i}: term が空です")
+            continue
         legacy_slug = norm(row.get("slug")) or norm(row.get("url_slug"))
         if legacy_slug:
-            if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", legacy_slug):
+            if strict and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", legacy_slug):
                 raise ValueError(f"line {i}: slug は半角英数字とハイフンのみ: {legacy_slug!r}")
-            # 移行サイト向け: CSV の slug 列はフラット URL（terms/{slug}.html）を維持
             slug_file = f"{legacy_slug}.html"
-            if slug_file in used_slugs:
+            if strict and slug_file in used_slugs:
                 raise ValueError(f"line {i}: slug が重複しています: {legacy_slug}")
             used_slugs[slug_file] = term
         else:
@@ -1356,9 +1371,22 @@ def main() -> int:
                 "faq_4_answer": norm(row.get("faq_4_answer")),
                 "slug_file": slug_file,
                 "field_hub": field_hub_slug(norm(row.get("category"))),
+                "fact_checked_at": norm(row.get("fact_checked_at")),
+                "last_reviewed_at": norm(row.get("last_reviewed_at")),
             }
         )
+    return entries
 
+
+def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--base-url", default=BASE_DEFAULT)
+    args = ap.parse_args()
+    base = args.base_url.rstrip("/")
+
+    entries = load_glossary_entries()
     term_lookup = make_term_lookup(entries)
     entries_by_term = {e["term"]: e for e in entries}
     guides = load_guide_slugs()

@@ -49,24 +49,6 @@ STATIC_PAGE_CURRENTS = {
 }
 
 
-def sync_ga4_measurement_ids(text: str) -> str:
-    mid = ga4_measurement_id()
-    if not mid:
-        return text
-    text = re.sub(
-        r'window\.__GA4_MEASUREMENT_ID__="[^"]*"',
-        f'window.__GA4_MEASUREMENT_ID__="{mid}"',
-        text,
-    )
-    text = re.sub(
-        r'var DEFAULT_MID = "[^"]*";',
-        f'var DEFAULT_MID = "{mid}";',
-        text,
-        count=1,
-    )
-    return text
-
-
 def replace_all(text: str) -> str:
     origin = clean_origin()
     host = origin.replace("https://", "").replace("http://", "").strip("/")
@@ -97,8 +79,6 @@ def replace_all(text: str) -> str:
         replacements.append(("◯◯試験", exam_name()))
     for src, dst in replacements:
         text = text.replace(src, dst)
-
-    text = sync_ga4_measurement_ids(text)
 
     marker = '<script src="./site-config.js"></script>'
     if "site-config.js" not in text and "site-analytics.js" in text:

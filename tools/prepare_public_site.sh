@@ -50,9 +50,23 @@ done
 if [[ -f "$ROOT/privacy-terms.html" ]]; then
   cp "$ROOT/privacy-terms.html" "$OUT/"
 fi
+# SPA トップ（index.html）用。CSS/JS を index から分離したサイト向け。
+for f in site-spa.css site-spa-fields.js; do
+  if [[ -f "$ROOT/$f" ]]; then
+    cp "$ROOT/$f" "$OUT/"
+  fi
+done
 if [[ -f "$ROOT/docs/glossary-article-slugs.json" ]]; then
   mkdir -p "$OUT/docs"
   cp "$ROOT/docs/glossary-article-slugs.json" "$OUT/docs/"
 fi
 n="$(find "$OUT" -type f | wc -l | tr -d ' ')"
+if grep -q 'site-spa.css' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/site-spa.css" ]]; then
+  echo "prepare_public_site.sh: index.html が site-spa.css を参照していますが public_site にありません。" >&2
+  exit 1
+fi
+if grep -q 'site-spa-fields.js' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/site-spa-fields.js" ]]; then
+  echo "prepare_public_site.sh: index.html が site-spa-fields.js を参照していますが public_site にありません。" >&2
+  exit 1
+fi
 echo "prepare_public_site.sh: $OUT に $n ファイルを配置しました。"

@@ -29,6 +29,7 @@ from tools.build_glossary_pages import (  # noqa: E402
     TERMS_INDEX_CSS_VER,
     build_term_html,
     load_guide_slugs,
+    load_glossary_entries,
     load_glossary_rows,
     make_term_lookup,
     term_slug,
@@ -210,6 +211,7 @@ def glossary_entries_for_sample() -> tuple[list[dict], dict[str, str], dict[str,
 
 def build_all(*, base_url: str = BASE_DEFAULT) -> int:
     term_lookup = glossary_term_lookup()
+    glossary_entries = load_glossary_entries(strict=False) if (ROOT / "data" / "glossary_terms.csv").is_file() else []
     guides = load_guide_slugs()
     count = 0
 
@@ -217,7 +219,7 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
     compare_path = ROOT / "terms" / "compare" / COMPARE_WRITING_SAMPLE["slug_file"]
     compare_rel = compare_path.relative_to(ROOT)
     compare_html = build_compare_detail_html(
-        COMPARE_WRITING_SAMPLE, compare_rel, base_url, term_lookup, guides
+        COMPARE_WRITING_SAMPLE, compare_rel, base_url, term_lookup, guides, glossary_entries
     )
     banner = sample_banner_html(
         samples_href="../samples/index.html",
@@ -242,6 +244,7 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
         base_url,
         term_lookup,
         guides,
+        glossary_entries,
         matrix_html_fn=numbers_matrix_table_html,
     )
     banner = sample_banner_html(
@@ -267,6 +270,7 @@ def build_all(*, base_url: str = BASE_DEFAULT) -> int:
         base_url,
         term_lookup,
         guides,
+        glossary_entries,
         matrix_html_fn=mistakes_matrix_table_html,
     )
     banner = sample_banner_html(

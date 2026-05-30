@@ -9,7 +9,11 @@ globs: **/*.{html,css,js,py,csv,md}
 Use this rule when editing exam-site SEO articles, term pages, article CSVs, generators, or shared page CSS.
 
 **Full source of truth:** `docs/seo-article-guidelines.md`  
-**Editorial quality:** `docs/editorial-quality.md` (`tools/audit_editorial_quality.py`, in `build_all`)
+## Editorial quality (mandatory)
+
+- **Original prose:** Do not ship scaffold/template paragraphs copied across articles. Each `section_*_body` and FAQ must be unique to that article's search intent. See `docs/editorial-quality.md` §オリジナル執筆.
+- `python3 tools/audit_editorial_quality.py` flags boilerplate phrases (`EDITORIAL_BOILERPLATE_PHRASES`) and cross-article duplicate section bodies as **ERROR** for published guides.
+- Full source: `docs/editorial-quality.md` (`tools/audit_editorial_quality.py`, in `build_all`)
 
 ## Content volume
 

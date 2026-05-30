@@ -32,48 +32,6 @@ def parse_explanation_choices(raw: str) -> dict[int, str]:
     return out
 
 
-_FW_DIGITS = "１２３４５６７８"
-
-
-def parse_fullwidth_numbered_explanation(exp: str) -> dict[int, str]:
-    """過去問解説の「１．…２．…」形式を選択肢番号ごとに分割する。"""
-    out: dict[int, str] = {}
-    text = norm(exp)
-    if not text:
-        return out
-    parts = re.split(r"([１２３４５６７８])[．.]", text)
-    i = 1
-    while i < len(parts) - 1:
-        ch = parts[i]
-        if ch in _FW_DIGITS:
-            num = _FW_DIGITS.index(ch) + 1
-            body = norm(parts[i + 1])
-            if body:
-                out[num] = body
-        i += 2
-    return out
-
-
-def _clause_sounds_wrong(clause: str) -> bool:
-    return bool(
-        re.search(
-            r"誤り|不適|間違|誤っ|正しくない|適切でない|ではない|含まれない|"
-            r"違反となる|改善基準に違反|適合していない|とする点が誤",
-            clause,
-        )
-    )
-
-
-def _clause_sounds_right(clause: str) -> bool:
-    return bool(
-        re.search(
-            r"正しい|適合|違反していない|適切|妥当|業務である|記述として正|"
-            r"義務である|含まれる|必要がある",
-            clause,
-        )
-    )
-
-
 def question_ask_mode(stem: str) -> str:
     """設問の求め方: most_correct / least_appropriate / unknown。"""
     s = norm(stem)
@@ -281,15 +239,9 @@ def resolve_wrong_choice_note(
     inferred = infer_wrong_choice_note(page, choice_num, choice_text, row)
     if not note:
         return inferred
-    if not _is_thin_choice_note(note, mode):
-        return note
-    # 過去問解説の「１．…」由来など、短くても内容が具体的なら推論で上書きしない
-    if len(note) >= 20 and not re.search(
-        r"正答になりません|設問の求め方|本肢を選ぶ場合|設問形式の読み違え",
-        note,
-    ):
-        return note
-    return inferred
+    if _is_thin_choice_note(note, mode):
+        return inferred
+    return note
 
 
 CATEGORY_STUDY_HINTS: dict[str, str] = {
@@ -432,7 +384,6 @@ def split_legacy_explanation(exp: str) -> tuple[str, str]:
 
 def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]:
     parsed = parse_explanation_choices(norm(row.get("explanation_choices")))
-    numbered = parse_fullwidth_numbered_explanation(norm(row.get("explanation")))
     correct = page.get("correct")
     items: list[tuple[int, str, str]] = []
     for i, opt in enumerate(page["opts"], start=1):
@@ -440,20 +391,8 @@ def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]
             continue
         if i == correct:
             continue
-        csv_note = parsed.get(i) or ""
-        numbered_note = numbered.get(i) or ""
-        if numbered_note and (
-            not csv_note
-            or _is_thin_choice_note(csv_note, question_ask_mode(
-                norm(page.get("stem_plain") or page.get("stem") or "")
-            ))
-            or "正答になりません" in csv_note
-        ):
-            csv_note = numbered_note
-        elif not csv_note:
-            csv_note = numbered_note
         note = resolve_wrong_choice_note(
-            page, i, opt, row, csv_note=csv_note
+            page, i, opt, row, csv_note=parsed.get(i) or ""
         )
         items.append((i, opt, note))
     return items
@@ -467,26 +406,17 @@ def build_explanation_html(page: dict, row: dict) -> str:
     summary = norm(row.get("explanation_summary"))
     correct_body = norm(row.get("explanation_correct"))
     point = norm(row.get("explanation_point"))
-    correct = page.get("correct")
-    numbered = parse_fullwidth_numbered_explanation(base)
-
-    if numbered and correct and not correct_body:
-        correct_body = numbered.get(correct, "")
-        if not summary:
-            summary = f"正答は（{correct}）です。"
 
     if not summary and not correct_body and not point:
         leg_summary, leg_body = split_legacy_explanation(base)
         summary = summary or leg_summary
-        if numbered and correct and leg_body == base:
-            correct_body = numbered.get(correct, "") or leg_body
-        else:
-            correct_body = correct_body or leg_body
+        correct_body = correct_body or leg_body
 
     parts: list[str] = ['<div class="q-exp">']
     if summary:
         parts.append(f'<p class="q-exp-lead">{text_to_html(summary)}</p>')
 
+    correct = page.get("correct")
     if correct and not page.get("is_invalidated"):
         opt_text = page["opts"][correct - 1] if 1 <= correct <= len(page["opts"]) else ""
         parts.append(

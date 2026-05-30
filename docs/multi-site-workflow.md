@@ -83,3 +83,4 @@
 | CSS だけ古い | 同期漏れ or ブラウザキャッシュ（`site-pages.css?v=` を確認） |
 | 同期したのにレイアウトが違う | 本番に `template_site_only.paths` 外の独自 HTML/CSS が残っていないか `drift` で確認 |
 | フッター過去問が遷移しない / ハブにタブがない / 用語定義が空 | [integration-checklist.md](./integration-checklist.md) §2・§5 |
+| `main` は新しいが本番だけ古い（kikenbutsu / kangyou 等） | 本番が **`gh-pages` 配信**。`bash tools/sync_gh_pages_branch.sh` または `build_all.py` 末尾まで実行して `main`→`gh-pages` を push |

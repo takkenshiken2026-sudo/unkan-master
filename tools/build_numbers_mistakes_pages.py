@@ -24,13 +24,12 @@ if str(ROOT) not in sys.path:
 
 from tools.build_glossary_pages import (  # noqa: E402
     GLOSSARY_CSV,
-    HEAD_FONTS,
     TERMS_INDEX_CSS_VER,
     custom_faq_items,
     faq_items_for_term,
-    faq_section_html,
     field_hub_slug,
     glossary_field_id,
+    load_glossary_entries,
     load_glossary_rows,
     load_guide_slugs,
     make_term_lookup,
@@ -41,26 +40,35 @@ from tools.build_glossary_pages import (  # noqa: E402
     ordered_term_categories,
     parse_term_tags,
     public_url,
-    rel_css,
-    rel_theme_css,
+    rel_editorial_css,
     semicolon_field_html,
     semicolon_list_html,
     split_semicolon,
     term_slug,
 )
+from tools.seo_editorial_chrome import (  # noqa: E402
+    seo_editorial_article_class,
+    seo_editorial_head_fonts,
+)
 from tools.glossary_past_questions import past_questions_section_html  # noqa: E402
 from tools.knowledge_hub_seo import (
+    faq_section_html as hub_faq_section_html,
     field_hub_page_exists,  # noqa: E402
     build_numbered_sections,
     find_past_questions_for_hub,
     hub_article_json_ld,
     hub_breadcrumb_json_ld,
     hub_detail_breadcrumb,
+    hub_faq_items_resolved,
     hub_guide_links,
     hub_meta_line,
+    hub_mistakes_points_body_html,
     hub_next_links_html,
+    hub_numbers_points_body_html,
+    hub_stub_memory_body_html,
+    hub_stub_mistakes_body_html,
     official_info_html,
-    seo_action_box_html,
+    seo_hub_key_points_box_html,
     seo_quality_panel_html,
     seo_toc_html,
 )
@@ -377,22 +385,23 @@ def mistakes_matrix_table_html(rows: list[dict], *, note_html: str) -> str:
     )
 
 
-def related_terms_links_html(related: str, term_lookup: dict[str, str]) -> str:
-    items: list[str] = []
-    seen: set[str] = set()
-    for label in split_semicolon(related):
-        href = term_lookup.get(label)
-        if href and href not in seen:
-            seen.add(href)
-            items.append(
-                f'<a class="related-link" href="../{html.escape(href)}">{html.escape(label)}</a>'
-            )
-    if not items:
-        return ""
-    return (
-        '<div class="related-box" aria-labelledby="hub-related-title">'
-        '<div id="hub-related-title" class="related-box-title">関連用語</div>'
-        f'<div class="related-links term-related-links">{"".join(items)}</div></div>'
+def related_terms_links_html(
+    related: str,
+    term_lookup: dict[str, str],
+    *,
+    glossary_entries: list[dict],
+    category: str,
+) -> str:
+    from tools.internal_links import related_terms_box_html
+
+    return related_terms_box_html(
+        related,
+        term_lookup,
+        entries=glossary_entries,
+        current={"category": category, "slug_file": "__hub_page__"},
+        href_prefix="../",
+        box_id="hub-related-title",
+        box_title="関連用語",
     )
 
 
@@ -421,6 +430,7 @@ def build_detail_html(
     base_url: str,
     term_lookup: dict[str, str],
     guides: list[dict[str, str]],
+    glossary_entries: list[dict],
     *,
     matrix_html_fn: Callable[[list[dict], str], str],
 ) -> str:
@@ -441,17 +451,17 @@ def build_detail_html(
     updated = content_date_from_row(entry)
 
     matrix_html = matrix_html_fn(entry["detail_rows"], note_html=spec.note_html)
-    points_html = semicolon_list_html(exam_points)
-    mistakes_html = semicolon_field_html(common_mistakes) or (
-        f"<p>{html.escape(common_mistakes)}</p>" if common_mistakes else ""
-    )
-    memory_html = (
-        f"<blockquote><p>{html.escape(memory_tip)}</p></blockquote>" if memory_tip else ""
-    )
+    if spec.hub_id == "numbers":
+        points_html = hub_numbers_points_body_html(entry)
+    elif spec.hub_id == "mistakes":
+        points_html = hub_mistakes_points_body_html(entry)
+    else:
+        points_html = semicolon_list_html(exam_points)
+    mistakes_html = hub_stub_mistakes_body_html(entry)
+    memory_html = hub_stub_memory_body_html(entry)
 
     fallback_faq = faq_items_for_term(title_text, summary, summary, exam_points or summary)
-    faq_items = custom_faq_items(entry, fallback_faq)
-    faq_html = faq_section_html(faq_items)
+    faq_items = hub_faq_items_resolved(entry, fallback_faq, hub_type=spec.hub_id)
 
     page_header = site_page_header(rel_path, current="terms")
     page_footer = site_page_footer(rel_path, current="terms")
@@ -463,7 +473,12 @@ def build_detail_html(
         category=category,
     )
     tabs_html = knowledge_hub_tabs_html(current=spec.tabs_current, **knowledge_hub_tab_hrefs(here=spec.tabs_current))
-    rel_section = related_terms_links_html(related, term_lookup)
+    rel_section = related_terms_links_html(
+        related,
+        term_lookup,
+        glossary_entries=glossary_entries,
+        category=category,
+    )
 
     info_rows = [
         ("対象試験", exam_name()),
@@ -510,14 +525,15 @@ def build_detail_html(
         body_toc.append(("term-past-title", "関連する過去問"))
 
     faq_section = ""
-    if faq_html:
-        faq_section = (
-            '<section class="seo-article-section" aria-labelledby="hub-sec-faq">'
-            f'<h2 id="hub-sec-faq">よくある質問</h2>{faq_html}</section>'
+    if faq_items:
+        faq_section = hub_faq_section_html(
+            faq_items,
+            heading_id="hub-sec-faq",
+            section_num=len(body_toc) + 1,
         )
 
     quality_html = seo_quality_panel_html(updated=updated)
-    action_html = seo_action_box_html(subject=title_text, hub_label=spec.hub_label)
+    key_points_html = seo_hub_key_points_box_html(subject=title_text, hub_label=spec.hub_label)
     official_html = official_info_html(subject=title_text)
     guide_links = hub_guide_links(category, guides)
     next_links = hub_next_links_html(
@@ -529,8 +545,8 @@ def build_detail_html(
     )
 
     toc_items: list[tuple[str, str]] = [
+        ("key-points-title", "この記事の要点"),
         ("quality-panel-title", "この記事の信頼性について"),
-        ("action-box-title", "この記事でできること"),
         *body_toc,
     ]
     if faq_section:
@@ -541,6 +557,8 @@ def build_detail_html(
         toc_items.append(("hub-related-title", "関連用語"))
     toc_items.append(("hub-next-title", "次に確認するページ"))
     toc_html = seo_toc_html(toc_items)
+
+    editorial_css = rel_editorial_css(rel_path)
 
     graph = hub_article_json_ld(
         canonical=canonical,
@@ -579,9 +597,8 @@ def build_detail_html(
 <script type="application/ld+json">
 {json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False, indent=2)}
 </script>
-{HEAD_FONTS}
-<link rel="stylesheet" href="{html.escape(rel_css(rel_path))}">
-<link rel="stylesheet" href="{html.escape(rel_theme_css(rel_path))}">
+{seo_editorial_head_fonts()}
+{editorial_css}
 </head>
 <body class="{shell_body_class(spec.article_body_class)}">
 {site_page_wrap_open()}
@@ -589,7 +606,7 @@ def build_detail_html(
 <main class="seo-article-main">
   {page_breadcrumb}
   {tabs_html}
-  <article class="seo-article-card article-body">
+  <article class="{seo_editorial_article_class()}">
     <div class="article-meta">
       <span class="meta-category">{html.escape(spec.hub_label)}</span>
       {meta_updated_html(updated)}
@@ -597,9 +614,9 @@ def build_detail_html(
     </div>
     <h1 class="article-title">{html.escape(article_title)}</h1>
     {multi_paragraph_html(article_lead)}
+    {key_points_html}
     {toc_html}
     {quality_html}
-    {action_html}
     {content_sections_html}
     {faq_section}
     {info_table}
@@ -696,7 +713,7 @@ def build_index_html(spec: HubSpec, entries: list[dict], base_url: str) -> str:
 <script type="application/ld+json">
 {json.dumps(ld, ensure_ascii=False, indent=2)}
 </script>
-{HEAD_FONTS}
+{seo_editorial_head_fonts()}
 <link rel="stylesheet" href="../../site-pages.css?v={TERMS_INDEX_CSS_VER}">
 <link rel="stylesheet" href="../../site-theme.css">
 <script>document.documentElement.classList.add("js");</script>
@@ -859,6 +876,7 @@ def build_hub(
 ) -> int:
     entries = load_hub_rows(spec, row_parser=row_parser)
     term_lookup = glossary_term_lookup()
+    glossary_entries = load_glossary_entries()
     redirects = redirects or {}
 
     spec.out_dir.mkdir(parents=True, exist_ok=True)
@@ -879,6 +897,7 @@ def build_hub(
                 base_url,
                 term_lookup,
                 guides,
+                glossary_entries,
                 matrix_html_fn=matrix_html_fn,
             ),
             encoding="utf-8",
