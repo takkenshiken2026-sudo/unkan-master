@@ -25,6 +25,7 @@ from tools.hub_dedup import (  # noqa: E402
     load_csv,
     load_hub_redirects,
     merge_glossary_paren_rows,
+    repair_hub_row_quality,
     write_csv,
     write_hub_redirects,
 )
@@ -102,6 +103,8 @@ def fix_site(*, apply: bool, rebuild: bool, root: Path) -> dict[str, int]:
     stats["numbers_after"] = len(numbers_rows)
     stats["mistakes_after"] = len(mistakes_rows)
     stats["redirects"] = sum(len(v) for v in redirects.values())
+
+    repair_hub_row_quality(compare_rows, numbers_rows, mistakes_rows, glossary_rows)
 
     print(
         "glossary "

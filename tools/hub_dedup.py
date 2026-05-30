@@ -21,6 +21,9 @@ from tools.hub_collapse_angles import (
 from tools.hub_collapse_series import merge_redirect_maps
 
 PAREN_RE = re.compile(r"[（(][^）)]*[）)]")
+OPTIONAL_PARTICLE_RE = re.compile(
+    r"(が|の|を|は|に|で|と|へ|から|より|も|等|について|に関する)"
+)
 
 TEXT_MERGE_FIELDS = (
     "definition",
@@ -60,6 +63,7 @@ def base_term_name(term: str) -> str:
 def normalize_hub_label(title: str) -> str:
     base, _ = strip_angle_title(title or "")
     base = re.sub(r"日間$", "日", base.strip())
+    base = OPTIONAL_PARTICLE_RE.sub("", base)
     return re.sub(r"\s+", "", base)
 
 
@@ -289,6 +293,111 @@ def apply_glossary_related_term_fixup(
                 seen.add(item)
                 deduped.append(item)
             row[field] = ";".join(deduped)
+
+
+def _split_term_field(value: str) -> list[str]:
+    return [part.strip() for part in re.split(r"[;；]", value or "") if part.strip()]
+
+
+def _join_term_field(parts: Iterable[str]) -> str:
+    seen: set[str] = set()
+    out: list[str] = []
+    for part in parts:
+        if part and part not in seen:
+            seen.add(part)
+            out.append(part)
+    return ";".join(out)
+
+
+def expand_concatenated_glossary_term(term: str, lookup: dict[str, str]) -> list[str]:
+    if term in lookup:
+        return [lookup[term]]
+    candidates = sorted((t for t in lookup if len(t) >= 2), key=len, reverse=True)
+    found: list[str] = []
+    rest = term
+    for cand in candidates:
+        while cand in rest:
+            found.append(lookup[cand])
+            rest = rest.replace(cand, "", 1)
+    if found and not rest.strip():
+        return found
+    return [term]
+
+
+def repair_related_terms(
+    rows: list[dict[str, str]],
+    glossary_rows: list[dict[str, str]],
+    *,
+    min_count: int = 2,
+) -> None:
+    lookup = build_glossary_lookup(glossary_rows)
+    for row in rows:
+        if "related_terms" not in row:
+            continue
+        expanded: list[str] = []
+        for part in _split_term_field(row.get("related_terms", "")):
+            for item in expand_concatenated_glossary_term(part, lookup):
+                resolved = resolve_glossary_term(item, lookup)
+                if resolved in lookup and resolved not in expanded:
+                    expanded.append(resolved)
+        for tag in _split_term_field(row.get("tags", "")):
+            resolved = resolve_glossary_term(tag, lookup)
+            if resolved in lookup and resolved not in expanded:
+                expanded.append(resolved)
+        if len(expanded) < min_count:
+            title = row.get("title", "")
+            for term in sorted(lookup.keys(), key=len, reverse=True):
+                if len(term) < 3 or term not in title:
+                    continue
+                canonical = lookup[term]
+                if canonical not in expanded:
+                    expanded.append(canonical)
+                if len(expanded) >= min_count:
+                    break
+        if len(expanded) < min_count:
+            category = (row.get("category") or "").strip()
+            for grow in glossary_rows:
+                term = (grow.get("term") or "").strip()
+                if not term or term not in lookup or term in expanded:
+                    continue
+                if category and (grow.get("category") or "").strip() != category:
+                    continue
+                expanded.append(term)
+                if len(expanded) >= min_count:
+                    break
+        row["related_terms"] = _join_term_field(expanded)
+
+
+def repair_short_article_titles(
+    rows: list[dict[str, str]],
+    *,
+    min_len: int = 10,
+) -> None:
+    for row in rows:
+        if "article_title" not in row:
+            continue
+        article_title = (row.get("article_title") or "").strip()
+        if len(article_title) >= min_len:
+            continue
+        title = (row.get("title") or "").strip()
+        if not title:
+            continue
+        suffix = ""
+        if "｜" in article_title:
+            suffix = "｜" + article_title.split("｜", 1)[1]
+        lead = "の整理" if any(k in title for k in ("誤り", "混同", "誤答", "典型")) else "の数値早見"
+        row["article_title"] = f"{title}{lead}{suffix}"
+
+
+def repair_hub_row_quality(
+    compare_rows: list[dict[str, str]],
+    numbers_rows: list[dict[str, str]],
+    mistakes_rows: list[dict[str, str]],
+    glossary_rows: list[dict[str, str]],
+) -> None:
+    for rows in (compare_rows, numbers_rows, mistakes_rows):
+        repair_related_terms(rows, glossary_rows)
+        repair_short_article_titles(rows)
 
 
 def apply_term_remap_to_rows(
