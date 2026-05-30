@@ -1218,7 +1218,7 @@ def build_terms_index(entries: list[dict], base_url: str) -> str:
         "分野別に整理し、検索と絞り込みで目的の語句を探せます。"
     )
     lead = (
-        f"{exam_name()}の試験で押さえたい知識（用語・比較・数値・誤答）を、分野別にまとめています。"
+        f"{exam_name()}の試験で押さえたい用語を、分野別にまとめています。"
         "各ページで意味や試験での論点を確認できます。学習の進め方は試験ガイド（articles/）をご覧ください。"
     )
     return f"""<!DOCTYPE html>
