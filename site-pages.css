@@ -3802,7 +3802,8 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--text);
   line-height: 1.4;
 }
-.section-heading-num {
+/* seo-editorial 記事は seo-editorial.css の番号バッジを使う */
+.article-body:not(.seo-editorial) .section-heading-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3885,7 +3886,7 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   overflow: hidden;
   box-shadow: var(--sh);
 }
-.article-body th {
+.article-body:not(.seo-editorial) th {
   background: var(--table-head-bg);
   color: #fff;
   font-weight: 600;
@@ -3924,7 +3925,7 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 .article-body blockquote strong {
   color: var(--ink);
 }
-.seo-info-table th {
+.article-body:not(.seo-editorial) .seo-info-table th {
   white-space: nowrap;
   background: var(--table-head-bg);
   color: #fff;
@@ -3932,14 +3933,14 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   width: 22%;
   font-weight: 700;
 }
-.seo-info-table td {
+.article-body:not(.seo-editorial) .seo-info-table td {
   background: var(--bg);
   color: var(--text);
 }
-.seo-info-table tr:nth-child(even) td {
+.article-body:not(.seo-editorial) .seo-info-table tr:nth-child(even) td {
   background: var(--bg);
 }
-.seo-info-table tr:last-child th {
+.article-body:not(.seo-editorial) .seo-info-table tr:last-child th {
   border-bottom: none;
 }
 /* 比較・整理表（terms/compare） */
@@ -4506,7 +4507,7 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     box-shadow: none;
   }
   .site-page-section table,
-  .article-body table.seo-info-table {
+  .article-body:not(.seo-editorial) table.seo-info-table {
     display: block;
     width: 100%;
     border: none;
@@ -4515,11 +4516,11 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     overflow: visible;
   }
   .site-page-section table tbody,
-  .article-body table.seo-info-table tbody {
+  .article-body:not(.seo-editorial) table.seo-info-table tbody {
     display: block;
   }
   .site-page-section table tr,
-  .article-body table.seo-info-table tr {
+  .article-body:not(.seo-editorial) table.seo-info-table tr {
     display: block;
     margin-bottom: 10px;
     border: 1px solid var(--table-border);
@@ -4528,20 +4529,20 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     background: var(--bg);
   }
   .site-page-section table tr:last-child,
-  .article-body table.seo-info-table tr:last-child {
+  .article-body:not(.seo-editorial) table.seo-info-table tr:last-child {
     margin-bottom: 0;
   }
   .site-page-section table th,
   .site-page-section table td,
-  .article-body table.seo-info-table th,
-  .article-body table.seo-info-table td {
+  .article-body:not(.seo-editorial) table.seo-info-table th,
+  .article-body:not(.seo-editorial) table.seo-info-table td {
     display: block;
     width: 100%;
     border-bottom: 1px solid var(--border);
     box-sizing: border-box;
   }
   .site-page-section table th,
-  .article-body table.seo-info-table th {
+  .article-body:not(.seo-editorial) table.seo-info-table th {
     background: var(--table-head-bg);
     color: #fff;
     font-size: var(--fs-caption);
@@ -4549,19 +4550,19 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     white-space: normal;
     border-bottom: 1px solid var(--table-border);
   }
-  .compare-article-page .article-body table.seo-info-table th,
-  .compare-article-page .article-body table.seo-info-table td {
+  .compare-article-page .article-body:not(.seo-editorial) table.seo-info-table th,
+  .compare-article-page .article-body:not(.seo-editorial) table.seo-info-table td {
     font-size: 14px;
   }
   .site-page-section table td,
-  .article-body table.seo-info-table td {
+  .article-body:not(.seo-editorial) table.seo-info-table td {
     background: var(--bg);
     color: var(--ink);
   }
   .site-page-section table tr:last-child th,
   .site-page-section table tr:last-child td,
-  .article-body table.seo-info-table tr:last-child th,
-  .article-body table.seo-info-table tr:last-child td {
+  .article-body:not(.seo-editorial) table.seo-info-table tr:last-child th,
+  .article-body:not(.seo-editorial) table.seo-info-table tr:last-child td {
     border-bottom: none;
   }
   .article-body table:not(.seo-info-table) {
@@ -5427,13 +5428,13 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--ink);
   font-size: var(--fs-body);
 }
-.term-article-page .article-body th,
-.term-article-page .seo-info-table th {
+.term-article-page .article-body:not(.seo-editorial) th,
+.term-article-page .article-body:not(.seo-editorial) .seo-info-table th {
   background: var(--table-head-bg);
   color: var(--on-dark);
 }
-.term-article-page .article-body td,
-.term-article-page .seo-info-table td {
+.term-article-page .article-body:not(.seo-editorial) td,
+.term-article-page .article-body:not(.seo-editorial) .seo-info-table td {
   color: var(--text);
   font-size: var(--fs-sub);
 }
@@ -5579,13 +5580,13 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--ink);
   font-size: var(--fs-body);
 }
-.guide-article-page .article-body th,
-.guide-article-page .seo-info-table th {
+.guide-article-page .article-body:not(.seo-editorial) th,
+.guide-article-page .article-body:not(.seo-editorial) .seo-info-table th {
   background: var(--table-head-bg);
   color: var(--on-dark);
 }
-.guide-article-page .article-body td,
-.guide-article-page .seo-info-table td {
+.guide-article-page .article-body:not(.seo-editorial) td,
+.guide-article-page .article-body:not(.seo-editorial) .seo-info-table td {
   color: var(--text);
   font-size: var(--fs-sub);
 }
@@ -5611,7 +5612,8 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--ink);
   font-size: var(--fs-body);
 }
-.guide-article-page .seo-article-section h2 .section-heading-num {
+/* seo-editorial 記事は seo-editorial.css の番号バッジ（青丸・白文字）を優先 */
+.guide-article-page .article-body:not(.seo-editorial) .seo-article-section h2 .section-heading-num {
   color: var(--text);
 }
 .guide-article-page .seo-action-box p,

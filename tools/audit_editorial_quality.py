@@ -16,9 +16,40 @@ if str(ROOT) not in sys.path:
 from tools.build_glossary_pages import make_term_lookup  # noqa: E402
 from tools.glossary_term_rules import check_glossary_row  # noqa: E402
 from tools.guide_article_rules import check_guide_row  # noqa: E402
+from tools.editorial_quality import EditorialIssue  # noqa: E402
 
 GUIDE_CSV = ROOT / "data" / "guide_articles.csv"
 GLOSSARY_CSV = ROOT / "data" / "glossary_terms.csv"
+
+
+def audit_guide_cross_duplicates(rows: list[dict[str, str]]) -> list[EditorialIssue]:
+    """複数記事で同一 section 本文が使い回されていないか（published のみ）。"""
+    from tools.editorial_quality import is_published_guide, norm
+
+    body_to_slugs: dict[str, list[str]] = {}
+    for row in rows:
+        if not is_published_guide(row):
+            continue
+        slug = norm(row.get("slug"))
+        if not slug:
+            continue
+        for n in range(1, 8):
+            body = norm(row.get(f"section_{n}_body"))
+            if len(body) < 120:
+                continue
+            body_to_slugs.setdefault(body, []).append(slug)
+    issues: list[EditorialIssue] = []
+    for body, slugs in body_to_slugs.items():
+        if len(slugs) < 2:
+            continue
+        issues.append(
+            EditorialIssue(
+                "ERROR",
+                "section_*_body",
+                f"同一本文が {len(slugs)} 記事で使い回されています（{', '.join(slugs[:4])}{'…' if len(slugs) > 4 else ''}）。各記事オリジナルに書き直してください",
+            )
+        )
+    return issues
 
 
 def audit_guides(*, strict: bool) -> tuple[int, int]:
@@ -43,6 +74,10 @@ def audit_guides(*, strict: bool) -> tuple[int, int]:
                     print(msg, file=sys.stderr)
                 else:
                     print(msg)
+    for issue in audit_guide_cross_duplicates(rows):
+        msg = f"guide_articles.csv [cross] [{issue.column}] {issue.message}"
+        errors += 1
+        print(msg, file=sys.stderr)
     return errors, warns
 
 

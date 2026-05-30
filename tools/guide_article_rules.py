@@ -7,6 +7,7 @@ from __future__ import annotations
 from tools.editorial_quality import (
     GUIDE_PRO,
     EditorialIssue,
+    boilerplate_issues,
     concreteness_issues,
     duplicate_faq_answers,
     generic_issues,
@@ -74,6 +75,8 @@ def check_guide_row(
         if published:
             issues.extend(readability_issues(text, col))
             issues.extend(generic_issues(text, col))
+            if (col.startswith("section_") and col.endswith("_body")) or col.startswith("faq_"):
+                issues.extend(boilerplate_issues(text, col))
 
     sections = [(h, b, body) for h, b, body in section_pairs(row) if body]
     for _h, bcol, body in sections:

@@ -57,7 +57,8 @@ body.seo-editorial-preview-page {
   --seo-panel-border: rgba(0, 0, 0, 0.07);
   --seo-callout-bg: var(--bg2, #f4f4f5);
   --seo-callout-border: var(--accent-border, rgba(0, 0, 0, 0.12));
-  --seo-callout-side: var(--accent, #333333);
+  /* 要点・信頼性パネル左ラインはサイト --accent ではなく中立グレー（赤サイトでも統一） */
+  --seo-callout-side: #9ca3af;
   --seo-callout-text: var(--seo-text-body);
   --seo-callout-title: var(--seo-text-title);
   --seo-callout-radius: 0;
@@ -128,7 +129,6 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 .seo-editorial.seo-article-card a,
 .seo-editorial.seo-article-card blockquote,
 .seo-editorial.seo-article-card .seo-toc a,
-.seo-editorial.seo-article-card .section-heading-num,
 .seo-editorial.seo-article-card .meta-category,
 .seo-editorial.seo-article-card .related-box-title,
 .seo-editorial.seo-article-card .related-link {
@@ -268,9 +268,32 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 }
 
 .seo-editorial .section-heading-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--seo-accent);
+  color: #ffffff;
+  border: 1px solid var(--seo-accent);
+  font-size: 0.8125rem;
+  font-weight: var(--seo-font-weight-heading);
+  line-height: 1;
+}
+
+/* site-pages.css の .guide-article-page タイポ上書きより詳細度を上げる */
+body.guide-article-page .seo-editorial .seo-article-section h2 .section-heading-num,
+body.term-article-page .seo-editorial .seo-article-section h2 .section-heading-num,
+body.compare-article-page .seo-editorial .seo-article-section h2 .section-heading-num,
+body.numbers-article-page .seo-editorial .seo-article-section h2 .section-heading-num,
+body.mistakes-article-page .seo-editorial .seo-article-section h2 .section-heading-num,
+body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-heading-num {
   background: var(--seo-accent);
   color: #ffffff;
   border-color: var(--seo-accent);
+  font-weight: var(--seo-font-weight-heading);
 }
 
 /* 目次 */
@@ -309,7 +332,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
   border-bottom-color: var(--seo-accent);
 }
 
-/* 要点ボックス・信頼性・行動ボックス（グレー背景 + サイトカラー左ライン） */
+/* 要点ボックス・信頼性・行動ボックス（グレー背景 + 中立グレー左ライン） */
 .seo-editorial .seo-quality-panel,
 .seo-editorial .seo-action-box,
 .seo-editorial .seo-key-points-box {
@@ -613,6 +636,55 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
   color: var(--seo-table-cell-text);
 }
 
+/* site-pages.css の .article-body th / モバイル seo-info-table より優先 */
+body.guide-article-page .seo-editorial.seo-article-card table th,
+body.term-article-page .seo-editorial.seo-article-card table th,
+body.compare-article-page .seo-editorial.seo-article-card table th,
+body.numbers-article-page .seo-editorial.seo-article-card table th,
+body.mistakes-article-page .seo-editorial.seo-article-card table th,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card table th {
+  background: var(--seo-table-head-bg);
+  color: var(--seo-table-head-text);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+body.term-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+body.compare-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+body.numbers-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],
+body.mistakes-article-page .seo-editorial.seo-article-card .mistakes-matrix-table tbody th[scope="row"],
+body.seo-editorial-preview-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"] {
+  background: var(--seo-table-cell-alt-bg);
+  color: var(--seo-table-cell-text);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card table td,
+body.term-article-page .seo-editorial.seo-article-card table td,
+body.compare-article-page .seo-editorial.seo-article-card table td,
+body.numbers-article-page .seo-editorial.seo-article-card table td,
+body.mistakes-article-page .seo-editorial.seo-article-card table td,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card table td {
+  background: var(--seo-table-cell-bg);
+  color: var(--seo-table-cell-text);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card tr:nth-child(even) td,
+body.term-article-page .seo-editorial.seo-article-card tr:nth-child(even) td,
+body.compare-article-page .seo-editorial.seo-article-card tr:nth-child(even) td,
+body.numbers-article-page .seo-editorial.seo-article-card tr:nth-child(even) td,
+body.mistakes-article-page .seo-editorial.seo-article-card tr:nth-child(even) td,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card tr:nth-child(even) td {
+  background: var(--seo-table-cell-alt-bg);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td,
+body.term-article-page .seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td,
+body.compare-article-page .seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td,
+body.numbers-article-page .seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td,
+body.mistakes-article-page .seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td,
+body.seo-editorial-preview-page .seo-editorial.seo-article-card .seo-info-table tr:nth-child(even) td {
+  background: var(--seo-table-cell-bg);
+}
+
 /* 要点・関連記事見出し（site-pages.css の fs-sub / fs-small より優先） */
 body.guide-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
 body.term-article-page .seo-editorial.seo-article-card .seo-key-points-box h2,
@@ -652,6 +724,89 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
   body.numbers-article-page,
   body.mistakes-article-page {
     --seo-hub-tabs-sticky-h: 98px;
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card table.seo-info-table,
+  body.term-article-page .seo-editorial.seo-article-card table.seo-info-table,
+  body.compare-article-page .seo-editorial.seo-article-card table.seo-info-table,
+  body.numbers-article-page .seo-editorial.seo-article-card table.seo-info-table,
+  body.mistakes-article-page .seo-editorial.seo-article-card table.seo-info-table,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card table.seo-info-table {
+    display: table;
+    width: 100%;
+    border: 1px solid var(--seo-table-border);
+    border-radius: var(--seo-card-radius);
+    overflow: hidden;
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card table.seo-info-table tbody,
+  body.term-article-page .seo-editorial.seo-article-card table.seo-info-table tbody,
+  body.compare-article-page .seo-editorial.seo-article-card table.seo-info-table tbody,
+  body.numbers-article-page .seo-editorial.seo-article-card table.seo-info-table tbody,
+  body.mistakes-article-page .seo-editorial.seo-article-card table.seo-info-table tbody,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card table.seo-info-table tbody {
+    display: table-row-group;
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card table.seo-info-table tr,
+  body.term-article-page .seo-editorial.seo-article-card table.seo-info-table tr,
+  body.compare-article-page .seo-editorial.seo-article-card table.seo-info-table tr,
+  body.numbers-article-page .seo-editorial.seo-article-card table.seo-info-table tr,
+  body.mistakes-article-page .seo-editorial.seo-article-card table.seo-info-table tr,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card table.seo-info-table tr {
+    display: table-row;
+    margin-bottom: 0;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card table.seo-info-table th,
+  body.term-article-page .seo-editorial.seo-article-card table.seo-info-table th,
+  body.compare-article-page .seo-editorial.seo-article-card table.seo-info-table th,
+  body.numbers-article-page .seo-editorial.seo-article-card table.seo-info-table th,
+  body.mistakes-article-page .seo-editorial.seo-article-card table.seo-info-table th,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card table.seo-info-table th {
+    display: table-cell;
+    width: auto;
+    background: var(--seo-table-head-bg);
+    color: var(--seo-table-head-text);
+    font-size: var(--seo-fs-table);
+    white-space: normal;
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card table.seo-info-table td,
+  body.term-article-page .seo-editorial.seo-article-card table.seo-info-table td,
+  body.compare-article-page .seo-editorial.seo-article-card table.seo-info-table td,
+  body.numbers-article-page .seo-editorial.seo-article-card table.seo-info-table td,
+  body.mistakes-article-page .seo-editorial.seo-article-card table.seo-info-table td,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card table.seo-info-table td {
+    display: table-cell;
+    width: auto;
+    background: var(--seo-table-cell-bg);
+    color: var(--seo-table-cell-text);
+    font-size: var(--seo-fs-table);
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],
+  body.guide-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+  body.guide-article-page .seo-editorial.seo-article-card .mistakes-matrix-table tbody th[scope="row"],
+  body.term-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],
+  body.term-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+  body.term-article-page .seo-editorial.seo-article-card .mistakes-matrix-table tbody th[scope="row"],
+  body.compare-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],
+  body.compare-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+  body.compare-article-page .seo-editorial.seo-article-card .mistakes-matrix-table tbody th[scope="row"],
+  body.numbers-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],
+  body.numbers-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+  body.numbers-article-page .seo-editorial.seo-article-card .mistakes-matrix-table tbody th[scope="row"],
+  body.mistakes-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],
+  body.mistakes-article-page .seo-editorial.seo-article-card .compare-matrix-table tbody th[scope="row"],
+  body.mistakes-article-page .seo-editorial.seo-article-card .mistakes-matrix-table tbody th[scope="row"],
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"] {
+    background: var(--seo-table-cell-alt-bg);
+    color: var(--seo-table-cell-text);
   }
 }
 

@@ -30,73 +30,12 @@ from tools.knowledge_hub_rules import (
     check_numbers_row,
     production_count_message,
 )
-
 from tools.site_config import category_to_field_map, guide_genre_labels
+from tools.term_diagram import DIAGRAM_ID_RE, diagram_id_exists
 
 
 def split_semicolon(value: str) -> list[str]:
     return [x.strip() for x in value.split(";") if x.strip()]
-
-
-def _validate_correct_format(qtype: str, correct: str, max_choice: int) -> tuple[bool, str]:
-    """型別に correct のフォーマットを検証する。
-
-    - single: "3"
-    - multi: "1,3" (カンマ区切り、各 1..max_choice)
-    - combination: "A-2;B-3;C-5" (アルファベット-数字 のセミコロン区切り)
-    - truefalse_group: "適-2,3;不適-1,4" (ラベル-数字群 のセミコロン区切り)
-    """
-    correct = (correct or "").strip()
-    if qtype == "single":
-        try:
-            n = int(correct)
-        except ValueError:
-            return False, f"correct は 1〜{max_choice} の整数で入力してください: {correct!r}"
-        if not 1 <= n <= max_choice:
-            return False, f"correct は 1〜{max_choice} の範囲で入力してください: {n}"
-        return True, ""
-    if qtype == "multi":
-        nums = [s.strip() for s in correct.split(",") if s.strip()]
-        try:
-            ints = [int(n) for n in nums]
-        except ValueError:
-            return False, f"multi の correct はカンマ区切り整数で入力してください: {correct!r}"
-        if len(ints) < 2:
-            return False, f"multi の correct は2つ以上の番号が必要です: {correct!r}"
-        if len(set(ints)) != len(ints):
-            return False, f"multi の correct に重複があります: {correct!r}"
-        if any(n < 1 or n > max_choice for n in ints):
-            return False, f"multi の correct は 1〜{max_choice} の範囲: {correct!r}"
-        return True, ""
-    if qtype == "combination":
-        pairs = [p.strip() for p in correct.split(";") if p.strip()]
-        if not pairs:
-            return False, f"combination の correct は 'A-2;B-3' 形式: {correct!r}"
-        for p in pairs:
-            m = re.fullmatch(r"[A-Za-zア-オ甲乙①-⑫]-\d+", p)
-            if not m:
-                return False, f"combination の correct ペア形式: {p!r}"
-            num = int(p.split("-", 1)[1])
-            if not 1 <= num <= max_choice:
-                return False, f"combination の番号は 1〜{max_choice}: {p!r}"
-        return True, ""
-    if qtype == "truefalse_group":
-        groups = [g.strip() for g in correct.split(";") if g.strip()]
-        if len(groups) < 2:
-            return False, f"truefalse_group の correct は2グループ以上: {correct!r}"
-        used: set[int] = set()
-        for g in groups:
-            m = re.fullmatch(r"([^,\d;\-]+)-(\d+(?:,\d+)*)", g)
-            if not m:
-                return False, f"truefalse_group のグループ形式: {g!r}"
-            nums = [int(s) for s in m.group(2).split(",") if s]
-            if any(n < 1 or n > max_choice for n in nums):
-                return False, f"truefalse_group の番号は 1〜{max_choice}: {g!r}"
-            if any(n in used for n in nums):
-                return False, f"truefalse_group の番号が他グループと重複: {g!r}"
-            used.update(nums)
-        return True, ""
-    return False, f"未対応の type です: {qtype!r}（single / multi / combination / truefalse_group）"
 
 DATA_DIR = ROOT / "data"
 
@@ -214,11 +153,8 @@ class Validator:
         return category
 
     def validate_choices_and_correct(self, path: Path, row: dict[str, str], line: int, *, allow_invalidated: bool) -> None:
-        # choice_1..8 のうち 2 つ以上が必要（運管試験の combination で枠内 8 択を
-        # choice_1 と choice_5 のように配置するパターンに対応）。
-        non_empty = sum(1 for i in range(1, 9) if self.norm(row.get(f"choice_{i}")))
-        if non_empty < 2:
-            self.error(path, line, f"choice_1..8 のうち 2 つ以上を入力してください（現在 {non_empty} 個）")
+        for i in range(1, 5):
+            self.require_text(path, row, line, f"choice_{i}")
         invalidated = allow_invalidated and self.truthy(row.get("is_invalidated"))
         correct = self.norm(row.get("correct"))
         if invalidated and not correct:
@@ -226,12 +162,15 @@ class Validator:
         if not correct:
             self.error(path, line, "correct が空です")
             return
-        choices = [self.norm(row.get(f"choice_{i}")) for i in range(1, 9)]
+        try:
+            n = int(correct)
+        except ValueError:
+            self.error(path, line, f"correct は 1〜5 の整数で入力してください: {correct!r}")
+            return
+        choices = [self.norm(row.get(f"choice_{i}")) for i in range(1, 6)]
         max_choice = max([i for i, value in enumerate(choices, start=1) if value] or [4])
-        qtype = self.norm(row.get("type")) or "single"
-        ok, message = _validate_correct_format(qtype, correct, max_choice)
-        if not ok:
-            self.error(path, line, message)
+        if not 1 <= n <= max_choice:
+            self.error(path, line, f"correct は 1〜{max_choice} の範囲で入力してください: {n}")
 
     def validate_past_questions(self) -> None:
         path = DATA_DIR / "past_questions.csv"
@@ -275,6 +214,7 @@ class Validator:
                             idx,
                             f"related_links の形式を確認してください（例: guide:slug:ラベル）: {token!r}",
                         )
+            self._validate_diagram_id(path, row, idx)
 
     def validate_practice_questions(self) -> None:
         path = DATA_DIR / "practice_questions.csv"
@@ -303,6 +243,7 @@ class Validator:
             self.require_text(path, row, idx, "stem")
             self.require_text(path, row, idx, "explanation")
             self.validate_choices_and_correct(path, row, idx, allow_invalidated=False)
+            self._validate_diagram_id(path, row, idx)
 
     def validate_ichimon_questions(self) -> None:
         path = DATA_DIR / "ichimon_questions.csv"
@@ -323,6 +264,7 @@ class Validator:
             answer = self.require_text(path, row, idx, "answer")
             if answer and answer not in {"○", "〇", "×", "✕", "╳"}:
                 self.error(path, idx, f"answer は ○ または × で入力してください: {answer!r}")
+            self._validate_diagram_id(path, row, idx)
 
     def validate_glossary(self) -> None:
         path = DATA_DIR / "glossary_terms.csv"
@@ -368,6 +310,25 @@ class Validator:
                     self.error(path, idx, issue.message)
                 else:
                     self.warn(path, idx, issue.message)
+            self._validate_diagram_id(path, row, idx)
+
+    def _validate_diagram_id(self, path: Path, row: dict[str, str], line: int) -> None:
+        raw = self.norm(row.get("diagram_id"))
+        if not raw:
+            return
+        if not DIAGRAM_ID_RE.fullmatch(raw):
+            self.error(
+                path,
+                line,
+                f"diagram_id は半角英小文字・数字・ハイフンのみ: {raw!r}",
+            )
+            return
+        if not diagram_id_exists(raw):
+            self.error(
+                path,
+                line,
+                f"diagram_id に対応する JSON がありません: data/term_diagrams/{raw}.json",
+            )
 
     def validate_guide_articles(self) -> None:
         path = DATA_DIR / "guide_articles.csv"
@@ -523,12 +484,11 @@ class Validator:
                 " 検索意図の重複と更新負荷がないか確認してください。",
             )
 
-
     def validate_knowledge_hub(self) -> None:
         entries: list[dict[str, str]] = []
         glossary_path = DATA_DIR / "glossary_terms.csv"
         if glossary_path.is_file():
-            _, gloss_rows = self.read_csv(glossary_path, set())
+            _, gloss_rows = self.read_csv(glossary_path, set(GLOSSARY_BASE_REQUIRED))
             for row in gloss_rows:
                 term = self.norm(row.get("term"))
                 if term:
@@ -549,9 +509,7 @@ class Validator:
                     f"{HUB_LABELS[hub_type]} の CSV がありません: {HUB_CSV_NAMES[hub_type]}",
                 )
                 continue
-            _, rows = self.read_csv(
-                path, required | {"article_title", "article_lead", "exam_points", "related_terms"}
-            )
+            _, rows = self.read_csv(path, required | {"article_title", "article_lead", "exam_points", "related_terms"})
             published = [row for row in rows if self.norm(row.get("title"))]
             msg = production_count_message(hub_type, len(published))
             if msg:
@@ -564,8 +522,7 @@ class Validator:
                 if title in seen_titles:
                     self.error(path, idx, f"title が重複しています: {title}")
                 seen_titles.add(title)
-                if hasattr(self, "validate_category"):
-                    self.validate_category(path, row, idx)
+                self.validate_category(path, row, idx)
                 for issue in checker(row, term_lookup=term_lookup, line=idx):
                     if issue.level == "ERROR":
                         self.error(path, idx, f"[{issue.column}] {issue.message}")

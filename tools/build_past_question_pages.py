@@ -76,7 +76,7 @@ def parse_correct(raw: str) -> int | None:
         n = int(raw)
     except ValueError:
         return None
-    if 1 <= n <= 8:
+    if 1 <= n <= 5:
         return n
     return None
 
@@ -120,15 +120,6 @@ def stem_preview(text: str, limit: int = 52) -> str:
     return one[: limit - 1] + "…"
 
 
-def _year_phrase(page: dict) -> str:
-    """page から年度表示用フレーズを得る（wareki 優先 / 5桁以上は wareki 必須）。"""
-    wareki = norm(page.get("wareki"))
-    year = page["year"]
-    if wareki:
-        return wareki
-    return f"{year}年"
-
-
 def page_heading(page: dict) -> str:
     from tools.q_page_seo import question_h1
 
@@ -137,12 +128,11 @@ def page_heading(page: dict) -> str:
         year=page["year"],
         qno=page["qno"],
         category=page["category"],
-        wareki=norm(page.get("wareki")),
     )
 
 
 def page_context_line(page: dict) -> str:
-    return f"{_year_phrase(page)} · {page['category']}"
+    return f"{page['year']}年 · {page['category']}"
 
 
 def page_title_seo(page: dict) -> str:
@@ -153,7 +143,6 @@ def page_title_seo(page: dict) -> str:
         year=page["year"],
         qno=page["qno"],
         category=page["category"],
-        wareki=norm(page.get("wareki")),
     )
 
 
@@ -163,10 +152,7 @@ def page_meta_description(page: dict) -> str:
     return question_meta_description(
         "past",
         headline=question_meta_headline(
-            "past",
-            year=page["year"],
-            qno=page["qno"],
-            wareki=norm(page.get("wareki")),
+            "past", year=page["year"], qno=page["qno"]
         ),
         category=page["category"],
         body=norm(page.get("stem_plain")),
@@ -322,154 +308,6 @@ def build_index_table_row(page: dict) -> str:
 def rel_to_root(rel_file: Path) -> str:
     depth = len(rel_file.parent.parts)
     return "/".join([".."] * depth) + "/index.html"
-
-
-def rel_quiz_assets(rel_file: Path) -> tuple[str, str]:
-    """静的ページ採点用 JS/CSS への相対パス。"""
-    depth = len(rel_file.parent.parts)
-    prefix = "/".join([".."] * depth) if depth else "."
-    return f"{prefix}/q-page-quiz.js", f"{prefix}/q-page-quiz.css"
-
-
-def parse_combination_correct(raw: str) -> list[tuple[str, int]]:
-    pairs: list[tuple[str, int]] = []
-    for p in raw.split(";"):
-        p = p.strip()
-        if not p:
-            continue
-        m = re.fullmatch(r"([A-Za-zア-オ甲乙①-⑫])-(\d+)", p)
-        if m:
-            pairs.append((m.group(1), int(m.group(2))))
-    return pairs
-
-
-def parse_truefalse_correct(raw: str) -> tuple[list[str], dict[int, str]]:
-    """returns (label_order, {stmt_no: label})。"""
-    label_order: list[str] = []
-    by_stmt: dict[int, str] = {}
-    for g in raw.split(";"):
-        g = g.strip()
-        if not g:
-            continue
-        m = re.fullmatch(r"([^,\d;\-]+)-(\d+(?:,\d+)*)", g)
-        if not m:
-            continue
-        label = m.group(1).strip()
-        if label not in label_order:
-            label_order.append(label)
-        for n in m.group(2).split(","):
-            by_stmt[int(n)] = label
-    return label_order, by_stmt
-
-
-def build_quiz_form_html(page: dict) -> str:
-    """型別の選択肢フォームを生成。採点ボタン押下で q-quiz-locked が解除される。"""
-    qtype = page.get("type") or "single"
-    correct_raw = page.get("correct_raw") or ""
-    opts: list[str] = page.get("opts") or []
-    is_invalidated = bool(page.get("is_invalidated"))
-
-    # 出題無効・正答なしの場合は採点フォームではなく従来の選択肢一覧を表示
-    if is_invalidated or not correct_raw:
-        items = "".join(
-            f'<li class="q-opt"><span class="q-opt-num">（{i}）</span> {html.escape(o)}</li>'
-            for i, o in enumerate(opts, start=1)
-        )
-        return f'<ol class="q-opts">{items}</ol>'
-
-    correct_attr = html.escape(correct_raw, quote=True)
-
-    if qtype == "multi":
-        items = "".join(
-            f'<li class="q-opt"><label class="q-opt-label">'
-            f'<input type="checkbox" name="q-opt" value="{i}">'
-            f'<span class="q-opt-num">（{i}）</span>'
-            f'<span class="q-opt-text">{html.escape(o)}</span></label></li>'
-            for i, o in enumerate(opts, start=1)
-        )
-        body = f'<ol class="q-opts">{items}</ol>'
-        intro = (
-            '<p class="q-quiz-hint-locked">正しいもの／誤っているものを<strong>すべて</strong>選び、'
-            '「採点する」を押してください。</p>'
-        )
-    elif qtype == "combination":
-        pairs = parse_combination_correct(correct_raw)
-        # 各サブ問題のラジオを 1..len(opts) で生成
-        groups_html = ""
-        for label, _expected in pairs:
-            radios = "".join(
-                f'<li><label class="q-quiz-subgroup__opt-label">'
-                f'<input type="radio" name="q-{html.escape(label, quote=True)}" value="{i}">'
-                f'<span>{i}</span></label></li>'
-                for i in range(1, len(opts) + 1)
-            )
-            groups_html += (
-                f'<div class="q-quiz-subgroup">'
-                f'<p class="q-quiz-subgroup__title">{html.escape(label)}</p>'
-                f'<ul class="q-quiz-subgroup__opts">{radios}</ul>'
-                f'</div>'
-            )
-        opts_list = "".join(
-            f'<li class="q-opt"><span class="q-opt-num">{i}．</span>'
-            f'<span class="q-opt-text">{html.escape(o)}</span></li>'
-            for i, o in enumerate(opts, start=1)
-        )
-        body = (
-            f'<p class="q-quiz-hint-locked">枠内の選択肢から、各空欄に対応する番号を選んでください。</p>'
-            f'<ol class="q-opts q-quiz-options-list">{opts_list}</ol>'
-            f'<div class="q-quiz-subgroups">{groups_html}</div>'
-        )
-        intro = ""
-    elif qtype == "truefalse_group":
-        labels, _ = parse_truefalse_correct(correct_raw)
-        if not labels:
-            labels = ["適", "不適"]
-        groups_html = ""
-        for stmt_no, opt_text in enumerate(opts, start=1):
-            radios = "".join(
-                f'<li><label class="q-quiz-subgroup__opt-label">'
-                f'<input type="radio" name="q-stmt-{stmt_no}" value="{html.escape(lab, quote=True)}">'
-                f'<span>{html.escape(lab)}</span></label></li>'
-                for lab in labels
-            )
-            groups_html += (
-                f'<div class="q-quiz-subgroup">'
-                f'<p class="q-quiz-subgroup__title">記述 {stmt_no}</p>'
-                f'<p class="q-quiz-subgroup__statement">{html.escape(opt_text)}</p>'
-                f'<ul class="q-quiz-subgroup__opts">{radios}</ul>'
-                f'</div>'
-            )
-        body = f'<div class="q-quiz-subgroups">{groups_html}</div>'
-        intro = (
-            '<p class="q-quiz-hint-locked">各記述について、'
-            f'「{labels[0]}」または「{labels[1] if len(labels) > 1 else "他"}」'
-            'を選び、「採点する」を押してください。</p>'
-        )
-    else:  # single
-        items = "".join(
-            f'<li class="q-opt"><label class="q-opt-label">'
-            f'<input type="radio" name="q-opt" value="{i}">'
-            f'<span class="q-opt-num">（{i}）</span>'
-            f'<span class="q-opt-text">{html.escape(o)}</span></label></li>'
-            for i, o in enumerate(opts, start=1)
-        )
-        body = f'<ol class="q-opts">{items}</ol>'
-        intro = ""
-
-    actions = (
-        '<div class="q-quiz-actions">'
-        '<button type="button" class="q-grade-btn">採点する</button>'
-        '<button type="button" class="q-reset-btn">リセット</button>'
-        '</div>'
-        '<div class="q-grade-result" role="status" aria-live="polite"></div>'
-    )
-
-    return (
-        f'<form class="q-quiz-form" data-quiz-type="{html.escape(qtype, quote=True)}" '
-        f'data-quiz-correct="{correct_attr}" onsubmit="return false;">'
-        f'{intro}{body}{actions}'
-        f'</form>'
-    )
 
 
 def rel_to_q_index(rel_file: Path) -> str:
@@ -717,24 +555,16 @@ def load_rows() -> list[dict]:
 def page_dict(row: dict, line_no: int) -> dict:
     year = int(row["exam_year"])
     qno = int(row["question_no"])
-    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 9) if norm(row.get(f"choice_{i}"))]
-    if len(opts) < 2:
-        raise ValueError(f"line {line_no}: 選択肢が 2 件未満 {year}-{qno}")
+    opts = [norm(row.get(f"choice_{i}")) for i in range(1, 6) if norm(row.get(f"choice_{i}"))]
+    if not all(opts):
+        raise ValueError(f"line {line_no}: 選択肢欠け {year}-{qno}")
     inv = norm(row.get("is_invalidated", "")).upper() == "TRUE"
-    typ = norm(row.get("type")) or "single"
-    correct_raw = norm(row.get("correct"))
-    # single の場合のみ legacy の int correct を使う。複合型は correct=None で
-    # 既存ロジックは「正答セクション省略」相当の挙動になる。
-    if typ == "single":
-        cor = parse_correct(correct_raw)
-        if cor is None and not inv:
-            raise ValueError(f"line {line_no}: 正答なし {year}-{qno}")
-    else:
-        cor = None
-        if not correct_raw and not inv:
-            raise ValueError(f"line {line_no}: 正答なし {year}-{qno}")
+    cor = parse_correct(row.get("correct"))
+    if cor is None and not inv:
+        raise ValueError(f"line {line_no}: 正答なし {year}-{qno}")
     wareki = norm(row.get("exam_wareki"))
     cat = norm(row.get("category"))
+    typ = norm(row.get("type")) or "single"
     stem_plain = norm(row.get("stem"))
     exp = norm(row.get("explanation")) or "（解説は未入力です。）"
     return {
@@ -747,7 +577,6 @@ def page_dict(row: dict, line_no: int) -> dict:
         "stem_plain": stem_plain,
         "opts": opts,
         "correct": cor,
-        "correct_raw": correct_raw,
         "is_exempt": norm(row.get("is_exempt", "")).upper() == "TRUE",
         "is_invalidated": inv,
         "note": norm(row.get("note")),
@@ -783,29 +612,19 @@ def build_question_html(
     css_href = rel_css(rel_path)
     theme_href = rel_theme_css(rel_path)
 
-    quiz_form_html = build_quiz_form_html(page)
-    qtype = page.get("type") or "single"
-    correct_raw = page.get("correct_raw") or ""
+    opts_html = "".join(
+        f'<li class="q-opt"><span class="q-opt-num">（{i}）</span> {html.escape(o)}</li>'
+        for i, o in enumerate(page["opts"], start=1)
+    )
 
-    if page["is_invalidated"] or not correct_raw:
+    if page["is_invalidated"] or page["correct"] is None:
         ans_block = (
             "<p>本問は試験上「出題無効」となった年度があります（"
             + html.escape(page["note"] or "公式の扱いを確認してください")
             + "）。学習用に選択肢のみ掲載します。</p>"
         )
-    elif qtype == "single" and page["correct"] is not None:
-        ans_block = f'<p>正答は <strong>（{page["correct"]}）</strong> です。</p>'
-    elif qtype == "multi":
-        ans_block = f'<p>正答は <strong>（{html.escape(correct_raw)}）</strong> の選択肢すべてです。</p>'
-    elif qtype == "combination":
-        pretty = "、".join(f"{lab}={n}" for lab, n in parse_combination_correct(correct_raw))
-        ans_block = f'<p>正答の組合せは <strong>{html.escape(pretty)}</strong> です（番号は枠内の選択肢）。</p>'
-    elif qtype == "truefalse_group":
-        _, by_stmt = parse_truefalse_correct(correct_raw)
-        pretty = " / ".join(f"記述{n}={lab}" for n, lab in sorted(by_stmt.items()))
-        ans_block = f'<p>正答は <strong>{html.escape(pretty)}</strong> です。</p>'
     else:
-        ans_block = f'<p>正答情報：<strong>{html.escape(correct_raw)}</strong></p>'
+        ans_block = f'<p>正答は <strong>（{page["correct"]}）</strong> です。</p>'
 
     badges = []
     if page["is_exempt"]:
@@ -861,7 +680,6 @@ def build_question_html(
     from tools.q_page_seo import study_modes_note_html
 
     study_modes_note = study_modes_note_html()
-    quiz_js_href, quiz_css_href = rel_quiz_assets(rel_path)
 
     return f"""<!DOCTYPE html>
 <html lang="ja">
@@ -880,7 +698,6 @@ def build_question_html(
 {HEAD_FONTS}
 <link rel="stylesheet" href="{html.escape(css_href)}">
 <link rel="stylesheet" href="{html.escape(theme_href)}">
-<link rel="stylesheet" href="{html.escape(quiz_css_href)}">
 <script type="application/ld+json">
 {json.dumps(json_ld, ensure_ascii=False, indent=2)}
 </script>
@@ -899,9 +716,11 @@ def build_question_html(
     <h2 id="q-stem-h" class="q-h2">問題</h2>
     <div class="q-stem">{page["stem_html"]}</div>
   </section>
-  <section class="q-block q-quiz" aria-labelledby="q-opts-h">
+  <section class="q-block" aria-labelledby="q-opts-h">
     <h2 id="q-opts-h" class="q-h2">選択肢</h2>
-    {quiz_form_html}
+    <ol class="q-opts">
+      {opts_html}
+    </ol>
   </section>
   <section class="q-block q-answer" aria-labelledby="q-ans-h">
     <h2 id="q-ans-h" class="q-h2">正答</h2>
@@ -917,7 +736,6 @@ def build_question_html(
 </main>
 {site_footer}
 {site_page_wrap_close()}
-<script src="{html.escape(quiz_js_href)}" defer></script>
 </body>
 </html>
 """
