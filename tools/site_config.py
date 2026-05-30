@@ -40,6 +40,18 @@ def exam_name() -> str:
     return str(CONFIG.get("examName") or "◯◯試験")
 
 
+def is_template_site() -> bool:
+    """exam-site-shell サンプル（プレースホルダー運用）かどうか。"""
+    origin = clean_origin().lower()
+    brand = brand_name()
+    if "your-domain" in origin or origin.endswith(".example"):
+        return True
+    if brand in {"Sampleマスター", "サンプルマスター"}:
+        return True
+    exam = exam_name()
+    return "プレースホルダ" in exam or exam.startswith("◯◯")
+
+
 def contact_url() -> str:
     return str(CONFIG.get("contactUrl") or "#")
 

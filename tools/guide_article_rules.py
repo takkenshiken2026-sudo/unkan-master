@@ -8,6 +8,7 @@ from tools.editorial_quality import (
     GUIDE_PRO,
     EditorialIssue,
     boilerplate_issues,
+    boilerplate_hits,
     concreteness_issues,
     duplicate_faq_answers,
     generic_issues,
@@ -18,6 +19,7 @@ from tools.editorial_quality import (
     readability_issues,
     split_semicolon,
 )
+from tools.site_config import is_template_site
 
 GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
 GUIDE_MIN_FAQ_ANSWER = 100
@@ -76,17 +78,26 @@ def check_guide_row(
             issues.extend(readability_issues(text, col))
             issues.extend(generic_issues(text, col))
             if (col.startswith("section_") and col.endswith("_body")) or col.startswith("faq_"):
-                issues.extend(boilerplate_issues(text, col))
+                if is_template_site():
+                    if boilerplate_hits(text):
+                        warn(col, "テンプレ用サンプルに量産禁止句が残っています（本番サイトでは ERROR）")
+                else:
+                    issues.extend(boilerplate_issues(text, col))
 
     sections = [(h, b, body) for h, b, body in section_pairs(row) if body]
     for _h, bcol, body in sections:
         if published and len(body) < GUIDE_MIN_SECTION_BODY:
-            err(
-                bcol,
-                f"section 本文は {GUIDE_MIN_SECTION_BODY} 文字以上にしてください（現在 {len(body)} 文字）",
-            )
+            msg = f"section 本文は {GUIDE_MIN_SECTION_BODY} 文字以上にしてください（現在 {len(body)} 文字）"
+            if is_template_site():
+                warn(bcol, msg)
+            else:
+                err(bcol, msg)
         elif not published and len(body) < 80:
-            err(bcol, f"section 本文は 80 文字以上にしてください（現在 {len(body)} 文字）")
+            msg = f"section 本文は 80 文字以上にしてください（現在 {len(body)} 文字）"
+            if is_template_site():
+                warn(bcol, msg)
+            else:
+                err(bcol, msg)
         if published:
             for issue in concreteness_issues(body, bcol):
                 issues.append(issue)
@@ -99,7 +110,11 @@ def check_guide_row(
         if q and not a:
             err(acol, f"{qcol} に対する {acol} が空です")
         if a and len(a) < GUIDE_MIN_FAQ_ANSWER:
-            err(acol, f"FAQ回答は {GUIDE_MIN_FAQ_ANSWER} 文字以上にしてください（現在 {len(a)} 文字）")
+            msg = f"FAQ回答は {GUIDE_MIN_FAQ_ANSWER} 文字以上にしてください（現在 {len(a)} 文字）"
+            if is_template_site():
+                warn(acol, msg)
+            else:
+                err(acol, msg)
         if a:
             faq_answers.append(a)
     issues.extend(duplicate_faq_answers(faq_answers))
