@@ -1,5 +1,5 @@
 ---
-description: Knowledge hub compare/numbers/mistakes — 50-100 articles each, CSV quality
+description: Knowledge hub compare/numbers/mistakes — 150 per type, CSV quality
 globs: data/comparisons.csv,data/numbers.csv,data/mistakes.csv,tools/knowledge_hub_rules.py,tools/scaffold_knowledge_hub_article.py,tools/build_compare_pages.py,tools/build_numbers_mistakes_pages.py,docs/knowledge-hub-article-templates.md
 alwaysApply: false
 ---
@@ -12,11 +12,11 @@ alwaysApply: false
 
 | 種別 | CSV | 目標 |
 |------|-----|------|
-| 比較・整理表 | `comparisons.csv` | **50〜100 件** |
-| 数値・期限早見表 | `numbers.csv` | **50〜100 件** |
-| よくある誤答 | `mistakes.csv` | **50〜100 件** |
+| 比較・整理表 | `comparisons.csv` | **150〜153 件** |
+| 数値・期限早見表 | `numbers.csv` | **150〜153 件** |
+| よくある誤答 | `mistakes.csv` | **150〜153 件** |
 
-50 件未満 → `validate_csv.py` **WARN**。100 件超 → 重複・更新負荷の WARN。
+150 件未満 → `validate_csv.py` **WARN**（本番目標）。件数超過は更新負荷の WARN のみ。
 
 ## 新規作成（必須フロー）
 

@@ -41,7 +41,7 @@
 | 過去問静的 `q/` | [question-static-pages.md](./question-static-pages.md) |
 | スマホレイアウト | [responsive-layout.md](./responsive-layout.md) |
 | 全サイトSEO展開（完了済み作業の記録） | [seo-editorial-rollout-checklist.md](./seo-editorial-rollout-checklist.md) |
-| 知識ハブ（比較・数値・誤答 — 多くは廃止・リダイレクト済み） | [knowledge-hub-article-templates.md](./knowledge-hub-article-templates.md) |
+| 知識ハブ（比較・数値・誤答 — **各150件/種**） | [knowledge-hub-article-templates.md](./knowledge-hub-article-templates.md) · [knowledge-hub-quality-gate.md](./knowledge-hub-quality-gate.md) |
 
 ### Cursor ルール（`.cursor/rules/`）
 
@@ -123,7 +123,21 @@ cd ~/Projects/takken-master && git status && git commit && git push
 
 ---
 
-## 6. 整理状況（2026-05-31）
+## 6. 知識ハブ Phase B（2026-05-31 完了）
+
+| 項目 | 正本 |
+|------|------|
+| 件数目標 | `tools/knowledge_hub_rules.py`（150〜153件/種） |
+| 再生成 | 各サイト `tools/write_*_hub_data.py` |
+| 一括検証 | `~/Projects/scripts/_hub_sync_and_verify.py` |
+| 数値照合 | `~/Projects/docs/hub_numbers_verified.json` + `_hub_numbers_bulk_verify_pending.py` |
+| 監査 | 各サイト `tools/audit_hub_quality.py`（`ROOT=parents[1]`） |
+
+横断手順: `~/Projects/docs/HUB_QUALITY_PIPELINE.md`
+
+---
+
+## 7. 整理状況（2026-05-31）
 
 - [x] マスター3本 + `ORGANIZATION.md` を入口に統一
 - [x] `.cursor/rules/` を 3 ファイルに集約（template / site-workflow / content-authoring）

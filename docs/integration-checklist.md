@@ -124,7 +124,7 @@ python3 tools/build_all.py
 
 | 項目 | 正 |
 |------|-----|
-| **本番目標** | **各 50〜100 件**（`comparisons.csv` / `numbers.csv` / `mistakes.csv`） |
+| **本番目標** | **各 150〜153 件**（`comparisons.csv` / `numbers.csv` / `mistakes.csv`） |
 | **新規作成** | `scaffold_knowledge_hub_article.py --append` → 執筆 → `build_glossary_pages.py` |
 | **正本** | [knowledge-hub-article-templates.md](./knowledge-hub-article-templates.md) |
 | **検証** | `validate_csv.py` + `tools/knowledge_hub_rules.py` |

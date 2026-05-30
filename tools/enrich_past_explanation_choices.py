@@ -673,6 +673,13 @@ def build_row_fields(row: dict) -> tuple[str, str, str]:
         correct_body = " ".join(dict.fromkeys(parts)) or extract_correct_body(exp, correct)
         if not correct_body:
             correct_body = exp[:500]
+    for bad in (
+        " この記述は本問の正答ではありません。",
+        "本問の正答ではありません",
+        "正答ではありません",
+    ):
+        correct_body = correct_body.replace(bad, "")
+    correct_body = re.sub(r"\s{2,}", " ", correct_body).strip()
 
     summary = norm(row.get("explanation_summary"))
     if not summary or summary == exp[:200]:
