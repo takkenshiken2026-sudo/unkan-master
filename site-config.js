@@ -4,7 +4,7 @@ window.SITE_CONFIG = {
   "examName": "運行管理者試験",
   "siteOrigin": "https://unkan-master.jp",
   "contactUrl": "https://forms.gle/c2SxYVPDbdThhnYw8",
-  "ga4MeasurementId": "G-Q47X42S88D",
+  "ga4MeasurementId": "G-N0F8L2Q698",
   "theme": {
     "accent": "#333333",
     "accentText": "#ffffff",
