@@ -68,6 +68,7 @@ from tools.knowledge_hub_seo import (
     hub_stub_memory_body_html,
     hub_stub_mistakes_body_html,
     official_info_html,
+    sanitize_hub_article_lead,
     seo_hub_key_points_box_html,
     seo_quality_panel_html,
     seo_toc_html,
@@ -281,20 +282,6 @@ def _numbers_table_body(rows: list[dict]) -> str:
     )
 
 
-
-
-def _matrix_group_field(rows: list[dict], *, primary: str, secondary: str) -> str | None:
-    primary_vals = {r.get(primary) for r in rows if r.get(primary)}
-    secondary_vals = {r.get(secondary) for r in rows if r.get(secondary)}
-    if len(secondary_vals) > 1 and len(primary_vals) <= 1:
-        return secondary
-    if len(primary_vals) > 1:
-        return primary
-    if len(secondary_vals) > 1:
-        return secondary
-    return primary if primary_vals else None
-
-
 def _grouped_matrix_html(
     rows: list[dict],
     *,
@@ -334,16 +321,23 @@ def numbers_matrix_table_html(rows: list[dict], *, note_html: str) -> str:
         '<thead><tr><th scope="col">項目</th><th scope="col">数値・期限</th>'
         '<th scope="col">補足</th></tr></thead><tbody>'
     )
-    group_field = _matrix_group_field(rows, primary="angle", secondary="nuance")
-    if group_field:
-        heading = "hub-angle-heading" if group_field == "angle" else "hub-nuance-heading"
+    if any(r.get("angle") for r in rows):
         return _grouped_matrix_html(
             rows,
             note_html=note_html,
             table_head=table_head,
             table_body_fn=_numbers_table_body,
-            group_field=group_field,
-            heading_class=heading,
+            group_field="angle",
+            heading_class="hub-angle-heading",
+        )
+    if any(r.get("nuance") for r in rows):
+        return _grouped_matrix_html(
+            rows,
+            note_html=note_html,
+            table_head=table_head,
+            table_body_fn=_numbers_table_body,
+            group_field="nuance",
+            heading_class="hub-nuance-heading",
         )
     return (
         '<table class="seo-info-table numbers-matrix-table">'
@@ -368,16 +362,23 @@ def mistakes_matrix_table_html(rows: list[dict], *, note_html: str) -> str:
         '<thead><tr><th scope="col">論点</th><th scope="col">誤答例</th><th scope="col">正解</th>'
         '<th scope="col">引っかけポイント</th></tr></thead><tbody>'
     )
-    group_field = _matrix_group_field(rows, primary="angle", secondary="nuance")
-    if group_field:
-        heading = "hub-angle-heading" if group_field == "angle" else "hub-nuance-heading"
+    if any(r.get("angle") for r in rows):
         return _grouped_matrix_html(
             rows,
             note_html=note_html,
             table_head=table_head,
             table_body_fn=_mistakes_table_body,
-            group_field=group_field,
-            heading_class=heading,
+            group_field="angle",
+            heading_class="hub-angle-heading",
+        )
+    if any(r.get("nuance") for r in rows):
+        return _grouped_matrix_html(
+            rows,
+            note_html=note_html,
+            table_head=table_head,
+            table_body_fn=_mistakes_table_body,
+            group_field="nuance",
+            heading_class="hub-nuance-heading",
         )
     return (
         '<table class="seo-info-table mistakes-matrix-table">'
@@ -439,7 +440,7 @@ def build_detail_html(
     summary = entry.get("summary") or ""
     detail_line = entry.get(spec.index_detail_field) or ""
     article_title = entry.get("article_title") or f"{title_text}｜{exam_name()}"
-    article_lead = entry.get("article_lead") or summary
+    article_lead = sanitize_hub_article_lead(entry.get("article_lead") or summary)
     exam_points = entry.get("exam_points") or ""
     common_mistakes = entry.get("common_mistakes") or ""
     memory_tip = entry.get("memory_tip") or ""

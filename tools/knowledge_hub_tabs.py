@@ -1,105 +1,43 @@
 # -*- coding: utf-8 -*-
-"""知識ハブ（用語解説 / 比較 / 数値早見 / よくある誤答）のタブナビ。"""
+"""知識ハブ（用語解説）のリード文。"""
 
 from __future__ import annotations
 
 import html
 
-HUB_SECTIONS: tuple[str, ...] = ("terms", "compare", "numbers", "mistakes")
-
-HUB_TABS: tuple[tuple[str, str], ...] = (
-    ("terms", "用語解説"),
-    ("compare", "比較・整理表"),
-    ("numbers", "数値・期限早見表"),
-    ("mistakes", "よくある誤答"),
-)
+HUB_SECTIONS: tuple[str, ...] = ("terms",)
 
 
 def articles_guide_href(*, here: str) -> str:
     """試験ガイド index への相対 href（terms 配下の深さに応じる）。"""
     if here == "terms":
         return "../articles/index.html"
-    if here in ("compare", "numbers", "mistakes", "field", "samples", "diagram-samples"):
+    if here in ("field", "samples", "diagram-samples"):
         return "../../articles/index.html"
     return "../../articles/index.html"
 
 
 def knowledge_hub_tab_hrefs(*, here: str) -> dict[str, str]:
-    """here: terms / compare / numbers / mistakes / field（分野ハブ）。"""
+    """互換用。用語解説のみ残す。"""
     if here == "field":
-        return {
-            "terms_href": "../index.html",
-            "compare_href": "../compare/index.html",
-            "numbers_href": "../numbers/index.html",
-            "mistakes_href": "../mistakes/index.html",
-        }
+        return {"terms_href": "../index.html"}
     if here in ("samples", "diagram-samples"):
-        return {
-            "terms_href": "../index.html",
-            "compare_href": "../compare/index.html",
-            "numbers_href": "../numbers/index.html",
-            "mistakes_href": "../mistakes/index.html",
-        }
-    if here not in HUB_SECTIONS:
-        return {
-            "terms_href": "../index.html",
-            "compare_href": "../compare/index.html",
-            "numbers_href": "../numbers/index.html",
-            "mistakes_href": "../mistakes/index.html",
-        }
-
-    out: dict[str, str] = {}
-    for section in HUB_SECTIONS:
-        key = "terms_href" if section == "terms" else f"{section}_href"
-        if section == here:
-            out[key] = "index.html"
-        elif here == "terms":
-            out[key] = "index.html" if section == "terms" else f"{section}/index.html"
-        elif section == "terms":
-            out[key] = "../index.html"
-        else:
-            out[key] = f"../{section}/index.html"
-    return out
+        return {"terms_href": "../index.html"}
+    if here == "terms":
+        return {"terms_href": "index.html"}
+    return {"terms_href": "../index.html"}
 
 
 def knowledge_hub_tabs_html(*, current: str, **hrefs: str) -> str:
-    """current: HUB_SECTIONS のいずれか。hrefs 未指定時は here=current の相対パスを使う。"""
-    if not hrefs:
-        hrefs = knowledge_hub_tab_hrefs(here=current)
-    valid = {tab_id for tab_id, _ in HUB_TABS} | {"field", "samples", "diagram-samples"}
-    if current not in valid:
-        raise ValueError(f"unknown tab current: {current!r}")
-
-    tab_here = "terms" if current == "field" else current
-    defaults = knowledge_hub_tab_hrefs(here=tab_here if current != "field" else "field")
-    merged = {**defaults, **hrefs}
-
-    items: list[str] = []
-    for tab_id, label in HUB_TABS:
-        cls = "q-hub-tab is-current" if tab_id == current or (current == "field" and tab_id == "terms") else "q-hub-tab"
-        href_key = "terms_href" if tab_id == "terms" else f"{tab_id}_href"
-        href = merged.get(href_key, defaults.get(href_key, "#"))
-        if tab_id == current or (current == "field" and tab_id == "terms"):
-            inner = f'<span class="q-hub-tab-label" aria-current="page">{html.escape(label)}</span>'
-        else:
-            inner = (
-                f'<a class="q-hub-tab-label" href="{html.escape(href)}">'
-                f"{html.escape(label)}</a>"
-            )
-        items.append(f'<li class="{cls}">{inner}</li>')
-
-    note = (
+    """比較・数値・誤答タブは廃止。用語解説ページ向けのリード文のみ返す。"""
+    here = "field" if current == "field" else current
+    if here not in ("terms", "field", "samples", "diagram-samples"):
+        here = "terms"
+    guide_href = articles_guide_href(here=here)
+    return (
         '<p class="q-study-modes-note">'
-        "知識ハブでは、用語の意味・似た制度の比較・数値・誤答パターンなど<strong>試験の知識</strong>を調べられます。"
+        "用語解説では、試験で押さえる用語の意味と関連条文を調べられます。"
         "学習計画や申込手続きなど<strong>進め方</strong>は"
-        '<a href="' + html.escape(articles_guide_href(here=current if current in ("field", "samples", "diagram-samples") else current)) + '">試験ガイド</a>をご覧ください。'
-        "タブから各コンテンツへ移動できます。"
+        f'<a href="{html.escape(guide_href)}">試験ガイド</a>をご覧ください。'
         "</p>"
     )
-    nav = (
-        '<nav class="q-hub-links q-hub-links--tabs" aria-label="知識コンテンツ">'
-        '<ul class="q-hub-tabs-list">'
-        + "".join(items)
-        + "</ul></nav>"
-    )
-    return note + nav

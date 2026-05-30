@@ -158,9 +158,6 @@ def collect_entries(base: str) -> list[SitemapEntry]:
     guide_dates = guide_lastmod_by_slug()
     csv_dates = {
         **glossary_lastmod_by_rel(),
-        **compare_lastmod_by_rel(),
-        **hub_lastmod_by_rel(NUMBERS_CSV, "terms/numbers", "n-"),
-        **hub_lastmod_by_rel(MISTAKES_CSV, "terms/mistakes", "m-"),
     }
 
     static_pages = ["index.html", "about.html", "privacy.html", "related-sites.html"]
@@ -192,18 +189,6 @@ def collect_entries(base: str) -> list[SitemapEntry]:
             add_file(entries, base, path.relative_to(ROOT).as_posix(), csv_dates=csv_dates)
         for path in sorted(terms_root.glob("g-*.html")):
             add_file(entries, base, path.relative_to(ROOT).as_posix(), csv_dates=csv_dates)
-        compare_dir = terms_root / "compare"
-        if compare_dir.is_dir():
-            for path in sorted(compare_dir.glob("c-*.html")):
-                add_file(entries, base, path.relative_to(ROOT).as_posix(), csv_dates=csv_dates)
-        numbers_dir = terms_root / "numbers"
-        if numbers_dir.is_dir():
-            for path in sorted(numbers_dir.glob("n-*.html")):
-                add_file(entries, base, path.relative_to(ROOT).as_posix(), csv_dates=csv_dates)
-        mistakes_dir = terms_root / "mistakes"
-        if mistakes_dir.is_dir():
-            for path in sorted(mistakes_dir.glob("m-*.html")):
-                add_file(entries, base, path.relative_to(ROOT).as_posix(), csv_dates=csv_dates)
 
     return entries
 

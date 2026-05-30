@@ -15,17 +15,10 @@ MAX_AUTO_LINKS_PER_ARTICLE = 12
 
 GUIDE_HUB_LINKS: tuple[tuple[str, str], ...] = (
     ("../../terms/index.html", "用語解説一覧"),
-    ("../../terms/compare/index.html", "比較・整理表"),
-    ("../../terms/numbers/index.html", "数値・期限早見表"),
-    ("../../terms/mistakes/index.html", "よくある誤答"),
     ("../../index.html#past", "過去問演習"),
 )
 
-TERM_NEXT_HUB_LINKS: tuple[tuple[str, str], ...] = (
-    ("compare/index.html", "比較・整理表"),
-    ("numbers/index.html", "数値・期限早見表"),
-    ("mistakes/index.html", "よくある誤答"),
-)
+TERM_NEXT_HUB_LINKS: tuple[tuple[str, str], ...] = ()
 
 
 def term_hub_link_prefix(rel_path: Path) -> str:

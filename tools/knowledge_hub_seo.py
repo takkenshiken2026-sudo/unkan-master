@@ -38,23 +38,7 @@ from tools.site_config import (  # noqa: E402
     primary_external_link,
 )
 
-HUB_CROSS_LINKS: dict[str, list[tuple[str, str]]] = {
-    "compare": [
-        ("数値・期限早見表", "../numbers/index.html"),
-        ("よくある誤答", "../mistakes/index.html"),
-        ("用語解説一覧", "../index.html"),
-    ],
-    "numbers": [
-        ("比較・整理表", "../compare/index.html"),
-        ("よくある誤答", "../mistakes/index.html"),
-        ("用語解説一覧", "../index.html"),
-    ],
-    "mistakes": [
-        ("比較・整理表", "../compare/index.html"),
-        ("数値・期限早見表", "../numbers/index.html"),
-        ("用語解説一覧", "../index.html"),
-    ],
-}
+HUB_CROSS_LINKS: dict[str, list[tuple[str, str]]] = {}
 
 
 def seo_quality_panel_html(*, updated: str = "") -> str:
@@ -430,6 +414,84 @@ def _hub_row_is_placeholder(row: dict) -> bool:
     return False
 
 
+GENERIC_NUMBER_MATRIX_ITEMS = frozenset(
+    {"確認テーマ", "試験の確認点", "数値・条件", "記録・保存", "関連制度"}
+)
+GENERIC_NUMBER_MATRIX_VALUES = frozenset(
+    {
+        "基準値は試験要項・省令で確認",
+        "定義確認のメモ",
+        "過去問の条件メモ",
+        "運転日誌・報告書",
+        "主語→目的→対象",
+        "誰が・いつ・何を",
+        "逆転肢の型分類",
+        "弱点タグ付きノート",
+        "条文×通知の対応表",
+    }
+)
+EXAM_POINTS_SCAFFOLD_MARKERS = (
+    "用語の境界を表で整理",
+    "類似語の入替肢に注意",
+    "定義と主体を固定",
+    "数値+条件+主体",
+)
+
+
+def sanitize_hub_article_lead(lead: str) -> str:
+    """早見表 scaffold の重複リード（「Xでは… Xは用語の定義…」）を1文に整理。"""
+    text = _norm(lead)
+    if not text:
+        return text
+    if "用語の定義と義務主体を先に固定" in text:
+        parts = [p.strip() for p in re.split(r"。+", text) if p.strip()]
+        cleaned: list[str] = []
+        for part in parts:
+            if "用語の定義と義務主体を先に固定" in part:
+                continue
+            if cleaned and part in cleaned[-1]:
+                continue
+            cleaned.append(part)
+        if cleaned:
+            return "。".join(c.rstrip("。") for c in cleaned) + "。"
+    return text
+
+
+def _hub_exam_points_are_scaffold(items: list[str]) -> bool:
+    if not items:
+        return True
+    return all(any(marker in item for marker in EXAM_POINTS_SCAFFOLD_MARKERS) for item in items)
+
+
+def _hub_numeric_row_is_substantive(row: dict, *, title: str = "") -> bool:
+    if _hub_row_is_placeholder(row):
+        return False
+    item = _norm(row.get("item"))
+    value = _norm(row.get("value"))
+    if item in GENERIC_NUMBER_MATRIX_ITEMS:
+        return False
+    if value in GENERIC_NUMBER_MATRIX_VALUES:
+        return False
+    if title and (value == title or title in value):
+        return False
+    if len(value) < 4:
+        return False
+    return True
+
+
+def _hub_numeric_row_point(row: dict) -> str:
+    item = _norm(row.get("item"))
+    value = _norm(row.get("value"))
+    note = _norm(row.get("note"))
+    if not item or not value:
+        return ""
+    skip_notes = ("異常時", "口述", "横串", "現場フロー", "逆転肢", "記録様式")
+    para = f"{item}は{value.rstrip('。')}。"
+    if note and not any(marker in note for marker in skip_notes):
+        para += note if note.endswith("。") else note + "。"
+    return para
+
+
 def _compare_labels_usable(labels: list[str]) -> bool:
     if len(labels) < 2:
         return False
@@ -647,42 +709,46 @@ def hub_compare_memory_body_html(entry: dict) -> str:
 def hub_numbers_points_body_html(entry: dict) -> str:
     exam_points = _norm(entry.get("exam_points"))
     item_rows = entry.get("item_rows") or entry.get("detail_rows") or []
-    lead = _norm(entry.get("article_lead")) or _norm(entry.get("summary"))
+    title = _norm(entry.get("title"))
+    highlight = _norm(entry.get("highlight"))
 
-    if exam_points and not hub_field_is_stub(exam_points):
-        items = hub_field_items(exam_points)
-        if items:
-            return hub_prose_html([i if i.endswith("。") else i + "。" for i in items])
+    exam_items = hub_field_items(exam_points)
+    if exam_items and not hub_field_is_stub(exam_points) and not _hub_exam_points_are_scaffold(exam_items):
+        return hub_prose_html([i if i.endswith("。") else i + "。" for i in exam_items])
 
     paras: list[str] = []
-    if lead:
-        paras.append(lead)
-    highlight = _norm(entry.get("highlight"))
-    if highlight and len(highlight) >= 16 and highlight not in lead:
-        paras.append(highlight if highlight.endswith("。") else highlight + "。")
+    seen: set[str] = set()
 
-    substantive_rows = [r for r in item_rows if not _hub_row_is_placeholder(r)]
-    for row in substantive_rows or item_rows:
-        item = _norm(row.get("item"))
-        value = _norm(row.get("value"))
-        note = _norm(row.get("note"))
-        if not item or not value:
-            continue
-        if _hub_row_is_placeholder(row):
-            if note:
-                paras.append(
-                    f"「{item}」については{note.rstrip('。')}。"
-                    f"数値・期限は年度で見直されるため、試験要項と公式情報で最新を確認してください。"
-                )
-            continue
-        para = f"{item}は{value.rstrip('。')}。"
-        if note:
-            para += note if note.endswith("。") else note + "。"
-        paras.append(para)
+    def _add(para: str) -> None:
+        p = para.strip()
+        if not p or p in seen:
+            return
+        seen.add(p)
+        paras.append(p if p.endswith("。") else p + "。")
 
-    title = _norm(entry.get("title"))
-    if title and len(paras) <= 2:
-        paras.append(
+    if highlight and len(highlight) >= 16:
+        _add(highlight)
+
+    substantive_rows = [r for r in item_rows if _hub_numeric_row_is_substantive(r, title=title)]
+    for row in substantive_rows[:8]:
+        _add(_hub_numeric_row_point(row))
+
+    if exam_items and not _hub_exam_points_are_scaffold(exam_items):
+        for item in exam_items:
+            _add(item)
+    elif exam_items:
+        for item in exam_items:
+            if "定義と主体" in item:
+                _add("試験では、用語の定義と義務主体を先に固定してから数値・期限を当てはめてください。")
+            elif "類似語" in item or "入替" in item:
+                _add("似た制度名や近い数字を入れ替えた肢が誤答として出やすいため、比較表で整理してください。")
+            elif "境界" in item:
+                _add("関連制度との境界（期間・主体・手続の時点）を表で照合してから暗記してください。")
+            else:
+                _add(item)
+
+    if title and len(paras) <= 1:
+        _add(
             f"「{title}」は数字だけでなく、義務主体・手続の時点・記録保存まで一体で確認する問題が多いです。"
             f"表の各行を過去問の条件文に当てはめて演習してください。"
         )
@@ -872,6 +938,8 @@ def glossary_exam_points_body_html(entry: dict) -> str:
             text = item.rstrip("。")
             if len(text) >= 36:
                 paras.append(text + "。")
+            elif term and (text.startswith(term) or text.startswith(f"{term}の")):
+                paras.append(f"{text}が試験で問われやすい論点です。")
             elif term:
                 paras.append(f"{term}では、{text}が試験で問われやすい論点です。")
             else:
