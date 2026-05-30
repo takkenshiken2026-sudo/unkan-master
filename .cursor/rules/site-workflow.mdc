@@ -1,0 +1,20 @@
+---
+description: Site integration, chrome nav, responsive layout, practice/ichimon CSV
+globs:
+  - "**/tools/html_footer.py"
+  - "**/tools/build_past*.py"
+  - "**/tools/build_practice*.py"
+  - "**/site-pages.css"
+  - "**/site-config.json"
+  - "**/q/**"
+---
+
+# サイト統合・UI（要約）
+
+**正本:** `docs/ORGANIZATION.md` → マスター `integration-checklist.md` + `site-chrome.md` + `responsive-layout.md` + `question-static-pages.md`
+
+- フッター「過去問一覧」= `q/index.html`。ヘッダー「過去問」= SPA `/#past`（混同禁止）
+- 生成 `q/`, `articles/`, `terms/` は手編集しない
+- テンプレ修正 → `sync_from_template.py --target ~/Projects/<site>` → 本番 `build_all`
+
+検証: `tools/validate_site_integration.py`（`build_all` 内）

@@ -60,7 +60,7 @@ LEARNING_NAV_ITEMS: list[tuple[str, str, str, str]] = [
     (
         "tnav-ichimondou",
         "一問一答",
-        "q/ichimon/index.html",
+        "#ichimondou",
         '<svg viewBox="0 0 16 16"><path d="M8 2v12M4 4h8M4 8h8M4 12h8"/></svg>',
     ),
     (
@@ -72,7 +72,7 @@ LEARNING_NAV_ITEMS: list[tuple[str, str, str, str]] = [
     (
         "tnav-orig",
         "実践演習",
-        "q/practice/index.html",
+        "#orig",
         '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>',
     ),
     (

@@ -5,7 +5,7 @@ alwaysApply: true
 
 # exam-site-shell Template
 
-- `/Users/otedaiki/Desktop/exam-site-shell` is a template folder for exam site projects.
+- `~/Projects/exam-site-shell` is the template folder for exam site projects.
 - Treat changes here as template-level changes that can affect generated or copied sites.
 - When editing generated/public files, keep source/template files in sync when both exist.
 - **Do not edit production site repos** (e.g. remote GitHub sites) unless the user explicitly names a path and asks to. Default: change template only; user syncs with `tools/sync_from_template.py --target <local path>`.
@@ -13,16 +13,10 @@ alwaysApply: true
 
 ## Documentation & rules
 
-- **Index:** `docs/README.md` — where to find all rules and tools.
-- **Integration:** `docs/integration-checklist.md` + `docs/site-chrome.md` + `docs/responsive-layout.md` + `tools/validate_site_integration.py` (in `build_all`) — footer via `site-config` + `apply_site_config`; Cursor: `.cursor/rules/site-integration.mdc`, `.cursor/rules/site-chrome-nav.mdc`, `.cursor/rules/responsive-layout.mdc`, `.cursor/rules/practice-ichimon-static.mdc`
-- **Multi-site:** `docs/multi-site-workflow.md` — manifest sync, `sites/` notes, `data/README.md`.
-- **Primary guide:** `docs/seo-article-guidelines.md` (structure, colors, public/operator boundary, internal links, checklists).
-- **Glossary terms (full article per term):** `docs/glossary-term-template.md` + `tools/glossary_term_rules.py` + `tools/scaffold_glossary_term.py`; Cursor: `.cursor/rules/glossary-term-template.mdc`
-- **HTML diagrams (glossary + question pages):** `docs/term-diagrams.md` + `data/term_diagrams/*.json` + `tools/term_diagram.py`; Cursor: `.cursor/rules/term-diagrams.mdc`
-- **Editorial quality (expert × pro writer):** `docs/editorial-quality.md` + `tools/audit_editorial_quality.py` (in `build_all`); Cursor: `.cursor/rules/editorial-quality.mdc`
-- **Question static pages:** `docs/question-static-pages.md` — `q/past/`, `q/practice/`, `q/ichimon/` CSV・ビルド・一覧 UI（`site-q-index.js`）
-- **Guide genres (MECE):** `docs/guide-article-genres.md` + `site-config.json` → `guideArticleGenres` (CSV `genre` whitelist).
-- **Cursor (SEO/UI/CSV):** `.cursor/rules/seo-article-template.mdc`
+- **Start here:** `docs/ORGANIZATION.md` — folder roles, master docs, daily workflow.
+- **Index:** `docs/README.md` — full doc list.
+- **Cursor (2 files):** `.cursor/rules/site-workflow.mdc` (UI・q・sync), `.cursor/rules/content-authoring.mdc` (CSV・記事・用語). 詳細は常に `docs/` 正本。
+- **Multi-site:** `docs/multi-site-workflow.md` — `sync_from_template.py --target ~/Projects/<site>`.
 - **This file:** template-wide defaults and build requirements.
 
 ## Content targets (production)
@@ -30,7 +24,7 @@ alwaysApply: true
 - **100+** guide articles (`data/guide_articles.csv`); genres in `guideArticleGenres`, catalog in `docs/guide-article-catalog.md`
 - **~10** affiliate guide articles (`tags` includes `アフィリエイト`; same `articles/` URLs; A8.net / afb / Amazon) — see `docs/seo-article-guidelines.md`
 - **300+** glossary terms (`data/glossary_terms.csv`); **every row is a full detail article** (see `docs/glossary-term-template.md`); `validate_csv.py` enforces minimum column quality
-- **50–100 each** knowledge hub articles: `comparisons.csv`, `numbers.csv`, `mistakes.csv` (see `docs/knowledge-hub-article-templates.md`); Cursor: `.cursor/rules/knowledge-hub-content.mdc`
+- Knowledge hub tabs (compare/numbers/mistakes) are **retired**; old URLs redirect via `build_hub_retire_redirects.py`.
 
 ## Reader-facing quality (non-negotiable)
 

@@ -379,6 +379,8 @@ def _html_footer_source(root: Path) -> list[Issue]:
 def _header_learning_nav(root: Path) -> list[Issue]:
     """静的ページの学習ナビ href / q/index の active 状態（site-chrome.md §3, §7）。"""
     spa_hash = {
+        "tnav-ichimondou": "/#ichimondou",
+        "tnav-orig": "/#orig",
         "tnav-past": "/#past",
         "tnav-dash": "/#dash",
         "tnav-review": "/#review",

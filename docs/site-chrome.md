@@ -136,8 +136,8 @@ def _learning_nav_href(rel_path, dest):
 
 | ラベル | ヘッダー行き先 | 備考 |
 |--------|----------------|------|
-| 一問一答 | `q/ichimon/index.html`（`footer_href` で相対解決） | 静的一覧 |
-| 実践演習 | `q/practice/index.html` | 静的一覧 |
+| 一問一答 | **`/#ichimondou`** | SPA 演習（静的一覧 `q/ichimon/` ではない） |
+| 実践演習 | **`/#orig`** | SPA 演習（静的一覧 `q/practice/` ではない） |
 | 記録・分析 | **`/#dash`** | SPA |
 | 復習 | **`/#review`** | SPA |
 | 用語解説 | `terms/index.html` | 静的一覧 |
