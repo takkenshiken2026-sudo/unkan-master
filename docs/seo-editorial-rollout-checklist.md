@@ -61,19 +61,19 @@ python3 tools/build_all.py
 
 | # | サイト ID | 同期方式 | ローカル例 | 特記 |
 |---|-----------|----------|------------|------|
-| 1 | `boiler-master` | フル | `~/Desktop/boiler-master.jp` | — |
-| 2 | `chintaikanrishi-master` | フル | `~/Desktop/chintaikanrishi-master` | — |
-| 3 | `eisei1shu-master` | フル | `~/Desktop/eisei1shu-master` | — |
-| 4 | `eisei2shu-master` | フル | `~/Desktop/eisei2shu-master` | — |
+| 1 | `boiler-master` | フル | `~/Projects/boiler-master.jp` | — |
+| 2 | `chintaikanrishi-master` | フル | `~/Projects/chintaikanrishi-master` | — |
+| 3 | `eisei1shu-master` | フル | `~/Projects/eisei1shu-master` | — |
+| 4 | `eisei2shu-master` | フル | `~/Projects/eisei2shu-master` | — |
 | 5 | `kangyou-master` | フル | `~/Projects/kangyou-master` | gh-pages 配信 |
 | 6 | `kikenbutsu-master` | フル | `~/Projects/kikenbutsu-master` | gh-pages 配信 |
-| 7 | `mentalhealth-master` | フル | `~/Desktop/mentalhealth-master` | — |
-| 8 | `mankan-master` | フル + **site-only** | `~/mankan-master` | [SITE.md](../sites/mankan-master/SITE.md) |
-| 9 | `unkan-master` | フル + **site-only** | `~/unkan-master` | [SITE.md](../sites/unkan-master/SITE.md) |
-| 10 | `takken-master` | **フェーズ同期** | `~/Documents/GitHub/takken-master` | [SITE.md](../sites/takken-master/SITE.md) |
+| 7 | `mentalhealth-master` | フル | `~/Projects/mentalhealth-master` | — |
+| 8 | `mankan-master` | フル + **site-only** | `~/Projects/mankan-master` | [SITE.md](../sites/mankan-master/SITE.md) |
+| 9 | `unkan-master` | フル + **site-only** | `~/Projects/unkan-master` | [SITE.md](../sites/unkan-master/SITE.md) |
+| 10 | `takken-master` | フル | `~/Projects/takken-master` | [SITE.md](../sites/takken-master/SITE.md) |
 | 11 | （予備） | — | 新規は `_example` 参照 | — |
 
-**反映順の推奨:** 記事数が少ないサイト（boiler 等）→ 標準サイト → mankan/unkan → **最後に takken**（マージ作業あり）。
+**反映順の推奨:** 記事数が少ないサイト（boiler 等）→ 標準サイト → mankan/unkan → **最後に takken**（規模が大きいため）。
 
 ---
 

@@ -3,7 +3,7 @@
 運行管理者試験の対策学習サイト。`exam-site-shell` テンプレートをベースに、SPA（過去問・実践演習・一問一答）と静的 SEO ページ（試験ガイド・用語集・過去問ハブ）を生成します。
 
 - 公開 URL: https://unkan-master.jp
-- テンプレート（正本）: `~/Desktop/exam-site-shell`
+- テンプレート（正本）: `~/Projects/exam-site-shell`
 - 試験実施団体: 公益財団法人 運行管理者試験センター（https://www.unkan.or.jp/）
 
 ## クイックスタート
@@ -44,10 +44,10 @@ python3 -m http.server 8765
 UI やビルドの修正はテンプレ側で行い、本リポジトリへ取り込みます。
 
 ```bash
-cd ~/Desktop/exam-site-shell
-python3 tools/check_template_drift.py --target ~/unkan-master
-python3 tools/sync_from_template.py    --target ~/unkan-master --dry-run
-python3 tools/sync_from_template.py    --target ~/unkan-master --build
+cd ~/Projects/exam-site-shell
+python3 tools/check_template_drift.py --target ~/Projects/unkan-master
+python3 tools/sync_from_template.py    --target ~/Projects/unkan-master --dry-run
+python3 tools/sync_from_template.py    --target ~/Projects/unkan-master --build
 ```
 
 詳しくはテンプレの `docs/multi-site-workflow.md` を参照。
