@@ -1044,6 +1044,140 @@ _DEFINITION_SKIP_SENTENCE = (
     "条文根拠と実務場面を往復",
     "手続・判断基準を押さえる論点",
 )
+_DEFINITION_BODY_MAX_CHARS = 600
+_DEFINITION_DETAIL_MAX_PARAS = 2
+_TERM_DETAIL_SECTION_HEADERS = frozenset(
+    {
+        "定義",
+        "条文上の根拠",
+        "試験で問われやすいポイント",
+        "よくある誤解",
+        "記憶のコツ",
+        "関連分野",
+        "根拠",
+        "試験のポイント",
+        "具体例",
+    }
+)
+_TERM_DETAIL_SKIP_SECTIONS = frozenset(
+    {
+        "試験で問われやすいポイント",
+        "よくある誤解",
+        "記憶のコツ",
+        "関連分野",
+    }
+)
+_TERM_DETAIL_PARA_SKIP_RES = (
+    re.compile(r"^誤り。"),
+    re.compile(r"^【試験"),
+    re.compile(r"正しいものはどれか"),
+    re.compile(r"記述のうち、正しい"),
+    re.compile(r"^肢の数字・主体・期限"),
+)
+
+
+def _definition_body_keys(text: str) -> set[str]:
+    keys: set[str] = set()
+    compact = re.sub(r"\s+", "", text or "")
+    if compact:
+        keys.add(compact[:80])
+    for sent in _definition_sentences(text or ""):
+        sk = re.sub(r"\s+", "", sent)[:48]
+        if sk:
+            keys.add(sk)
+    return keys
+
+
+def _term_detail_prose_paragraphs(raw_body: str) -> list[str]:
+    """term_detail_body から表・見出し・箇条書きを除いた説明段落を返す。"""
+    text = re.sub(r"<table[\s\S]*?</table>", "", raw_body or "", flags=re.I).strip()
+    if not text:
+        return []
+
+    def _finalize(lines: list[str], section: str) -> str | None:
+        if section in _TERM_DETAIL_SKIP_SECTIONS or not lines:
+            return None
+        if all(ln.startswith(("・", "-", "◆")) for ln in lines):
+            return None
+        para = " ".join(ln for ln in lines if not ln.startswith(("・", "-", "◆")))
+        para = re.sub(r"\s+", " ", para).strip()
+        if len(para) < 20:
+            return None
+        if any(skip in para for skip in _DEFINITION_SKIP_SENTENCE):
+            return None
+        if any(pat.search(para) for pat in _TERM_DETAIL_PARA_SKIP_RES):
+            return None
+        return para
+
+    paras: list[str] = []
+    section = ""
+    buf: list[str] = []
+
+    def flush() -> None:
+        nonlocal buf, section
+        para = _finalize(buf, section)
+        if para:
+            paras.append(para)
+        buf = []
+
+    for line in text.splitlines():
+        s = line.strip()
+        if not s:
+            flush()
+            continue
+        if s in _TERM_DETAIL_SECTION_HEADERS:
+            flush()
+            section = s
+            continue
+        if section in _TERM_DETAIL_SKIP_SECTIONS:
+            continue
+        if s.startswith(("・", "-", "◆")):
+            continue
+        buf.append(s)
+    flush()
+    return paras
+
+
+def _merge_term_detail_prose(parts: list[str], raw_body: str, *, max_chars: int) -> None:
+    """short_def / definition 後に term_detail_body の散文を最大2段落まで追補。"""
+    joined = "\n\n".join(parts)
+    if len(joined) >= max_chars or not raw_body.strip():
+        return
+    existing = _definition_body_keys(joined)
+    added = 0
+    for para in _term_detail_prose_paragraphs(raw_body):
+        if added >= _DEFINITION_DETAIL_MAX_PARAS:
+            break
+        new_sents: list[str] = []
+        for sent in _definition_sentences(para):
+            if any(skip in sent for skip in _DEFINITION_SKIP_SENTENCE):
+                continue
+            if any(pat.search(sent) for pat in _TERM_DETAIL_PARA_SKIP_RES):
+                continue
+            if re.match(r"^まず「", sent):
+                continue
+            sk = re.sub(r"\s+", "", sent)[:48]
+            if not sk or sk in existing:
+                continue
+            new_sents.append(sent)
+            existing.add(sk)
+        if not new_sents:
+            continue
+        chunk = " ".join(new_sents)
+        room = max_chars - len(joined) - (2 if parts else 0)
+        if room < 40:
+            break
+        if len(chunk) > room:
+            trimmed = chunk[:room]
+            cut = trimmed.rfind("。")
+            chunk = trimmed[: cut + 1] if cut >= 20 else trimmed
+        if not chunk.strip():
+            continue
+        parts.append(chunk.strip())
+        joined = "\n\n".join(parts)
+        added += 1
+        if len(joined) >= max_chars:
+            break
 
 
 def _definition_sentences(text: str) -> list[str]:
@@ -1056,7 +1190,7 @@ def _definition_sentences(text: str) -> list[str]:
 
 
 def glossary_definition_body_text(entry: dict) -> str:
-    """定義セクション用。プロ量産テンプレを除き、定義中心の短い本文に整える。"""
+    """定義セクション用。short_def / definition に加え term_detail_body の散文も反映。"""
     term = _norm(entry.get("term"))
     category = _norm(entry.get("category"))
     short_def = _norm(entry.get("short_def"))
@@ -1072,6 +1206,15 @@ def glossary_definition_body_text(entry: dict) -> str:
     defn = definition or short_def
     body_so_far = "".join(parts)
     for sent in _definition_sentences(defn):
+        if term:
+            lead = re.match(
+                rf"^まず「{re.escape(term)}」(?:は|とは)?[、,]?\s*(.+)",
+                sent,
+            )
+            if lead:
+                sent = lead.group(1).strip()
+                if sent and not sent.endswith("。"):
+                    sent += "。"
         if any(skip in sent for skip in _DEFINITION_SKIP_SENTENCE):
             continue
         key = re.sub(r"\s+", "", sent)[:48]
@@ -1090,6 +1233,8 @@ def glossary_definition_body_text(entry: dict) -> str:
     joined = "".join(parts)
     if nums and not any(n in joined for n in nums):
         parts.append(f"押さえる数値・期限：{'、'.join(nums[:4])}。")
+
+    _merge_term_detail_prose(parts, raw_body, max_chars=_DEFINITION_BODY_MAX_CHARS)
 
     body = "\n\n".join(parts)
     if "有害" not in category:
