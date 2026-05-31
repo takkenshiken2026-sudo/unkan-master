@@ -1100,6 +1100,97 @@ def glossary_definition_body_text(entry: dict) -> str:
     return body.strip() or definition or short_def
 
 
+_LAW_CITATION_TAIL_RE = re.compile(r"（[^）]*(?:法|令|則|規則|条例)[^）]*）\s*$")
+
+
+def _law_matches(sent: str, law: str) -> bool:
+    if law in sent:
+        return True
+    base = re.sub(r"第?\d+条.*", "", law).strip()
+    return len(base) >= 2 and base in sent
+
+
+def _definition_core_from_sentence(sent: str, term: str) -> str:
+    s = sent.strip().rstrip("。")
+    if term:
+        quoted = f"「{term}」とは、"
+        if s.startswith(quoted):
+            s = s[len(quoted) :]
+        elif "とは、" in s:
+            s = s.split("とは、", 1)[1]
+    s = _LAW_CITATION_TAIL_RE.sub("", s).strip()
+    s = re.sub(
+        r"です?（[^）]*(?:法|令|則|規則|条例)[^）]*）\s*$",
+        "",
+        s,
+    ).strip()
+    s = s.lstrip("「").rstrip("」").rstrip("。")
+    s = re.sub(r"です$", "", s).strip()
+    return s
+
+
+def _legal_source_text(entry: dict) -> str:
+    return (
+        _norm(entry.get("term_detail_body"))
+        or _norm(entry.get("definition"))
+        or _norm(entry.get("short_def"))
+    )
+
+
+def _legal_explain_sentence(law: str, entry: dict) -> str:
+    """根拠条文を、定義文から平易な解説1文（＋必要なら補足1文）に整える。"""
+    term = _norm(entry.get("term"))
+    short_def = _norm(entry.get("short_def"))
+    sentences = _definition_sentences(_legal_source_text(entry))
+
+    main_core = ""
+    extras: list[str] = []
+    matched_first = False
+    for sent in sentences:
+        if any(skip in sent for skip in _DEFINITION_SKIP_SENTENCE):
+            continue
+        if _law_matches(sent, law):
+            core = _definition_core_from_sentence(sent, term)
+            if core:
+                main_core = core
+                matched_first = True
+                continue
+        if matched_first:
+            extra = sent.rstrip("。").strip()
+            if len(extra) >= 12:
+                extras.append(extra)
+                break
+
+    if main_core:
+        text = f"{law}は、{main_core}について定めた条文です"
+        if extras:
+            text += f"。{extras[0]}"
+        return text + "。"
+
+    core = _definition_core_from_sentence(short_def, term)
+    if core and not any(skip in core for skip in _DEFINITION_SKIP_SENTENCE):
+        return f"{law}は、{core}に関する根拠法令です。"
+
+    label = term.split("（")[0].strip() if term else "この用語"
+    return f"{law}は、{label}の要件・手続を定める根拠法令です。"
+
+
+def glossary_legal_body_html(entry: dict) -> str:
+    """法令・根拠セクション。条文名と平易な解説文をセットで出力する。"""
+    legal = _norm(entry.get("legal_basis"))
+    if not legal:
+        return ""
+    blocks: list[str] = []
+    for law in split_semicolon(legal):
+        law = law.strip()
+        if not law:
+            continue
+        explain = _legal_explain_sentence(law, entry)
+        blocks.append(f"<p><strong>{html.escape(law)}</strong></p>")
+        blocks.append(f"<p>{html.escape(explain)}</p>")
+    return "\n".join(blocks)
+
+
 def glossary_mistakes_body_html(entry: dict) -> str:
     common_mistakes = _norm(entry.get("common_mistakes"))
     term = _norm(entry.get("term"))
