@@ -242,7 +242,7 @@ def meta_description(text: str, limit: int = 155) -> str:
 
 
 def split_semicolon(s: str) -> list[str]:
-    return [x.strip() for x in (s or "").split(";") if x.strip()]
+    return [x.strip() for x in re.split(r"[;；]", s or "") if x.strip()]
 
 
 TERMS_INDEX_CSS_VER = "20260524-terms-table-14px"
@@ -764,6 +764,7 @@ def build_term_html(
     points = study_points(explanation)
     from tools.knowledge_hub_seo import (  # noqa: E402
         glossary_definition_body_text,
+        glossary_exam_choices_body_html,
         glossary_exam_points_body_html,
         glossary_memory_body_html,
         glossary_mistakes_body_html,
@@ -784,6 +785,9 @@ def build_term_html(
     if not mistakes_html and common_mistakes:
         mistakes_html = text_paragraphs(common_mistakes)
     memory_html = glossary_memory_body_html(entry)
+    exam_choices_html = glossary_exam_choices_body_html(entry)
+    if not exam_choices_html and explanation:
+        exam_choices_html = text_paragraphs(explanation)
     example_html = ""
     if example_question or example_answer:
         example_html = (
@@ -877,7 +881,7 @@ def build_term_html(
     section_plan.extend(
         [
             ("legal", "法令・根拠", glossary_legal_body_html(entry)),
-            ("exam", "選択肢で問われやすい点", text_paragraphs(explanation)),
+            ("exam", "選択肢で問われやすい点", exam_choices_html),
             ("mistakes", "よくある誤解・注意点", mistakes_html),
             ("memory", "覚え方・整理のコツ", memory_html),
             ("example", "例題で確認", example_html),
@@ -1346,8 +1350,8 @@ def sync_index_glossary_slug_map(entries: list[dict]) -> None:
 def load_glossary_rows() -> list[dict]:
     if not GLOSSARY_CSV.is_file():
         raise FileNotFoundError(str(GLOSSARY_CSV))
-    text = GLOSSARY_CSV.read_text(encoding="utf-8-sig")
-    return list(csv.DictReader(text.splitlines()))
+    with GLOSSARY_CSV.open(encoding="utf-8-sig", newline="") as f:
+        return list(csv.DictReader(f))
 
 
 def load_glossary_entries(*, strict: bool = True) -> list[dict]:

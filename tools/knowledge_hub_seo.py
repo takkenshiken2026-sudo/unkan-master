@@ -1191,22 +1191,134 @@ def glossary_legal_body_html(entry: dict) -> str:
     return "\n".join(blocks)
 
 
+def _glossary_field_items(value: str) -> list[str]:
+    return [x.strip() for x in re.split(r"[;；]", value or "") if x.strip()]
+
+
+def _parse_trap_pair(item: str) -> tuple[str, str] | None:
+    text = item.strip()
+    if not text:
+        return None
+    m = re.match(r"^誤り肢の型\d+[：:]\s*(.+?)\s*→\s*(.+)$", text)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    m = re.match(r"^×\s*(.+?)\s*→\s*[○◯]?\s*(.+)$", text)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    m = re.match(r"^「(.+?)」\s*→\s*誤り[（(](.+?)[）)]", text)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    m = re.match(r"^(.+?)\s*→\s*誤り[（(](.+?)[）)]", text)
+    if m:
+        return m.group(1).strip().strip("「」"), m.group(2).strip()
+    if " → " in text:
+        left, right = text.split(" → ", 1)
+        left = re.sub(r"^誤り肢の型\d+[：:]", "", left).strip().strip("「」")
+        right = re.sub(r"^[○◯]\s*", "", right).strip()
+        if left and right and len(left) >= 4:
+            if (
+                "誤り" in text
+                or "誤り肢" in text
+                or "要件" in left
+                or "根拠" in left
+                or text.strip().startswith("「")
+            ):
+                return left, right
+    return None
+
+
+def _trap_list_html(pairs: list[tuple[str, str]]) -> str:
+    if not pairs:
+        return ""
+    lis: list[str] = []
+    for wrong, correct in pairs:
+        correct = correct.rstrip("。").strip()
+        lis.append(
+            f"<li><strong>誤り：</strong>{html.escape(wrong)}"
+            f"<br><strong>正解の考え方：</strong>{html.escape(correct)}。</li>"
+        )
+    return '<ul class="term-trap-list">' + "".join(lis) + "</ul>"
+
+
+def _checklist_html(items: list[str]) -> str:
+    cleaned = [item.rstrip("。").strip() for item in items if item.strip()]
+    if not cleaned:
+        return ""
+    return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in cleaned) + "</ul>"
+
+
+def glossary_exam_choices_body_html(entry: dict) -> str:
+    """section 4「選択肢で問われやすい点」。区切り記号で分割し、観点と誤り肢を整理して表示。"""
+    explanation = _norm(entry.get("explanation"))
+    if not explanation:
+        return ""
+
+    items = _glossary_field_items(explanation)
+    if len(items) <= 1 and "；" not in explanation and ";" not in explanation:
+        sentences = _definition_sentences(explanation)
+        return hub_prose_html(sentences[:4] if sentences else [explanation])
+
+    intro = ""
+    checks: list[str] = []
+    traps: list[tuple[str, str]] = []
+
+    for item in items:
+        pair = _parse_trap_pair(item)
+        if pair:
+            traps.append(pair)
+            continue
+        if not intro and ("問われます" in item or "問われやすい" in item):
+            intro = item if item.endswith("。") else item + "。"
+            continue
+        if item.startswith("試験での確認"):
+            continue
+        if len(item) >= 6:
+            checks.append(item)
+
+    parts: list[str] = []
+    if intro:
+        parts.append(f"<p>{html.escape(intro)}</p>")
+    if checks:
+        parts.append('<h3 class="term-subheading">確認する観点</h3>')
+        parts.append(_checklist_html(checks))
+    if traps:
+        parts.append('<h3 class="term-subheading">出やすい誤り肢</h3>')
+        parts.append(_trap_list_html(traps))
+
+    if parts:
+        return "\n".join(parts)
+
+    traps = [pair for item in items if (pair := _parse_trap_pair(item))]
+    if traps:
+        return (
+            '<h3 class="term-subheading">出やすい誤り肢</h3>'
+            + _trap_list_html(traps)
+        )
+
+    return hub_prose_html([explanation])
+
+
 def glossary_mistakes_body_html(entry: dict) -> str:
     common_mistakes = _norm(entry.get("common_mistakes"))
     term = _norm(entry.get("term"))
     related = _norm(entry.get("related_terms"))
 
-    if common_mistakes and not hub_field_is_stub(common_mistakes):
-        items = hub_field_items(common_mistakes)
-        if items and all(len(i) >= 40 for i in items):
+    if common_mistakes:
+        items = _glossary_field_items(common_mistakes)
+        pairs = [pair for item in items if (pair := _parse_trap_pair(item))]
+        if pairs:
+            return _trap_list_html(pairs)
+
+        prose = [item for item in items if len(item) >= 40]
+        if prose and all(len(i) >= 40 for i in prose):
+            return hub_prose_html(prose)
+
+        short = [item for item in items if len(item) >= 8]
+        if len(short) >= 2:
+            return _checklist_html(short)
+
+        if len(items) == 1 and len(items[0]) >= 40:
             return hub_prose_html(items)
-        paras = []
-        for item in items:
-            paras.append(
-                f"「{item.rstrip('。')}」と短く覚えると、選択肢の微妙な差を見落としやすくなります。"
-                f"{term}の定義と関連条文を確認してから演習に進んでください。"
-            )
-        return hub_prose_html(paras)
 
     paras: list[str] = []
     if related:
@@ -1224,6 +1336,16 @@ def glossary_mistakes_body_html(entry: dict) -> str:
     return hub_prose_html(paras)
 
 
+def _memory_tip_lines(memory_tip: str) -> list[str]:
+    text = memory_tip.strip()
+    if not text:
+        return []
+    if text.count("■") > 1:
+        parts = re.split(r"(?=■)", text)
+        return [part.strip() for part in parts if part.strip()]
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
 def glossary_memory_body_html(entry: dict) -> str:
     memory_tip = _norm(entry.get("memory_tip"))
     term = _norm(entry.get("term"))
@@ -1235,25 +1357,39 @@ def glossary_memory_body_html(entry: dict) -> str:
             return f'<div class="term-memory-guide"><p>{html.escape(text)}</p></div>'
         return ""
 
-    parts = [p.strip() for p in re.split(r"◆\s*", memory_tip) if p.strip()]
-    paras: list[str] = []
-    for part in parts:
-        cleaned = re.sub(r"整理の手順\d+\.\s*", "", part)
-        cleaned = re.sub(r"\s+", " ", cleaned).strip()
-        if not cleaned:
+    labeled: list[tuple[str, str]] = []
+    free_lines: list[str] = []
+    for line in _memory_tip_lines(memory_tip):
+        line = line.strip()
+        if not line:
             continue
-        if not cleaned.endswith("。"):
-            cleaned += "。"
-        paras.append(cleaned)
+        m = re.match(r"^■\s*([^：:]+)[：:]\s*(.+)$", line)
+        if m:
+            labeled.append((m.group(1).strip(), m.group(2).strip()))
+        elif line.startswith("■"):
+            free_lines.append(line.lstrip("■").strip())
+        else:
+            free_lines.append(line)
 
-    if len(paras) == 1 and len(paras[0]) > 220:
-        long_text = paras[0]
-        paras = [s.strip() + "。" for s in re.split(r"(?<=[。])\s*", long_text) if len(s.strip()) >= 18][:4]
+    parts: list[str] = []
+    if labeled:
+        lis = []
+        for label, content in labeled:
+            content = content.rstrip("。").strip()
+            lis.append(
+                f"<li><strong>{html.escape(label)}</strong> {html.escape(content)}。</li>"
+            )
+        parts.append("<ul>" + "".join(lis) + "</ul>")
+    elif free_lines:
+        parts.append(hub_prose_html(free_lines[:5]))
 
-    if term and paras:
-        paras.append(f"最後に「{term}」が登場する過去問を1問解き、選択肢の根拠まで言語化して整理してください。")
+    if term:
+        parts.append(
+            f"<p>最後に「{html.escape(term)}」が登場する過去問を1問解き、"
+            "選択肢の根拠まで言語化して整理してください。</p>"
+        )
 
-    body = hub_prose_html(paras)
+    body = "\n".join(parts)
     return f'<div class="term-memory-guide">{body}</div>' if body else ""
 
 

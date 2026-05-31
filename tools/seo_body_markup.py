@@ -26,7 +26,7 @@ _GENERIC_ENUM = re.compile(
 
 
 def split_semicolon(value: str) -> list[str]:
-    return [x.strip() for x in (value or "").split(";") if x.strip()]
+    return [x.strip() for x in re.split(r"[;；]", value or "") if x.strip()]
 
 
 def _comma_list_items(chunk: str) -> list[str]:
@@ -62,7 +62,7 @@ def _try_trigger_list(block: str) -> str | None:
 
 def inject_comma_sentence_list(text: str) -> str:
     """列挙トリガーが無い段落でも、読点の多い文から箇条書きを起こす（控えめ）。"""
-    if not text.strip() or "\n-" in text or ";" in text:
+    if not text.strip() or "\n-" in text or ";" in text or "；" in text:
         return text
 
     blocks = re.split(r"\n{2,}", text.strip())
@@ -112,7 +112,7 @@ def inject_comma_sentence_list(text: str) -> str:
 
 def inject_enumeration_lists(text: str) -> str:
     """既存 CSV 本文から列挙句を検出し `- ` 行のブロックを挿入する。"""
-    if not text.strip() or "\n-" in text:
+    if not text.strip() or "\n-" in text or "；" in text:
         return text
 
     blocks = re.split(r"\n{2,}", text.strip())
@@ -150,10 +150,11 @@ def _render_block(
         items = [ln.lstrip()[2:].strip() for ln in non_empty]
         return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in items) + "</ul>"
 
-    if ";" in block and "\n" not in block:
-        items = split_semicolon(block)
-        if len(items) >= 2:
-            return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in items) + "</ul>"
+    if ";" in block or "；" in block:
+        if "\n" not in block:
+            items = split_semicolon(block)
+            if len(items) >= 2:
+                return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in items) + "</ul>"
 
     if block.startswith("### "):
         heading = block[4:].split("\n", 1)[0].strip()
