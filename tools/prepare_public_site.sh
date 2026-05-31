@@ -15,6 +15,7 @@ for f in \
   site-config.js \
   site-pages.css \
   site-theme.css \
+  seo-editorial.css \
   site-q-index.js \
   site-terms-index.js \
   site-compare-index.js \
@@ -70,3 +71,7 @@ if grep -q 'site-spa-fields.js' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/s
   exit 1
 fi
 echo "prepare_public_site.sh: $OUT に $n ファイルを配置しました。"
+if grep -rq 'seo-editorial.css' "$OUT/terms" "$OUT/articles" 2>/dev/null && [[ ! -f "$OUT/seo-editorial.css" ]]; then
+  echo "prepare_public_site.sh: 用語・ガイドが seo-editorial.css を参照していますが public_site にありません。" >&2
+  exit 1
+fi

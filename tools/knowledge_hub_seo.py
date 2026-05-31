@@ -1029,3 +1029,52 @@ def glossary_memory_body_html(entry: dict) -> str:
 
     body = hub_prose_html(paras)
     return f'<div class="term-memory-guide">{body}</div>' if body else ""
+
+_MISTAKE_POINT_MARKERS = ("→ 誤り", "誤り（", "誤答", "入れ替えに注意")
+
+
+def glossary_summary_body_html(short_def: str) -> str:
+    """「まず押さえる要点」用。定義文を1段落のまま出力する。"""
+    text = _norm(short_def)
+    if not text:
+        return ""
+    return f"<p>{html.escape(text)}</p>"
+
+
+def glossary_key_points_items(entry: dict) -> list[str]:
+    """要点ボックス用。誤答パターンではなく、定義・根拠から学習要点を組み立てる。"""
+    term = _norm(entry.get("term"))
+    short_def = _norm(entry.get("short_def"))
+    legal = _norm(entry.get("legal_basis"))
+    exam_points = split_semicolon(_norm(entry.get("exam_points")))
+
+    if exam_points and not any(
+        any(marker in item for marker in _MISTAKE_POINT_MARKERS) for item in exam_points
+    ):
+        items = [item for item in exam_points if len(item.strip()) >= 8][:4]
+    else:
+        items = []
+        core = short_def
+        if term:
+            quoted = f"「{term}」とは、"
+            if core.startswith(quoted):
+                core = core[len(quoted) :]
+            elif "とは、" in core:
+                core = core.split("とは、", 1)[1]
+        core = core.strip().lstrip("「").rstrip("。")
+        for clause in re.split(r"、", core):
+            clause = clause.strip()
+            if len(clause) >= 8:
+                items.append(clause)
+        if len(items) > 3:
+            items = items[:3]
+        legal_first = split_semicolon(legal)[0].strip() if legal else ""
+        if legal_first and not any(legal_first in item for item in items):
+            items.append(f"根拠：{legal_first}")
+
+    if len(items) < 3:
+        items.append(f"{term or '用語'}の定義と数値・主体を条文とセットで確認する")
+    if not any("過去問" in item for item in items):
+        items.append("関連する用語解説や過去問へ進む")
+    return items[:5]
+

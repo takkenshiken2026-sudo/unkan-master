@@ -793,18 +793,9 @@ def build_term_html(
     faq_items = custom_faq_items(entry, faq_items_for_term(term, short_def, definition, explanation))
     faq_html = faq_section_html(faq_items)
 
-    key_points_source = split_semicolon(exam_points)[:5]
-    if not key_points_source:
-        key_points_source = points[:3]
-    if not key_points_source:
-        key_points_source = [
-            f"{term}の定義と位置づけを確認する",
-            "試験で問われやすい条件や表現を整理する",
-            "頻出の誤り選択肢や混同しやすい点を復習する",
-        ]
-    if not any("過去問" in item for item in key_points_source):
-        key_points_source = [*key_points_source, "関連する用語解説や過去問へ進む"]
-    from tools.knowledge_hub_seo import seo_key_points_box_html
+    from tools.knowledge_hub_seo import glossary_key_points_items, seo_key_points_box_html
+
+    key_points_source = glossary_key_points_items(entry)
 
     key_points_intro = f"この記事では、{term}の意味と試験での見方を、問題の解説に沿って整理します。"
     key_points_html = seo_key_points_box_html(
@@ -816,7 +807,7 @@ def build_term_html(
     meta_bits: list[str] = ['<span class="q-id">用語</span>']
     if badge_html:
         meta_bits.append(badge_html)
-    if category:
+    if category and not badge_html:
         meta_bits.append(f"<span>{html.escape(category)}</span>")
     meta_line = " · ".join(meta_bits)
 
@@ -873,8 +864,10 @@ def build_term_html(
 
     content_sections: list[str] = []
     body_toc_items: list[tuple[str, str]] = []
+    from tools.knowledge_hub_seo import glossary_summary_body_html
+
     section_plan: list[tuple[str, str, str]] = [
-        ("summary", "まず押さえる要点", text_paragraphs(short_def)),
+        ("summary", "まず押さえる要点", glossary_summary_body_html(short_def)),
         ("points", "試験で押さえるポイント", points_html),
         ("definition", "定義と基本理解", detail_html),
     ]
@@ -1036,7 +1029,7 @@ def build_term_html(
     {toc_html}
     {quality_html}
     {content_sections_html}
-    {article_section("faq", "よくある質問", faq_html, len(content_sections) + 1) if faq_html else ""}
+    {article_section("faq", "よくある質問", faq_html, len(content_sections) + (1 if past_section else 0) + 1) if faq_html else ""}
     {info_table}
     {official_html}
     {rel_section}
