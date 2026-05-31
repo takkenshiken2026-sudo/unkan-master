@@ -39,7 +39,7 @@ def finalize_hub_rows(
         rows = apply_premium(rows)
     rows = strip_hub_rows(rows)
     suffix = official_suffix if official_suffix is not None else discover_official_suffix(
-        Path(__file__).resolve().parents[1]
+        Path(__file__).resolve().parents[2]
     )
     rows = apply_auto_premium(rows, official_suffix=suffix)
     rows = diversify_hub_rows(rows)

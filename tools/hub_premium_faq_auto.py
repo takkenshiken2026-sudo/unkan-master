@@ -174,7 +174,7 @@ def discover_official_suffix(site_root) -> str:
     from pathlib import Path
 
     root = Path(site_root)
-    for fp in sorted(root.glob("tools/write_*_hub_s30.py")):
+    for fp in sorted(root.glob("tools/archive/write_*_hub_s30.py")):
         text = fp.read_text(encoding="utf-8")
         m = re.search(r'_OFFICIAL\s*=\s*("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'])*\')', text)
         if m:

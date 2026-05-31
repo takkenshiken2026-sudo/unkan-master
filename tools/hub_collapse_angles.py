@@ -13,7 +13,8 @@ from typing import Any
 from tools.hub_diversify_content import ANGLE_BY_BATCH, BATCH_EARLY_LABEL
 
 ANGLE_LABELS = frozenset(ANGLE_BY_BATCH.values()) | frozenset(BATCH_EARLY_LABEL.values())
-MIN_ANGLE_COLLAPSE_BATCH = 31
+# S31–S44 は角度別に公開する（折りたたむと本番目標 150 件を下回る）
+MIN_ANGLE_COLLAPSE_BATCH = 99
 BATCH_SLUG_PREFIX = re.compile(r"^s(\d+)-")
 BATCH_SLUG_SUFFIX = re.compile(r"-s(\d+)$")
 TEMPLATE_SUMMARY_MARKERS = (

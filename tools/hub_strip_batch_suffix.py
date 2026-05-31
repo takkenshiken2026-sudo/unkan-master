@@ -16,8 +16,10 @@ ARTICLE_PIPE_BATCH_RE = re.compile(
     r"｜(?:試験対策[^｜]*|(?:数値|誤答|比較)?S\d+[^｜]*)$"
 )
 
-# slug は内部識別子として -s35 等を残す
-_SKIP_KEYS = frozenset({"slug"})
+# slug・JSON列はバッチ除去の対象外（col_labels の S35 除去で validate が壊れる）
+_SKIP_KEYS = frozenset(
+    {"slug", "col_labels", "compare_rows", "item_rows", "pattern_rows"}
+)
 
 
 def _normalize_spaces(text: str) -> str:
@@ -32,6 +34,7 @@ def strip_batch_suffix(text: str) -> str:
     cleaned = INLINE_BATCH_RE.sub("", cleaned)
     cleaned = TRAILING_BATCH_RE.sub("", cleaned)
     cleaned = re.sub(r"｜\s*｜", "｜", cleaned).strip(" ｜")
+    cleaned = re.sub(r";{2,}", ";", cleaned).strip(";")
     if cleaned == text:
         return text
     return _normalize_spaces(cleaned)
