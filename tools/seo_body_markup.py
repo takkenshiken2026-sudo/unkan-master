@@ -29,8 +29,22 @@ def split_semicolon(value: str) -> list[str]:
     return [x.strip() for x in re.split(r"[;；]", value or "") if x.strip()]
 
 
+def _mask_commas_inside_parens(text: str) -> str:
+    """括弧内の読点を一時マスクし、列挙分割の誤爆を防ぐ。"""
+
+    def repl(match: re.Match[str]) -> str:
+        return match.group(0).replace("、", "\u0000").replace(",", "\u0001")
+
+    return re.sub(r"（[^）]*）|\([^)]*\)", repl, text)
+
+
 def _comma_list_items(chunk: str) -> list[str]:
-    items = [x.strip() for x in re.split(r"[、,]", chunk) if x.strip()]
+    masked = _mask_commas_inside_parens(chunk)
+    items = [
+        item.strip().replace("\u0000", "、").replace("\u0001", ",")
+        for item in re.split(r"[、,]", masked)
+        if item.strip()
+    ]
     if len(items) < 2:
         return []
     if any(len(item) > 52 for item in items):

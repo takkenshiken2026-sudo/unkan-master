@@ -21,6 +21,7 @@ from tools.editorial_quality import (
 )
 from tools.related_links import parse_related_link_token
 from tools.site_config import is_template_site
+from tools.guide_coherence_rules import check_guide_row_coherence
 
 GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
 GUIDE_MIN_FAQ_ANSWER = 100
@@ -193,6 +194,14 @@ def check_guide_row(
     sources = norm(row.get("primary_sources"))
     if "example.com" in sources:
         warn("primary_sources", "example.com のままです。公式一次情報の URL に差し替えてください")
+
+    for issue in check_guide_row_coherence(row, published=published):
+        if is_template_site() and issue.level == "ERROR":
+            warn(issue.column, f"[整合性] {issue.message}")
+        elif issue.level == "ERROR":
+            err(issue.column, issue.message)
+        else:
+            warn(issue.column, issue.message)
 
     _ = line
     return issues

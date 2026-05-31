@@ -84,6 +84,49 @@ def split_semicolon(value: str) -> list[str]:
     return [x.strip() for x in (value or "").split(";") if x.strip()]
 
 
+GUIDE_INTERNAL_MARKER_RE = re.compile(r"（記事:[^）]+）")
+
+
+INCOMPLETE_SECTION_TAIL_RE = re.compile(r"^.+の「[^」]+」(?:では|で)[。、,]?\s*$")
+INCOMPLETE_INLINE_TAIL_RE = re.compile(
+    r"[^。!\?？\n]*の「[^」]+」(?:では|で)[。、,]?\s*$"
+)
+SALT_LIST_ONLY_RE = re.compile(
+    r"^公式テキスト該当箇所に付箋を付けながら読み[、,]\s*演習で同テーマの設問を1問以上解いて確認してください。?$"
+)
+
+
+def sanitize_guide_text(text: str, slug: str = "") -> str:
+    """量産テンプレの内部マーカー（記事:slug 等）を読者向け本文から除去する。"""
+    out = GUIDE_INTERNAL_MARKER_RE.sub("", text or "")
+    if slug:
+        out = re.sub(rf"（{re.escape(slug)}）", "", out)
+        out = re.sub(rf"\({re.escape(slug)}\)", "", out)
+    out = re.sub(r"[^。!\?？\n]*の「[^」]+」(?:では|で)。", "", out)
+    out = INCOMPLETE_INLINE_TAIL_RE.sub("", out)
+    out = re.sub(
+        r"公式テキスト該当箇所に付箋を付けながら読み、?"
+        r"演習で同テーマの設問を1問以上解いて確認してください。?",
+        "",
+        out,
+    )
+    out = re.sub(r"[ \t]{2,}", " ", out).strip()
+    paras = [p.strip() for p in re.split(r"\n\s*\n", out) if p.strip()]
+    kept: list[str] = []
+    for p in paras:
+        if INCOMPLETE_SECTION_TAIL_RE.match(p):
+            continue
+        if SALT_LIST_ONLY_RE.match(p):
+            continue
+        if p.lstrip().startswith("- "):
+            lines = [ln for ln in p.split("\n") if ln.strip()]
+            if lines and all(ln.lstrip().startswith("- ") for ln in lines):
+                if all("付箋" in ln or "同テーマ" in ln for ln in lines):
+                    continue
+        kept.append(p)
+    return "\n\n".join(kept)
+
+
 from tools.seo_body_markup import seo_section_body_html  # noqa: E402
 
 
@@ -107,12 +150,15 @@ def list_or_paragraph(
 
 def resolve_guide_section_body(article: dict[str, str], body: str) -> str:
     """量産テンプレの冒頭をリード文ベースの本文に差し替える。"""
-    text = norm(body)
-    if not text or "の観点で整理します" not in text:
-        return body
-    lead = norm(article.get("lead"))
+    slug = norm(article.get("slug"))
+    text = sanitize_guide_text(norm(body), slug)
+    if not text:
+        return text
+    if "の観点で整理します" not in text:
+        return text
+    lead = sanitize_guide_text(norm(article.get("lead")), slug)
     if not lead:
-        return body
+        return text
     paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
     rest = [
         p
@@ -122,7 +168,7 @@ def resolve_guide_section_body(article: dict[str, str], body: str) -> str:
     ]
     lead_paras = [p.strip() for p in re.split(r"\n\s*\n", lead) if p.strip()]
     merged = lead_paras + rest
-    return "\n\n".join(merged)
+    return sanitize_guide_text("\n\n".join(merged), slug)
 
 
 def section_html(
@@ -217,9 +263,10 @@ def toc_html(article: dict[str, str], has_faq: bool) -> str:
 
 def faq_items(article: dict[str, str]) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
+    slug = norm(article.get("slug"))
     for idx in range(1, 4):
         q = apply_vars(article.get(f"faq_{idx}_question", ""))
-        a = apply_vars(article.get(f"faq_{idx}_answer", ""))
+        a = sanitize_guide_text(apply_vars(article.get(f"faq_{idx}_answer", "")), slug)
         if q and a:
             items.append({"question": q, "answer": a})
     return items

@@ -32,6 +32,7 @@ from tools.glossary_term_rules import (  # noqa: E402
 DATA = ROOT / "data"
 HUB_FILES = ("comparisons.csv", "numbers.csv", "mistakes.csv")
 HUB_MIN_COMMON_MISTAKES = 15
+HUB_MIN_ARTICLE_LEAD = 30
 HUB_MIN_RELATED_TERMS = 2
 
 # 執筆済み本文に残る見出しプレフィックス（validate の雛形 ERROR を避ける）
@@ -315,6 +316,12 @@ def repair_hub_file(path: Path, *, valid_terms: set[str], term_pool: list[str]) 
                 cm, HUB_MIN_COMMON_MISTAKES, suffix="（公式要項で要確認）"
             )
             stats["common_mistakes"] += 1
+        lead = norm(row.get("article_lead"))
+        if lead and len(lead) < HUB_MIN_ARTICLE_LEAD:
+            row["article_lead"] = pad_text(
+                lead, HUB_MIN_ARTICLE_LEAD, suffix=norm(row.get("summary")) or title
+            )
+            stats["article_lead"] += 1
     with path.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         w.writeheader()

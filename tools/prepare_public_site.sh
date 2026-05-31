@@ -52,7 +52,7 @@ if [[ -f "$ROOT/privacy-terms.html" ]]; then
   cp "$ROOT/privacy-terms.html" "$OUT/"
 fi
 # SPA トップ（index.html）用。CSS/JS を index から分離したサイト向け。
-for f in site-spa.css site-spa-fields.js; do
+for f in site-spa.css site-spa-fields.js site-app.css; do
   if [[ -f "$ROOT/$f" ]]; then
     cp "$ROOT/$f" "$OUT/"
   fi
@@ -70,8 +70,12 @@ if grep -q 'site-spa-fields.js' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/s
   echo "prepare_public_site.sh: index.html が site-spa-fields.js を参照していますが public_site にありません。" >&2
   exit 1
 fi
-echo "prepare_public_site.sh: $OUT に $n ファイルを配置しました。"
+if grep -q 'site-app.css' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/site-app.css" ]]; then
+  echo "prepare_public_site.sh: index.html が site-app.css を参照していますが public_site にありません。" >&2
+  exit 1
+fi
 if grep -rq 'seo-editorial.css' "$OUT/terms" "$OUT/articles" 2>/dev/null && [[ ! -f "$OUT/seo-editorial.css" ]]; then
   echo "prepare_public_site.sh: 用語・ガイドが seo-editorial.css を参照していますが public_site にありません。" >&2
   exit 1
 fi
+echo "prepare_public_site.sh: $OUT に $n ファイルを配置しました。"
