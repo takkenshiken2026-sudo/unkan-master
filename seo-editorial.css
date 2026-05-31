@@ -67,7 +67,7 @@ body.seo-editorial-preview-page {
   --seo-callout-margin: 24px 0;
   --seo-toc-bg: #fafbfc;
   --seo-fs-toc-title: 15px;
-  --seo-fs-toc-link: 14px;
+  --seo-fs-toc-link: 15px;
   --seo-toc-underline: rgba(20, 20, 20, 0.42);
   --seo-divider: rgba(0, 0, 0, 0.1);
 
@@ -306,11 +306,18 @@ body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-
   border-radius: var(--seo-card-radius);
 }
 
+/* 目次（本文 H2 の左ライン・大見出しサイズは適用しない） */
 .seo-editorial .seo-toc h2 {
-  margin-top: 0;
+  display: block;
+  margin: 0 0 12px;
+  padding: 0;
+  border: none;
+  border-left: none;
+  border-bottom: none;
   font-size: var(--seo-fs-toc-title);
   font-weight: var(--seo-font-weight-heading);
   color: var(--seo-text-title);
+  line-height: 1.45;
 }
 
 .seo-editorial .seo-toc li {

@@ -12,7 +12,7 @@ import html
 from pathlib import Path
 
 # キャッシュバスター（seo-editorial.css を更新したら必ず上げる）
-SEO_EDITORIAL_CSS_VER = "20260531-editorial-toc-fix"
+SEO_EDITORIAL_CSS_VER = "20260531-editorial-toc-fix2"
 
 SEO_ARTICLE_BODY_CLASSES = frozenset(
     {

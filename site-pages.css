@@ -3777,6 +3777,14 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--text);
   margin: 0 0 14px;
 }
+/* seo-editorial 記事の目次サイズは seo-editorial.css の --seo-fs-toc-* を正とする */
+.article-body.seo-editorial .seo-toc h2 {
+  font-size: inherit;
+}
+.article-body.seo-editorial .seo-toc a {
+  font-size: inherit;
+  font-weight: inherit;
+}
 .seo-toc ol {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5451,11 +5459,11 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--text);
   font-size: var(--fs-sub);
 }
-.term-article-page .seo-toc h2 {
+.term-article-page .article-body:not(.seo-editorial) .seo-toc h2 {
   color: var(--text);
   font-size: var(--fs-h2);
 }
-.term-article-page .seo-toc a {
+.term-article-page .article-body:not(.seo-editorial) .seo-toc a {
   color: var(--ink);
   font-size: var(--fs-sub);
 }
@@ -5603,11 +5611,11 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   color: var(--text);
   font-size: var(--fs-sub);
 }
-.guide-article-page .seo-toc h2 {
+.guide-article-page .article-body:not(.seo-editorial) .seo-toc h2 {
   color: var(--text);
   font-size: var(--fs-h2);
 }
-.guide-article-page .seo-toc a {
+.guide-article-page .article-body:not(.seo-editorial) .seo-toc a {
   color: var(--ink);
   font-size: var(--fs-sub);
 }
