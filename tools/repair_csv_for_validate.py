@@ -75,10 +75,22 @@ def pad_text(text: str, min_len: int, *, suffix: str) -> str:
     return combined
 
 
+_GUIDE_SALT_TAIL_RE = re.compile(
+    r"[^。!\?？\n]*の「[^」]+」(?:では|で)[。、,]?\s*"
+)
+_GUIDE_SALT_FRAGMENT_RE = re.compile(
+    r"公式テキスト該当箇所に[、,]?\s*(?:読み[、,]\s*)?(?:してください。?)?"
+)
+
+
 def strip_boilerplate(text: str) -> str:
     out = text
     for phrase in EDITORIAL_BOILERPLATE_PHRASES:
         out = out.replace(phrase, "")
+    out = _GUIDE_SALT_TAIL_RE.sub("", out)
+    out = _GUIDE_SALT_FRAGMENT_RE.sub("", out)
+    out = re.sub(r"、{2,}", "、", out)
+    out = re.sub(r"。{2,}", "。", out)
     out = re.sub(r"\n{3,}", "\n\n", out)
     return re.sub(r"  +", " ", out).strip()
 
@@ -449,13 +461,18 @@ def main() -> int:
         action="store_true",
         help="guide_articles の量産禁止句のみ除去（文字数パディングなし）",
     )
+    ap.add_argument(
+        "--skip-glossary",
+        action="store_true",
+        help="glossary / hub CSV の修復をスキップ（guide 系のみ実行）",
+    )
     args = ap.parse_args()
     root = args.root.resolve()
     data = root / "data"
     glossary = data / "glossary_terms.csv"
     valid_terms: set[str] = set()
     term_pool: list[str] = []
-    if glossary.is_file():
+    if glossary.is_file() and not args.skip_glossary:
         with glossary.open(encoding="utf-8", newline="") as f:
             for row in csv.DictReader(f):
                 term = norm(row.get("term"))

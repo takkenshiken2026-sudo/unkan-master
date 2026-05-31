@@ -27,6 +27,21 @@ GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
 GUIDE_MIN_FAQ_ANSWER = 100
 
 
+def reader_facing_text(row: dict[str, str], col: str, raw: str) -> str:
+    """ビルド後に読者へ出る本文（sanitize / resolve 後）。"""
+    from tools.build_article_pages import resolve_guide_section_body, sanitize_guide_text
+
+    slug = norm(row.get("slug"))
+    text = norm(raw)
+    if not text:
+        return text
+    if col.startswith("section_") and col.endswith("_body"):
+        return sanitize_guide_text(resolve_guide_section_body(row, text), slug)
+    if col.startswith("faq_"):
+        return sanitize_guide_text(text, slug)
+    return text
+
+
 def section_pairs(row: dict[str, str]) -> list[tuple[str, str, str]]:
     """(heading_col, body_col, body_text)"""
     out: list[tuple[str, str, str]] = []
@@ -72,10 +87,11 @@ def check_guide_row(
         *(f"faq_{n}_question" for n in range(1, 4)),
     ]
     for col in text_cols:
-        text = norm(row.get(col))
-        if not text:
+        raw = norm(row.get(col))
+        if not raw:
             continue
-        issues.extend(placeholder_issues(text, col))
+        text = reader_facing_text(row, col, raw) if published else raw
+        issues.extend(placeholder_issues(raw, col))
         if published:
             issues.extend(readability_issues(text, col))
             issues.extend(generic_issues(text, col))
@@ -88,8 +104,9 @@ def check_guide_row(
 
     sections = [(h, b, body) for h, b, body in section_pairs(row) if body]
     for _h, bcol, body in sections:
-        if published and len(body) < GUIDE_MIN_SECTION_BODY:
-            msg = f"section 本文は {GUIDE_MIN_SECTION_BODY} 文字以上にしてください（現在 {len(body)} 文字）"
+        visible = reader_facing_text(row, bcol, body) if published else body
+        if published and len(visible) < GUIDE_MIN_SECTION_BODY:
+            msg = f"section 本文は {GUIDE_MIN_SECTION_BODY} 文字以上にしてください（現在 {len(visible)} 文字）"
             if is_template_site():
                 warn(bcol, msg)
             else:
@@ -101,7 +118,7 @@ def check_guide_row(
             else:
                 err(bcol, msg)
         if published:
-            for issue in concreteness_issues(body, bcol):
+            for issue in concreteness_issues(visible, bcol):
                 issues.append(issue)
 
     faq_answers: list[str] = []
@@ -111,14 +128,15 @@ def check_guide_row(
         q, a = norm(row.get(qcol)), norm(row.get(acol))
         if q and not a:
             err(acol, f"{qcol} に対する {acol} が空です")
-        if a and len(a) < GUIDE_MIN_FAQ_ANSWER:
-            msg = f"FAQ回答は {GUIDE_MIN_FAQ_ANSWER} 文字以上にしてください（現在 {len(a)} 文字）"
+        visible_a = reader_facing_text(row, acol, a) if published and a else a
+        if visible_a and len(visible_a) < GUIDE_MIN_FAQ_ANSWER:
+            msg = f"FAQ回答は {GUIDE_MIN_FAQ_ANSWER} 文字以上にしてください（現在 {len(visible_a)} 文字）"
             if is_template_site():
                 warn(acol, msg)
             else:
                 err(acol, msg)
         if a:
-            faq_answers.append(a)
+            faq_answers.append(visible_a if published else a)
     issues.extend(duplicate_faq_answers(faq_answers))
 
     related = split_semicolon(norm(row.get("related_links")))
