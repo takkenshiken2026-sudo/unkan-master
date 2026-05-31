@@ -66,6 +66,9 @@ body.seo-editorial-preview-page {
   --seo-callout-padding: 18px 20px;
   --seo-callout-margin: 24px 0;
   --seo-toc-bg: #fafbfc;
+  --seo-fs-toc-title: 15px;
+  --seo-fs-toc-link: 14px;
+  --seo-toc-underline: rgba(20, 20, 20, 0.42);
   --seo-divider: rgba(0, 0, 0, 0.1);
 
   /* --- 表 --- */
@@ -305,31 +308,38 @@ body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-
 
 .seo-editorial .seo-toc h2 {
   margin-top: 0;
-  font-size: var(--seo-fs-h2);
+  font-size: var(--seo-fs-toc-title);
+  font-weight: var(--seo-font-weight-heading);
   color: var(--seo-text-title);
 }
 
 .seo-editorial .seo-toc li {
   color: var(--seo-text-body);
+  font-size: var(--seo-fs-toc-link);
   margin: 0.15em 0;
 }
 
 .seo-editorial .seo-toc a {
-  display: inline-block;
-  padding: 0.15em 0.35em;
-  margin: 0 -0.35em;
-  border-radius: 2px;
-  color: var(--seo-text-title);
-  font-weight: var(--seo-font-weight-heading);
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--seo-accent) 35%, transparent);
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  color: var(--seo-text-body);
+  font-size: var(--seo-fs-toc-link);
+  font-weight: var(--seo-font-weight);
+  text-decoration: underline;
+  text-decoration-color: var(--seo-toc-underline);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  border-bottom: none;
+  transition: color 0.12s, text-decoration-color 0.12s;
 }
 
 .seo-editorial .seo-toc a:hover {
-  color: var(--seo-accent);
-  background: var(--seo-link-card-hover-bg);
-  border-bottom-color: var(--seo-accent);
+  color: var(--seo-text-title);
+  background: transparent;
+  text-decoration-color: #141414;
+  border-bottom: none;
 }
 
 /* 要点ボックス・信頼性・行動ボックス（グレー背景 + 中立グレー左ライン） */
