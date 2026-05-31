@@ -6,14 +6,17 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+os.environ.setdefault("EXAM_SITE_ROOT", str(ROOT))
 
 from tools.build_glossary_pages import make_term_lookup
 from tools.glossary_term_rules import (
@@ -543,19 +546,29 @@ class Validator:
                     else:
                         self.warn(path, idx, f"[{issue.column}] {issue.message}")
 
-    def run(self) -> int:
-        self.validate_past_questions()
-        self.validate_practice_questions()
-        self.validate_ichimon_questions()
-        self.validate_glossary()
-        self.validate_guide_articles()
-        self.validate_knowledge_hub()
+    def run(self, *, scope: str = "all", summary: bool = False) -> int:
+        if scope in ("all", "questions"):
+            self.validate_past_questions()
+            self.validate_practice_questions()
+            self.validate_ichimon_questions()
+        if scope in ("all", "glossary"):
+            self.validate_glossary()
+        if scope in ("all", "guide"):
+            self.validate_guide_articles()
+        if scope in ("all", "hub"):
+            self.validate_knowledge_hub()
 
         for issue in self.issues:
             print(issue.format(), file=sys.stderr if issue.level == "ERROR" else sys.stdout)
 
         errors = [i for i in self.issues if i.level == "ERROR"]
         warnings = [i for i in self.issues if i.level == "WARN"]
+        if summary or errors:
+            by_file = Counter(i.path.name for i in errors)
+            if by_file:
+                print("\n[ERROR summary by file]", file=sys.stderr)
+                for name, count in by_file.most_common():
+                    print(f"  {count:5d}  {name}", file=sys.stderr)
         if errors:
             print(f"CSV validation failed: {len(errors)} error(s), {len(warnings)} warning(s)", file=sys.stderr)
             return 1
@@ -564,7 +577,18 @@ class Validator:
 
 
 def main() -> int:
-    return Validator().run()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="CSV 検証（site-config は cwd / EXAM_SITE_ROOT を優先）")
+    parser.add_argument(
+        "--scope",
+        choices=("all", "hub", "questions", "glossary", "guide"),
+        default="all",
+        help="検証対象（hub=知識ハブ3種のみ、questions=過去問/演習/一問一答）",
+    )
+    parser.add_argument("--summary", action="store_true", help="ERROR をファイル別に集計表示")
+    args = parser.parse_args()
+    return Validator().run(scope=args.scope, summary=args.summary)
 
 
 if __name__ == "__main__":

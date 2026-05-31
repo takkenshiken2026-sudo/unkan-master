@@ -4,11 +4,26 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
+
+def resolve_site_root() -> Path:
+    """Prefer cwd (or EXAM_SITE_ROOT) so cross-repo PYTHONPATH still validates the right site."""
+    env_root = os.environ.get("EXAM_SITE_ROOT", "").strip()
+    if env_root:
+        p = Path(env_root).resolve()
+        if (p / "site-config.json").is_file():
+            return p
+    cwd = Path.cwd().resolve()
+    if (cwd / "site-config.json").is_file():
+        return cwd
+    return Path(__file__).resolve().parents[1]
+
+
+ROOT = resolve_site_root()
 CONFIG_PATH = ROOT / "site-config.json"
 
 
