@@ -381,6 +381,11 @@ def _norm(value: str | None) -> str:
     return (value or "").strip()
 
 
+def _term_item_label(text: str) -> str:
+    """用語記事内の行ラベル（seo-editorial の青 strong は使わない）。"""
+    return f'<span class="term-item-label">{html.escape(text.rstrip("：:"))}</span>'
+
+
 def hub_field_items(value: str) -> list[str]:
     return [x.strip() for x in split_semicolon(value) if x.strip()]
 
@@ -1186,7 +1191,7 @@ def glossary_legal_body_html(entry: dict) -> str:
         if not law:
             continue
         explain = _legal_explain_sentence(law, entry)
-        blocks.append(f"<p><strong>{html.escape(law)}</strong></p>")
+        blocks.append(f'<p class="term-legal-cite">{html.escape(law)}</p>')
         blocks.append(f"<p>{html.escape(explain)}</p>")
     return "\n".join(blocks)
 
@@ -1234,8 +1239,8 @@ def _trap_list_html(pairs: list[tuple[str, str]]) -> str:
     for wrong, correct in pairs:
         correct = correct.rstrip("。").strip()
         lis.append(
-            f"<li><strong>誤り：</strong>{html.escape(wrong)}"
-            f"<br><strong>正解の考え方：</strong>{html.escape(correct)}。</li>"
+            f"<li>{_term_item_label('誤り')}：{html.escape(wrong)}"
+            f"<br>{_term_item_label('正解の考え方')}：{html.escape(correct)}。</li>"
         )
     return '<ul class="term-trap-list">' + "".join(lis) + "</ul>"
 
@@ -1377,7 +1382,7 @@ def glossary_memory_body_html(entry: dict) -> str:
         for label, content in labeled:
             content = content.rstrip("。").strip()
             lis.append(
-                f"<li><strong>{html.escape(label)}</strong> {html.escape(content)}。</li>"
+                f"<li>{_term_item_label(label)}：{html.escape(content)}。</li>"
             )
         parts.append("<ul>" + "".join(lis) + "</ul>")
     elif free_lines:

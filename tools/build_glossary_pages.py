@@ -763,6 +763,7 @@ def build_term_html(
     )
     points = study_points(explanation)
     from tools.knowledge_hub_seo import (  # noqa: E402
+        _term_item_label,
         glossary_definition_body_text,
         glossary_exam_choices_body_html,
         glossary_exam_points_body_html,
@@ -792,8 +793,8 @@ def build_term_html(
     if example_question or example_answer:
         example_html = (
             '<div class="related-box"><div class="related-box-title">例題</div>'
-            f"<p><strong>問題：</strong>{html.escape(example_question)}</p>"
-            f"<p><strong>答え：</strong>{html.escape(example_answer)}</p></div>"
+            f"<p>{_term_item_label('問題')}：{html.escape(example_question)}</p>"
+            f"<p>{_term_item_label('答え')}：{html.escape(example_answer)}</p></div>"
         )
     faq_items = custom_faq_items(entry, faq_items_for_term(term, short_def, definition, explanation))
     faq_html = faq_section_html(faq_items)

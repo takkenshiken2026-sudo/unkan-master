@@ -824,3 +824,23 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
 @media (prefers-color-scheme: dark) {
   /* ダークモードは未対応。将来 --seo-* を上書きする場合はここに追加 */
 }
+
+/* 用語記事：繰り返しラベル（本文 strong の青太字は使わない） */
+.seo-editorial.seo-article-card .term-item-label,
+.seo-editorial.seo-article-card .term-legal-cite {
+  color: inherit;
+  font-weight: 600;
+}
+
+.seo-editorial.seo-article-card .term-legal-cite {
+  margin: 0 0 0.35em;
+}
+
+.seo-editorial.seo-article-card .term-trap-list li + li {
+  margin-top: 0.65em;
+}
+
+.seo-editorial.seo-article-card .term-memory-guide ul {
+  margin: 0 0 1em;
+  padding-left: 1.25em;
+}
