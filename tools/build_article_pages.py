@@ -110,6 +110,8 @@ def sanitize_guide_text(text: str, slug: str = "") -> str:
         "",
         out,
     )
+    # 付箋テンプレ除去後に残る「…の「見出し」では、」だけの末尾を落とす（段落ごと削除しない）
+    out = INCOMPLETE_INLINE_TAIL_RE.sub("", out)
     out = re.sub(r"[ \t]{2,}", " ", out).strip()
     paras = [p.strip() for p in re.split(r"\n\s*\n", out) if p.strip()]
     kept: list[str] = []
