@@ -44,34 +44,10 @@ def norm(s: str | None) -> str:
     return (s or "").strip()
 
 
-def _load_lib():
-    try:
-        from tools.archive.eisei2shu_guide_content_lib import (  # noqa: E402
-            action_items_for,
-            faq_answer_for,
-            is_stub,
-            key_points_for,
-            lead_for,
-            meta_description_for,
-            section_body_for,
-            user_intent_for,
-        )
+def _load_lib(root: Path):
+    from tools.fix_guide_duplicate_bodies import load_site_lib  # noqa: E402
 
-        return (
-            section_body_for,
-            lead_for,
-            meta_description_for,
-            user_intent_for,
-            action_items_for,
-            key_points_for,
-            faq_answer_for,
-            is_stub,
-        )
-    except ImportError as exc:
-        raise SystemExit(
-            "eisei2shu_guide_content_lib が見つかりません。"
-            " exam-site-shell を PYTHONPATH に含めて実行してください。"
-        ) from exc
+    return load_site_lib(root)
 
 
 def is_venue_slug(slug: str) -> bool:
@@ -109,29 +85,22 @@ def row_needs_patch(row: dict[str, str], is_stub) -> bool:
 
 
 def patch_row(row: dict[str, str], fieldnames: list[str], lib) -> dict[str, str]:
-    (
-        section_body_for,
-        lead_for,
-        meta_description_for,
-        user_intent_for,
-        action_items_for,
-        key_points_for,
-        faq_answer_for,
-        _is_stub,
-    ) = lib
+    from tools.fix_guide_duplicate_bodies import ensure_visible_min, section_unique_tail  # noqa: E402
+
     row = {k: row.get(k, "") for k in fieldnames}
     slug = norm(row.get("slug"))
     title = norm(row.get("title"))
     topic = short_topic_from_title(title) or topic_from_title_fallback(title)
     genre = norm(row.get("genre"))
     ctx: dict = {}
+    official = getattr(lib, "OFFICIAL", "試験実施団体（公式）")
 
-    row["meta_description"] = meta_description_for({**row, "lead": ""}, topic)
-    row["lead"] = lead_for({**row, "lead": ""}, topic)
-    row["user_intent"] = user_intent_for(topic, genre)
+    row["meta_description"] = lib.meta_description_for({**row, "lead": ""}, topic)
+    row["lead"] = lib.lead_for({**row, "lead": ""}, topic)
+    row["user_intent"] = lib.user_intent_for(topic, genre)
     if PLACEHOLDER_ACTION.search(norm(row.get("action_items"))) or not norm(row.get("action_items")):
-        row["action_items"] = action_items_for(topic, slug, genre)
-    row["key_points"] = key_points_for(row, topic)
+        row["action_items"] = lib.action_items_for(topic, slug, genre)
+    row["key_points"] = lib.key_points_for(row, topic)
     if "primary_sources" in fieldnames and not norm(row.get("primary_sources")):
         row["primary_sources"] = OFFICIAL_URL
 
@@ -144,8 +113,23 @@ def patch_row(row: dict[str, str], fieldnames: list[str], lib) -> dict[str, str]
                 row[bcol] = ""
             continue
         if bcol in fieldnames:
-            body = section_body_for(heading, topic, slug, genre, ctx)
+            body = lib.section_body_for(heading, topic, slug, genre, ctx)
             row[bcol] = sanitize_guide_text(body, slug)
+            unique = section_unique_tail(
+                slug=slug,
+                title=title,
+                topic=topic,
+                heading=heading,
+                idx=idx,
+                official=official,
+            )
+            row[bcol] = sanitize_guide_text(f"{row[bcol]}\n\n{unique}", slug)
+            ensure_visible_min(
+                row,
+                bcol,
+                180,
+                filler=f"{topic}の「{heading}」は{official}で確認してください。",
+            )
 
     for idx in range(1, 5):
         qcol = f"faq_{idx}_question"
@@ -154,7 +138,7 @@ def patch_row(row: dict[str, str], fieldnames: list[str], lib) -> dict[str, str]
         if not question:
             continue
         if acol in fieldnames:
-            answer = faq_answer_for(question, topic, slug, row, faq_index=idx)
+            answer = lib.faq_answer_for(question, topic, slug, row, faq_index=idx)
             row[acol] = sanitize_guide_text(answer, slug)
 
     return row
@@ -170,12 +154,17 @@ def topic_from_title_fallback(title: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="A級ガイド記事のテンプレ崩れを修復")
+    parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--slug", action="append", help="対象 slug（省略時は要修復の A級全件）")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    lib = _load_lib()
+    root = args.root.resolve()
+    from tools.fix_guide_duplicate_bodies import _ensure_import_paths  # noqa: E402
 
-    with GUIDE_CSV.open(encoding="utf-8-sig", newline="") as f:
+    _ensure_import_paths(root)
+    guide_csv = root / "data" / "guide_articles.csv"
+    lib = _load_lib(root)
+    with guide_csv.open(encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         fieldnames = list(reader.fieldnames or [])
         rows = list(reader)
@@ -188,7 +177,7 @@ def main() -> int:
             continue
         if targets and slug not in targets:
             continue
-        if not targets and not row_needs_patch(row, lib[7]):
+        if not targets and not row_needs_patch(row, lib.is_stub):
             continue
         if is_venue_slug(slug):
             continue
@@ -203,7 +192,7 @@ def main() -> int:
         print("Would patch:", ", ".join(patched))
         return 0
 
-    with GUIDE_CSV.open("w", encoding="utf-8-sig", newline="") as f:
+    with guide_csv.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
@@ -221,7 +210,7 @@ def main() -> int:
                 print(f"  {e.column}: {e.message}", file=sys.stderr)
         else:
             ok += 1
-    print(f"Patched {len(patched)} tier-A articles in {GUIDE_CSV} ({ok} pass coherence)")
+    print(f"Patched {len(patched)} tier-A articles in {guide_csv} ({ok} pass coherence)")
     return 0
 
 

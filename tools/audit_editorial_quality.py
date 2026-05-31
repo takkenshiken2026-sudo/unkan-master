@@ -23,8 +23,9 @@ GLOSSARY_CSV = ROOT / "data" / "glossary_terms.csv"
 
 
 def audit_guide_cross_duplicates(rows: list[dict[str, str]]) -> list[EditorialIssue]:
-    """複数記事で同一 section 本文が使い回されていないか（published のみ）。"""
+    """複数記事で同一 section 本文が使い回されていないか（published・読者向け本文）。"""
     from tools.editorial_quality import is_published_guide, norm
+    from tools.guide_article_rules import reader_facing_text
 
     body_to_slugs: dict[str, list[str]] = {}
     for row in rows:
@@ -34,7 +35,11 @@ def audit_guide_cross_duplicates(rows: list[dict[str, str]]) -> list[EditorialIs
         if not slug:
             continue
         for n in range(1, 8):
-            body = norm(row.get(f"section_{n}_body"))
+            col = f"section_{n}_body"
+            raw = norm(row.get(col))
+            if not raw:
+                continue
+            body = reader_facing_text(row, col, raw)
             if len(body) < 120:
                 continue
             body_to_slugs.setdefault(body, []).append(slug)

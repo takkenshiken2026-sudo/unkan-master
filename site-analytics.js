@@ -1,7 +1,7 @@
 // Google Analytics 4 — window.__GA4_MEASUREMENT_ID__ で上書き可（未設定・空なら下記の既定ID）
 // 測定IDの正: tools/html_footer.GA4_MEASUREMENT_ID と揃えること
 (function () {
-  var DEFAULT_MID = "G-N0F8L2Q698";
+  var DEFAULT_MID = "";
   var raw = "";
   try {
     if (typeof window !== "undefined" && window.__GA4_MEASUREMENT_ID__ != null) {
