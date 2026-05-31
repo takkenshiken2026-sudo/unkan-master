@@ -923,46 +923,181 @@ def hub_faq_items_resolved(
     return rebuilt
 
 
+_EXAM_POINT_FRAGMENT_ENDINGS = ("で", "を", "に", "が", "と", "へ", "や")
+
+
+def _exam_points_look_low_quality(items: list[str]) -> bool:
+    if any(item.startswith("数値・期限：") for item in items):
+        return True
+    if any(item.startswith("根拠：") for item in items[:-1]):
+        return True
+    for item in items:
+        text = item.rstrip("。").strip()
+        if text.endswith(_EXAM_POINT_FRAGMENT_ENDINGS) and len(text) < 40:
+            if not text.endswith(("ないで", "として", "について", "において")):
+                return True
+    if len(items) >= 2 and items[0].rstrip("。").endswith("で"):
+        if not items[0].rstrip("。").endswith("ないで"):
+            return True
+    return False
+
+
+def _glossary_study_point_items(entry: dict, *, max_items: int = 3) -> list[str]:
+    """定義文から完結した学習要点を組み立てる（読点分割は使わない）。"""
+    short_def = _norm(entry.get("short_def"))
+    definition = (
+        _norm(entry.get("term_detail_body"))
+        or _norm(entry.get("definition"))
+        or short_def
+    )
+    exam_points = split_semicolon(_norm(entry.get("exam_points")))
+
+    if exam_points and not any(
+        any(marker in item for marker in _MISTAKE_POINT_MARKERS) for item in exam_points
+    ):
+        cleaned = [item.strip() for item in exam_points if len(item.strip()) >= 8]
+        cleaned = [item for item in cleaned if not item.startswith("根拠：")]
+        if cleaned and not _exam_points_look_low_quality(cleaned):
+            return cleaned[:max_items]
+
+    items: list[str] = []
+    core = short_def
+    if "とは、" in core:
+        core = core.split("とは、", 1)[1]
+    core = core.strip().lstrip("「").rstrip("」")
+    core = re.sub(r"です$", "", core).strip()
+    if core:
+        items.append(core)
+
+    first_norm = short_def.replace(" ", "")
+    for sent in _definition_sentences(definition):
+        text = sent.rstrip("。").strip()
+        if len(text) < 12:
+            continue
+        text_norm = text.replace(" ", "")
+        if text_norm in first_norm or first_norm in text_norm:
+            continue
+        items.append(text)
+        if len(items) >= max_items:
+            break
+
+    return items[:max_items]
+
+
+def glossary_exam_points_items(entry: dict) -> list[str]:
+    """section 2 用。完結した学習要点を箇条書き用に返す。"""
+    legal = _norm(entry.get("legal_basis"))
+    items = _glossary_study_point_items(entry, max_items=3)
+
+    legal_first = split_semicolon(legal)[0].strip() if legal else ""
+    if legal_first and not any(legal_first in item for item in items):
+        items.append(f"根拠：{legal_first}")
+    return items[:5]
+
+
 def glossary_exam_points_body_html(entry: dict) -> str:
-    """用語ページの試験ポイントを段落化。"""
-    exam_points = _norm(entry.get("exam_points"))
-    explanation = _norm(entry.get("explanation"))
-    definition = _norm(entry.get("definition"))
+    """用語ページの試験ポイント（exam_points を箇条書きでそのまま表示）。"""
+    items = glossary_exam_points_items(entry)
+    if not items:
+        return ""
+    lis: list[str] = []
+    for item in items:
+        text = item.rstrip("。").strip()
+        if text.startswith("根拠："):
+            lis.append(f"{text}を条文とセットで確認する")
+        else:
+            lis.append(text)
+    return "<ul>" + "".join(f"<li>{html.escape(t)}</li>" for t in lis[:5]) + "</ul>"
+
+
+_DEFINITION_STRIP_RES = (
+    re.compile(r"【(?:専門家の視点|現場での意味|試験で差がつく見方|まとめ)】[^。\n]*。"),
+    re.compile(r"有害要因では[^。\n]*。"),
+    re.compile(r"ここでは[^。\n]*整理します。"),
+    re.compile(r"条文番号だけでなく[^。\n]*。"),
+    re.compile(r"過去問では[^。\n]*見られます。"),
+    re.compile(r"まとめると、[^。\n]*。"),
+    re.compile(r"本記事の表と[^。\n]*。"),
+    re.compile(r"※上記は[^。\n]*。"),
+    re.compile(r"定義＋数値＋手続」の5点[^。\n]*。"),
+    re.compile(r"失点差がつきやすい[^。\n]*。"),
+    re.compile(r"試験対策では[^。\n]*。"),
+    re.compile(r"過去問演習では[^。\n]*。"),
+    re.compile(r"実務目線では[^。\n]*。"),
+)
+_DEFINITION_NUM_RE = re.compile(
+    r"(\d+(?:\.\d+)?)\s*(人|時間|か月|月|年|日|回|週|mSv|mg/m³|mg|dB|ppm|%|時間以内|年間|回まで|回以上|人以上|時間超)"
+)
+_DEFINITION_SKIP_SENTENCE = (
+    "管理業務主任者試験では",
+    "第一種衛生管理者試験では",
+    "頻出となる基礎用語",
+    "失点差がつきやすい",
+    "試験対策では",
+    "過去問演習では",
+    "実務目線では",
+    "条文根拠と実務場面を往復",
+    "手続・判断基準を押さえる論点",
+)
+
+
+def _definition_sentences(text: str) -> list[str]:
+    parts: list[str] = []
+    for chunk in re.split(r"(?<=[。．])", text.strip()):
+        s = chunk.strip()
+        if s:
+            parts.append(s if s.endswith("。") else s + "。")
+    return parts
+
+
+def glossary_definition_body_text(entry: dict) -> str:
+    """定義セクション用。プロ量産テンプレを除き、定義中心の短い本文に整える。"""
     term = _norm(entry.get("term"))
     category = _norm(entry.get("category"))
-    legal = _norm(entry.get("legal_basis"))
+    short_def = _norm(entry.get("short_def"))
+    definition = _norm(entry.get("definition"))
+    raw_body = _norm(entry.get("term_detail_body"))
 
-    paras: list[str] = []
-    if exam_points:
-        for item in hub_field_items(exam_points):
-            text = item.rstrip("。")
-            if len(text) >= 36:
-                paras.append(text + "。")
-            elif term and (text.startswith(term) or text.startswith(f"{term}の")):
-                paras.append(f"{text}が試験で問われやすい論点です。")
-            elif term:
-                paras.append(f"{term}では、{text}が試験で問われやすい論点です。")
-            else:
-                paras.append(text + "。")
+    tables = re.findall(r"<table[\s\S]*?</table>", raw_body, flags=re.I)
 
-    if len(paras) < 2 and explanation:
-        for chunk in re.split(r"[。．]\s*", explanation):
-            chunk = chunk.strip()
-            if len(chunk) >= 20 and "とは、" not in chunk:
-                paras.append(chunk + "。")
-            if len(paras) >= 3:
-                break
+    parts: list[str] = []
+    if short_def:
+        parts.append(short_def if short_def.endswith("。") else short_def + "。")
 
-    if category and len(paras) < 3:
-        paras.append(
-            f"{exam_name()}の{category}分野では、{term}の意味と適用場面を条文とセットで確認することが重要です。"
-        )
-    if legal and len(paras) < 4:
-        basis = legal.split(";")[0].strip()
-        if basis:
-            paras.append(f"根拠法令として{basis}などが関連します。条文の読み取り問題と結びつけて復習してください。")
+    defn = definition or short_def
+    body_so_far = "".join(parts)
+    for sent in _definition_sentences(defn):
+        if any(skip in sent for skip in _DEFINITION_SKIP_SENTENCE):
+            continue
+        key = re.sub(r"\s+", "", sent)[:48]
+        if not key or key in re.sub(r"\s+", "", body_so_far):
+            continue
+        parts.append(sent)
+        body_so_far = "".join(parts)
+        if len(parts) >= 3:
+            break
 
-    return hub_prose_html(paras)
+    nums: list[str] = []
+    for m in _DEFINITION_NUM_RE.finditer(defn):
+        val = m.group(1) + m.group(2)
+        if val not in nums:
+            nums.append(val)
+    joined = "".join(parts)
+    if nums and not any(n in joined for n in nums):
+        parts.append(f"押さえる数値・期限：{'、'.join(nums[:4])}。")
+
+    body = "\n\n".join(parts)
+    if "有害" not in category:
+        for pat in _DEFINITION_STRIP_RES:
+            body = pat.sub("", body)
+    else:
+        for pat in _DEFINITION_STRIP_RES[:1]:
+            body = pat.sub("", body)
+
+    body = re.sub(r"\n{3,}", "\n\n", body).strip()
+    if tables:
+        body = body + "\n\n" + "\n\n".join(tables[:1])
+    return body.strip() or definition or short_def
 
 
 def glossary_mistakes_body_html(entry: dict) -> str:
@@ -1030,6 +1165,7 @@ def glossary_memory_body_html(entry: dict) -> str:
     body = hub_prose_html(paras)
     return f'<div class="term-memory-guide">{body}</div>' if body else ""
 
+
 _MISTAKE_POINT_MARKERS = ("→ 誤り", "誤り（", "誤答", "入れ替えに注意")
 
 
@@ -1044,37 +1180,15 @@ def glossary_summary_body_html(short_def: str) -> str:
 def glossary_key_points_items(entry: dict) -> list[str]:
     """要点ボックス用。誤答パターンではなく、定義・根拠から学習要点を組み立てる。"""
     term = _norm(entry.get("term"))
-    short_def = _norm(entry.get("short_def"))
     legal = _norm(entry.get("legal_basis"))
-    exam_points = split_semicolon(_norm(entry.get("exam_points")))
+    items = list(_glossary_study_point_items(entry, max_items=3))
 
-    if exam_points and not any(
-        any(marker in item for marker in _MISTAKE_POINT_MARKERS) for item in exam_points
-    ):
-        items = [item for item in exam_points if len(item.strip()) >= 8][:4]
-    else:
-        items = []
-        core = short_def
-        if term:
-            quoted = f"「{term}」とは、"
-            if core.startswith(quoted):
-                core = core[len(quoted) :]
-            elif "とは、" in core:
-                core = core.split("とは、", 1)[1]
-        core = core.strip().lstrip("「").rstrip("。")
-        for clause in re.split(r"、", core):
-            clause = clause.strip()
-            if len(clause) >= 8:
-                items.append(clause)
-        if len(items) > 3:
-            items = items[:3]
-        legal_first = split_semicolon(legal)[0].strip() if legal else ""
-        if legal_first and not any(legal_first in item for item in items):
-            items.append(f"根拠：{legal_first}")
+    legal_first = split_semicolon(legal)[0].strip() if legal else ""
+    if legal_first and not any(legal_first in item for item in items):
+        items.append(f"根拠：{legal_first}")
 
     if len(items) < 3:
         items.append(f"{term or '用語'}の定義と数値・主体を条文とセットで確認する")
     if not any("過去問" in item for item in items):
         items.append("関連する用語解説や過去問へ進む")
     return items[:5]
-
