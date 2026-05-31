@@ -11,9 +11,15 @@ from functools import lru_cache
 from pathlib import Path
 
 from tools.glossary_term_search import term_matches_text, term_search_keys  # noqa: E402
+from tools.site_config import resolve_site_root  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[1]
-PAST_CSV = ROOT / "data" / "past_questions.csv"
+
+def _site_root() -> Path:
+    return resolve_site_root()
+
+
+def _past_csv() -> Path:
+    return _site_root() / "data" / "past_questions.csv"
 
 
 def _strip_html(text: str) -> str:
@@ -27,19 +33,28 @@ def _preview(text: str, limit: int = 72) -> str:
     return plain[: limit - 1] + "…"
 
 
-@lru_cache(maxsize=1)
-def load_past_question_index() -> list[dict]:
-    if not PAST_CSV.is_file():
+@lru_cache(maxsize=8)
+def load_past_question_index(root_key: str = "") -> list[dict]:
+    root = Path(root_key) if root_key else _site_root()
+    past_csv = root / "data" / "past_questions.csv"
+    if not past_csv.is_file():
         return []
-    rows = list(csv.DictReader(PAST_CSV.read_text(encoding="utf-8-sig").splitlines()))
+    rows = list(csv.DictReader(past_csv.read_text(encoding="utf-8-sig").splitlines()))
     index: list[dict] = []
     for row in rows:
+        year_raw = (row.get("exam_year") or "").strip()
         try:
-            year = int(row.get("exam_year") or 0)
             qno = int(row.get("question_no") or 0)
         except ValueError:
             continue
-        if year < 1 or qno < 1:
+        if not year_raw or qno < 1:
+            continue
+        try:
+            year = int(year_raw)
+        except ValueError:
+            continue
+        href_rel = f"q/past/y{year}/q{qno:02d}/index.html"
+        if not (root / href_rel).is_file():
             continue
         parts = [row.get("stem") or "", row.get("explanation") or ""]
         for i in range(1, 5):
@@ -53,7 +68,7 @@ def load_past_question_index() -> list[dict]:
                 "hay": hay,
                 "stem": row.get("stem") or "",
                 "correct": (row.get("correct") or "").strip(),
-                "href_rel": f"q/past/y{year}/q{qno:02d}/index.html",
+                "href_rel": href_rel,
             }
         )
     return index
@@ -71,7 +86,8 @@ def find_past_questions_for_term(
         return []
     hits: list[dict] = []
     seen_pages: set[tuple[int, int]] = set()
-    for page in load_past_question_index():
+    root_key = str(_site_root())
+    for page in load_past_question_index(root_key):
         key = (page["year"], page["qno"])
         if key in seen_pages:
             continue

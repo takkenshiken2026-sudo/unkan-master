@@ -211,6 +211,8 @@ def audit_title_similar(rows_by_file: dict[str, list[dict[str, str]]]) -> list[d
     out: list[dict[str, str]] = []
     for i, (f1, s1, t1) in enumerate(entries):
         for f2, s2, t2 in entries[i + 1 :]:
+            if f1 != f2:
+                continue
             if t1 == t2:
                 out.append(
                     {
