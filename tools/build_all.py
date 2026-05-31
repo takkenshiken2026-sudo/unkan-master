@@ -27,7 +27,12 @@ def main() -> int:
     run([py, "tools/build_article_pages.py"])
     run([py, "tools/validate_guide_html_coherence.py"])
     run([py, "tools/build_glossary_pages.py"])
-    run([py, "tools/build_hub_retire_redirects.py"])
+    for hub_step in (
+        "tools/build_compare_pages.py",
+        "tools/build_numbers_mistakes_pages.py",
+    ):
+        if (ROOT / hub_step).is_file():
+            run([py, hub_step])
     # 用語ページ生成後に一問一答を組み立て（terms へのリンクを正す）
     run([py, "tools/build_practice_ichimon_pages.py"])
     run([py, "tools/build_sitemap.py"])

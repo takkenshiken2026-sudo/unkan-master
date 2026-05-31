@@ -1481,10 +1481,6 @@ def main() -> int:
 
     (TERMS_DIR / "index.html").write_text(build_terms_index(entries, base), encoding="utf-8")
 
-    from tools.build_hub_retire_redirects import build_all as build_hub_retire_redirects
-
-    build_hub_retire_redirects()
-
     from tools.build_term_diagram_sample_pages import build_all as build_term_diagram_samples
 
     build_term_diagram_samples(base_url=base)
