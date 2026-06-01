@@ -93,7 +93,15 @@ python3 tools/scaffold_guide_article.py --write-template-csv
 - 本文に「CSVの増やし方」「テンプレ運用」など **運用者向けの説明を書かない**。
 - 制度・数値・日程は **公式情報を確認したうえで** 資格固有の内容に差し替える。
 
-### ジャンル別の見出し案
+### 試験会場・アクセス記事
+
+`exam-venue-and-region`・`shiken-kaijo`・`*-center` など会場を扱う記事は [exam-venue-guide.md](./exam-venue-guide.md) に従う。
+
+- 住所・駅名・具体ルートは**書かない**（公式リンクへ誘導）
+- 受験票が正本である旨を必ず含める
+- 新規・修復は `fix_exam_venue_guide_articles.py` / `fix_exam_venue_hub_articles.py` を使う
+
+---
 
 `scaffold_guide_article.py` がジャンルごとに見出しを入れます。手書きするときの参考:
 

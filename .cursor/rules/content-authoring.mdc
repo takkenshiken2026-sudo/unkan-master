@@ -4,6 +4,7 @@ globs:
   - "**/data/*.csv"
   - "**/docs/seo-*.md"
   - "**/docs/guide-*.md"
+  - "**/docs/exam-venue-guide.md"
   - "**/docs/glossary-*.md"
   - "**/docs/editorial-quality.md"
   - "**/docs/affiliate/**"
@@ -25,3 +26,7 @@ globs:
 知識ハブ（比較・数値・誤答タブ）は**廃止**。旧 URL は `build_hub_retire_redirects.py` でリダイレクト。
 
 編集後は必ず `python3 tools/build_all.py`。
+
+ガイド記事の抽象表現・メタ確認だけの節・FAQ 定型は `.cursor/rules/guide-prose-quality.mdc` を参照。修復は `fix_guide_prose_quality.py` と `run_guide_prose_batch.sh`。
+
+**試験会場ガイド**（`*-center` / `exam-venue-and-region` / `shiken-kaijo`）は `.cursor/rules/exam-venue-guide.mdc` と `docs/exam-venue-guide.md` に従う。住所・駅名・ルートは書かず公式リンクのみ。修復は `fix_exam_venue_guide_articles.py` / `fix_exam_venue_hub_articles.py`。
