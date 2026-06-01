@@ -306,7 +306,7 @@ def parse_related_links(
 ) -> str:
     links: list[str] = []
     seen: set[str] = set()
-    from tools.related_links import parse_related_link_token
+    from tools.related_links import parse_related_link_token, resolve_related_link_label
 
     for item in split_semicolon(value):
         target, label = parse_related_link_token(item)
@@ -315,7 +315,7 @@ def parse_related_links(
         if target in by_slug and target not in seen:
             seen.add(target)
             href = f"../{html.escape(target)}/"
-            text_label = label or by_slug[target]["title"]
+            text_label = resolve_related_link_label(target, label, by_slug[target]["title"])
             links.append(f'<a class="related-link" href="{href}">{html.escape(apply_vars(text_label))}</a>')
         elif target.startswith(("http://", "https://")):
             text_label = label or target

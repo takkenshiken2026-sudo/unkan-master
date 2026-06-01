@@ -519,32 +519,57 @@ def infer_legal_basis(row: dict[str, str]) -> None:
             row["legal_basis"] = m.group(0)
 
 
-def fix_guide_related_links(row: dict[str, str], *, slug_pool: list[str]) -> None:
+def fix_guide_related_links(
+    row: dict[str, str],
+    *,
+    slug_pool: list[str],
+    titles_by_slug: dict[str, str] | None = None,
+) -> None:
     slug = norm(row.get("slug"))
     related = split_semicolon(norm(row.get("related_links")))
+    titles = titles_by_slug or {}
+
+    def format_token(target: str, label: str = "") -> str:
+        if target.startswith(("http://", "https://")):
+            return target
+        title = titles.get(target, "")
+        short = title.split("【", 1)[0].strip() if title else target
+        if len(short) > 48:
+            short = short[:47] + "…"
+        if label and label != target:
+            return f"{target}:{label}"
+        return f"{target}:{short}" if short and short != target else target
+
+    normalized = [
+        format_token(*parse_related_link_token(x))
+        for x in related
+        if x
+    ]
     internal = [
         parse_related_link_token(x)[0]
-        for x in related
+        for x in normalized
         if x and not parse_related_link_token(x)[0].startswith(("http://", "https://"))
     ]
     if len(internal) >= 2:
+        row["related_links"] = ";".join(dict.fromkeys(normalized))
         return
     genre = norm(row.get("genre"))
     candidates = [s for s in slug_pool if s != slug and s not in internal]
-    same_genre = [s for s in candidates if s]  # slug only; genre match done below
-    picked: list[str] = list(internal)
+    picked: list[str] = list(normalized)
+    picked_targets = set(internal)
     for pool in (
         [s for s in candidates if s.startswith(slug.split("-")[0][:4])],
         candidates,
     ):
         for s in pool:
-            if len(picked) >= 2:
+            if len(picked_targets) >= 2:
                 break
-            if s not in picked:
-                picked.append(s)
-        if len(picked) >= 2:
+            if s not in picked_targets:
+                picked.append(format_token(s))
+                picked_targets.add(s)
+        if len(picked_targets) >= 2:
             break
-    if genre and len(picked) < 2:
+    if genre and len(picked_targets) < 2:
         _ = genre
     row["related_links"] = ";".join(dict.fromkeys(picked))
 
@@ -798,6 +823,11 @@ def fix_guide_rows(
         for r in rows
         if is_published_guide(r) and norm(r.get("slug"))
     ]
+    titles_by_slug = {
+        norm(r.get("slug")): norm(r.get("title"))
+        for r in rows
+        if is_published_guide(r) and norm(r.get("slug"))
+    }
     for row in rows:
         if not is_published_guide(row):
             continue
@@ -812,7 +842,7 @@ def fix_guide_rows(
         fix_guide_sections(row)
         fix_hub_usage_guide(row)
         fix_section_bodies(row)
-        fix_guide_related_links(row, slug_pool=slug_pool)
+        fix_guide_related_links(row, slug_pool=slug_pool, titles_by_slug=titles_by_slug)
         scrub_exam_duplicate_fields(row, exam, exam_short)
         for col in ("lead", "user_intent", "meta_description"):
             text = norm(row.get(col))

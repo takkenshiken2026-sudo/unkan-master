@@ -31,14 +31,14 @@ class ProseHit:
 
 
 def exam_dup_re(exam: str, exam_short: str) -> re.Pattern[str] | None:
-    if not exam:
+    """試験名＋短称の不当な連続（例: 二衛試験の二衛 試験当日…）のみ検出。"""
+    if not exam or not exam_short or exam_short == exam:
         return None
-    alts = [a for a in {exam_short, exam} if a]
-    parts = []
-    for alias in sorted(set(alts), key=len, reverse=True):
-        parts.append(re.escape(exam) + r"の" + re.escape(alias))
-    if not parts:
-        return None
+    parts = [rf"{re.escape(exam)}の{re.escape(exam_short)}\s+"]
+    if exam_short in exam and exam != exam_short:
+        parts.append(rf"{re.escape(exam)}の{re.escape(exam_short)}試験")
+    if len(exam) > len(exam_short):
+        parts.append(rf"{re.escape(exam)}の{re.escape(exam)}")
     return re.compile("|".join(parts))
 
 

@@ -48,12 +48,12 @@ def scrub_exam_duplication(text: str, exam: str, exam_short: str = "") -> str:
         return text
     out = text
     if exam:
-        aliases = [a for a in (exam_short, exam) if a]
+        aliases = [a for a in (exam_short, exam) if a and a != exam]
         for alias in sorted(set(aliases), key=len, reverse=True):
             out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}\s+", f"{exam}の", out)
+            out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}試験", f"{exam}の", out)
             out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}の", f"{exam}の", out)
-            if alias != exam:
-                out = re.sub(rf"{re.escape(exam)}の{re.escape(exam)}", exam, out)
+        out = re.sub(rf"({re.escape(exam)}の){re.escape(exam)}", r"\1", out)
         out = re.sub(rf"({re.escape(exam)}の)\1+", r"\1", out)
     out = re.sub(
         r"(「[^」]+」(?:では|に関する)[^。]+について)。(?=[^。\n]*(?:公式|受験要項))",

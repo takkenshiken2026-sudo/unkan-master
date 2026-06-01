@@ -17,4 +17,18 @@ def parse_related_link_token(item: str) -> tuple[str, str]:
     if ":" in text:
         target, label = text.split(":", 1)
         return target.strip(), label.strip()
-    return text, text
+    # slug のみ → ラベル未指定（ビルド時に記事タイトルへ解決）
+    return text, ""
+
+
+def resolve_related_link_label(target: str, label: str, title: str) -> str:
+    """明示ラベルが無い、または slug そのものなら記事タイトルを表示する。"""
+    target = (target or "").strip()
+    label = (label or "").strip()
+    title = (title or "").strip()
+    if not label or label == target:
+        return title or target
+    if re.fullmatch(r"[a-z0-9][a-z0-9-]*", label, re.I) and label == target:
+        return title or target
+    return label
+
