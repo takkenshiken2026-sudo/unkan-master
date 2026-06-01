@@ -286,6 +286,7 @@ def _topnav_logo(rel_path: Path) -> str:
     return f"""<a class="topnav-logo" href="{root}" aria-label="{name}、{exam}対策のトップへ">
           {mark}
           <span class="topnav-logo-stack">
+            <span class="topnav-logo-text">{name}</span>
             <span class="topnav-logo-sub">{exam}</span>
           </span>
         </a>"""

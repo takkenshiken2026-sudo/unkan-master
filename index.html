@@ -227,9 +227,6 @@ body{font-family:var(--font);font-size:var(--fs-body);background:#f0f0f1;color:v
 .topnav-logo-mark,.site-footer-logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:var(--ink);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;font-family:var(--font);color:var(--bg2);box-sizing:border-box}
 .topnav-logo-mark .logo-mark-line,.site-footer-logo-mark .logo-mark-line{display:block;font-size:12px;font-weight:700;line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:.02em}
 .topnav-logo-mark .logo-mark-line--sub,.site-footer-logo-mark .logo-mark-line--sub{font-size:11px;letter-spacing:.04em}
-.site-footer-logo-mark{min-width:46px;min-height:30px;padding:4px 8px 3px;border-radius:3px}
-.site-footer-logo-mark .logo-mark-line{font-size:10px}
-.site-footer-logo-mark .logo-mark-line--sub{font-size:9px}
 .topnav-logo-text{font-size:16px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap}
 .topnav-logo-stack{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15;min-width:0}
 .topnav-logo-sub{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0;line-height:1.25;white-space:normal;max-width:min(220px,52vw)}
@@ -787,7 +784,9 @@ details.rich-detail summary{display:none}
   .topnav-hamburger{display:flex}
   .topnav-inner{padding:0 10px;height:52px}
   .topnav-logo{margin-right:8px}
-  .topnav-logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}  .topnav-logo-mark .logo-mark-line{font-size:11px}  .topnav-logo-mark .logo-mark-line--sub{font-size:10px}
+  .topnav-logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}
+  .topnav-logo-mark .logo-mark-line{font-size:11px}
+  .topnav-logo-mark .logo-mark-line--sub{font-size:10px}
   .topnav-logo-text{font-size:15px}
   .topnav-logo-sub{font-size:9px;max-width:min(200px,58vw)}
   .focus-btn{margin-left:auto;margin-right:6px;width:34px;height:34px}
@@ -909,6 +908,7 @@ details.rich-detail summary{display:none}
     gap:8px 10px;
     padding:6px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));
   }
+  .site-footer-logo-mark{width:20px;height:20px;font-size:9px;border-radius:5px}
   .site-footer-site-name{font-size:11px}
   .site-footer-legal{gap:8px 10px}
   .site-footer-legal a{font-size:10px}
@@ -987,6 +987,7 @@ body.is-solving .site-footer{display:none!important}
 }
 .site-footer-brand{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--text);flex:0 0 auto;transition:opacity .15s}
 .site-footer-brand:hover{opacity:.88}
+.site-footer-logo-mark{width:22px;height:22px;border-radius:6px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg2);flex-shrink:0;font-family:var(--font)}
 .site-footer-site-name{font-size:12px;font-weight:700;letter-spacing:-0.02em;color:var(--text);white-space:nowrap}
 .site-footer-sep{width:1px;height:14px;background:var(--border2);flex:0 0 auto;align-self:center;opacity:.85}
 .site-footer-legal{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:10px 14px;flex:0 0 auto}
@@ -1127,6 +1128,10 @@ body.is-solving .site-footer{display:none!important}
 .mission-text.done{color:var(--text);text-decoration:none}
 .mission-prog{font-size:13px;font-family:var(--mono);color:#111111;font-weight:800}
 .mission-prog.done{color:var(--green)}
+.mission-share-row{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.mission-card-share{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:11px;background:#000;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:opacity .15s}
+.mission-card-share:hover{opacity:.82}
+.mission-card-share svg{width:15px;height:15px;fill:currentColor;flex-shrink:0}
 /* Difficulty stars in q-meta */
 .q-meta-item.diff-wrap{flex:0 0 114px}
 .q-meta-item.freq-item{flex:0 0 108px}
@@ -1188,82 +1193,26 @@ body.is-solving .site-footer{display:none!important}
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "一般貨物自動車運送事業者（以下「事業者」という。）の事業計画の変更に関する次の記述のうち、正しいものを２つ選びなさい。なお、解答にあたって、各選択肢に記載されている事項以外は考慮しないものとする。",
+      "name": "Sample試験の制度に関する次の記述のうち、正しいものはどれか。",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "１．運送事業法第９条（事業計画の変更）第３項。２．「遅滞なく」⇒｢ あらかじめ」。運送事業法第９条（事業計画の変更）第３項。３．「あらかじめその旨を、国土交通大臣に届け出なければならない」⇒「国土交通大臣の認可を受けなければならない」。運送事業法第９条（事業計画の変更）第１項。４．運送事業法第11条（運賃及び料金等の掲示）第１項。"
+        "text": "試験制度は年度ごとに見直されるため、最新の公式情報を確認する姿勢が重要です。"
       }
     },
     {
       "@type": "Question",
-      "name": "道路運送車両法の自動車の登録等についての次の記述のうち、誤っているものを１つ選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
+      "name": "学習計画に関する次の記述のうち、最も適切でないものはどれか。",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "１．車両法第13条（移転登録）第１項。２．車両法第15条（永久抹消登録）第１項。３．自動車登録番号標は、自動車の前面及び後面であって、自動車登録番号の識別に支障が生じないものとして告示で定める位置に確実に取り付ける。車両法第19条（自動車登録番号標の表示の義務）第１項・施行規則第８条の２（自動車登録番号標の表示）第１項。４．車両法第11条（自動車登録番号標の"
+        "text": "「最も適切でないもの」を選ぶ問題です。学習法として明らかに誤った選択肢を見極めます。"
       }
     },
     {
       "@type": "Question",
-      "name": "道路交通法に定める灯火及び合図等についての次の記述のうち、誤っているものを１つ選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
+      "name": "設備・その他分野の学習に関する次の記述のうち、正しいものはどれか。",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "２．道交法施行令第21条（合図の時期及び方法）第１項①・③。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "労働基準法（以下「法」という。）の定めに関する次の記述のうち、誤っているものを１つ選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．労基法第12条（平均賃金の定義）第１項。２．当事者間の合意がある場合であっても、労基法で定める労働条件の基準を理由として、労働条件を低下させてはならない。労基法第１条（労働条件の原則）第２項。３．労基法第22条（退職時等の証明）第１項。４．労基法第３条（均等待遇）第１項。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "貨物自動車運送事業の事業用自動車の運転者に対する点呼の実施等に関する次の記述のうち、適切なものには「適」を、適切でないものには「不適」を記入しなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．不適：車庫と営業所が離れている場合や出庫・帰庫が早朝・深夜であり、運行管理者が出勤していない場合などは「運行上やむを得ない場合」には含まれないため、電話による点呼はできない。「安全規則の解釈及び運用」第７条第１項（１）。３．不適 ：「18時間以内」⇒「16時間以内」。「安全規則の解釈及び運用」第７条第１項（５）①ウ。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "次の記述のうち、貨物自動車運送事業の運行管理者の行わなければならない業務として誤っているものを１つ選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．安全規則第20条（運行管理者の業務）第１項⑧。２．安全規則第20条（運行管理者の業務）第１項⑫。３．安全規則第20条（運行管理者の業務）第１項⑭。４．運転者の勤務時間及び乗務時間を定めるのは、貨物自動車運送事業者の業務。安全規則第３条（過労運転の防止）第４項。・安全規則第20条（運行管理者の業務）第１項③。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "貨物自動車運送事業輸送安全規則に定める貨物自動車運送事業者の過労運転の防止についての次の文中、Ａ、Ｂ、Ｃ、Ｄに入るべき字句としていずれか正しいものを１つ選びなさい。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．安全規則第３条（過労運転の防止）第２項②。２．安全規則第３条（過労運転の防止）第３項。３．安全規則第３条（過労運転の防止）第６項。４．安全規則第３条（過労運転の防止）第７項。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "貨物自動車運送事業の事業用自動車の運転者（以下「運転者」という。）に対する点呼に関する次の記述のうち、正しいものをすべて選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．安全規則第７条（点呼等）第１項。２．安全規則第７条（点呼等）第４項・「安全規則の解釈及び運用」第７条第２項（５）。３．２日間にわたる運行であるが、２日目に乗務後の点呼を対面で行うため、中間点呼を行う必要はない。安全規則第７条（点呼等）第３項。４．乗務終了後の点呼においては、道路運送車両法第47条の２第１項及び第２項の規定による点検（日常点検）の実施又はその確認についての報告・確認は必要ない。安全規則第７条（点呼等）第２項。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "自動車事故に関する次の記述のうち、一般貨物自動車運送事業者が自動車事故報告規則に基づき運輸支局長等に速報を要するものを２つ選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．落下事故は、速報する必要がない。２．死傷事故のうち、２人以上の死者又は５人以上の重傷者を生じたものについては速報を要するが、選択文の事故は該当しないため、速報する必要はない。事故報告規則第４条（速報）第１項②・③。３．事故により５人が重傷を負っており、「死傷事故」に該当するため速報しなければならない。事故報告規則第４条（速報）第１項②ロ。４．事業用自動車の転覆により、積載物が漏えいした場合は、速報しなければならない。事故報告規則第４条（速報）第１項④。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "一般貨物自動車運送事業者（以下「事業者」という。）の事業用自動車の運行等の記録に関する次の記述のうち、誤っているものを１つ選びなさい。なお、解答にあたっては、各選択肢に記載されている事項以外は考慮しないものとする。",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "１．安全規則第９条の３（運行指示書による指示等）第４項。２．安全規則第８条（乗務等の記録）第１項⑦。３．安全規則第９条（運行記録計による記録）第１項③。４．事業用自動車に係る事故であるため、物損事故であっても「事故の記録」として記録しなければならない。安全規則第９条の２（事故の記録）第１項。"
+        "text": "数値・期限・例外規定は暗記だけでは混同しやすいため、一覧表や比較表で整理する学習法が有効です。"
       }
     }
   ]
@@ -1281,7 +1230,7 @@ body.is-solving .site-footer{display:none!important}
   <div class="auth-wrap" style="position:relative;background:var(--bg);border-radius:16px;padding:32px 20px 20px;">
     <button onclick="closeLoginModal()" style="position:absolute;top:-12px;right:20px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2)">✕</button>
     <div class="auth-logo">
-      <div class="auth-logo-mark" title="運管マスター">S</div>
+      <div class="auth-logo-mark" title="サービス略称（差し替え）">S</div>
       <h1>運管マスター</h1>
       <p class="auth-logo-fullname">運行管理者試験対策サイト</p>
       <p>合格を科学する学習プラットフォーム</p>
@@ -1322,8 +1271,9 @@ body.is-solving .site-footer{display:none!important}
   <nav class="topnav">
     <div class="topnav-inner">
       <a class="topnav-logo" href="/" onclick="event.preventDefault();gotoPage('quiz-start')" aria-label="運管マスター、運行管理者試験対策のトップへ">
-        <div class="topnav-logo-mark" aria-hidden="true"><span class="logo-mark-line">運管</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></div>
+        <div class="topnav-logo-mark logo-mark--narrow" aria-hidden="true"><span class="logo-mark-line">Sample</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></div>
         <span class="topnav-logo-stack">
+          <span class="topnav-logo-text">運管マスター</span>
           <span class="topnav-logo-sub">運行管理者試験</span>
         </span>
       </a>
@@ -1492,11 +1442,9 @@ body.is-solving .site-footer{display:none!important}
         <p class="ichi-config-lead">分野を選んで「開始」してください。記述が正しいときは○、誤りのときは×で答えます。</p>
         <div class="field-chips" id="ichi-field-chips">
           <button type="button" class="chip on" data-field="" onclick="selectIchiField(this)">全分野</button>
-          <button type="button" class="chip" data-field="jigyo" onclick="selectIchiField(this)">貨物自動車運送事業法関係</button>
-          <button type="button" class="chip" data-field="vehicle" onclick="selectIchiField(this)">道路運送車両法関係</button>
-          <button type="button" class="chip" data-field="traffic" onclick="selectIchiField(this)">道路交通法関係</button>
-          <button type="button" class="chip" data-field="labor" onclick="selectIchiField(this)">労働基準法関係</button>
-          <button type="button" class="chip" data-field="practice" onclick="selectIchiField(this)">実務上の知識及び能力</button>
+          <button type="button" class="chip" data-field="law" onclick="selectIchiField(this)">法令・制度</button>
+          <button type="button" class="chip" data-field="rights" onclick="selectIchiField(this)">契約・実務</button>
+          <button type="button" class="chip" data-field="limit" onclick="selectIchiField(this)">設備・その他</button>
         </div>
         <button type="button" class="btn-primary ichi-start-btn" onclick="beginIchimondouSession()">開始</button>
       </div>
@@ -1773,7 +1721,7 @@ body.is-solving .site-footer{display:none!important}
           <li>契約・実務（契約・実務論点・応用論点・重要事項説明など）</li>
           <li>設備・その他（設備・その他・不動産証券化など）</li>
         </ul>
-        <p style="margin-top:24px;font-size:14px;line-height:2"><a href="about.html">このサイトについて</a> ・ <a href="q/index.html">過去問一覧</a> ・ <a href="q/practice/index.html">実践演習一覧</a> ・ <a href="q/ichimon/index.html">一問一答一覧</a> ・ <a href="terms/index.html">用語集</a> ・ <a href="articles/index.html">試験ガイド</a> ・ <a href="related-sites.html">関連リンク</a> ・ <a href="privacy.html">プライバシー</a> ・ <a href="https://www.unkan.or.jp/contact" target="_blank" rel="noopener noreferrer">お問い合わせ</a></p>
+        <p style="margin-top:24px;font-size:14px;line-height:2"><a href="about.html">このサイトについて</a> ・ <a href="q/index.html">過去問一覧</a> ・ <a href="q/practice/index.html">実践演習一覧</a> ・ <a href="q/ichimon/index.html">一問一答一覧</a> ・ <a href="terms/index.html">用語集</a> ・ <a href="articles/index.html">試験ガイド</a> ・ <a href="related-sites.html">関連リンク</a> ・ <a href="privacy.html">プライバシー</a> ・ <a href="https://forms.gle/c2SxYVPDbdThhnYw8" target="_blank" rel="noopener noreferrer">お問い合わせ</a></p>
       </div>
     </noscript>
 
@@ -1804,8 +1752,6 @@ body.is-solving .site-footer{display:none!important}
     </footer>
 </div>
 
-<!-- site-config.js を SITE_CONFIG / FIELDS 参照より前にロード（運管本番拡張） -->
-<script src="site-config.js"></script>
 <!-- CSV 取り込みデータを QUESTIONS 等へ反映する（exam-site-data-past.js の末尾から呼ばれる） -->
 <script>
 var SITE_CONFIG = window.SITE_CONFIG || {};
@@ -1819,11 +1765,9 @@ var FIELDS = (Array.isArray(SITE_CONFIG.fields) && SITE_CONFIG.fields.length)
       };
     })
   : [
-      { id: 'jigyo', name: '貨物自動車運送事業法関係', aliases:['貨物自動車運送事業法関係','事業法'], legacyGlossaryCat:'jigyo' },
-      { id: 'vehicle', name: '道路運送車両法関係', aliases:['道路運送車両法関係','車両法'], legacyGlossaryCat:'vehicle' },
-      { id: 'traffic', name: '道路交通法関係', aliases:['道路交通法関係','道交法'], legacyGlossaryCat:'traffic' },
-      { id: 'labor', name: '労働基準法関係', aliases:['労働基準法関係','労基法'], legacyGlossaryCat:'labor' },
-      { id: 'practice', name: '実務上の知識及び能力', aliases:['実務上の知識及び能力','実務'], legacyGlossaryCat:'practice' }
+      { id: 'law', name: '法令・制度', aliases:['法令・制度','関連法令'], legacyGlossaryCat:'law' },
+      { id: 'rights', name: '契約・実務', aliases:['契約・実務','実務'], legacyGlossaryCat:'rights' },
+      { id: 'limit', name: '設備・その他', aliases:['設備・その他','その他'], legacyGlossaryCat:'limit' }
     ];
 function getFieldLabel(fieldId){
   var f = FIELDS.find(function(x){ return x.id === fieldId; });
@@ -2383,12 +2327,17 @@ function renderDailyStatus(){
       <div class="mission-prog${done?' done':''}">${prog.cur}/${prog.target}</div>
     </div>`;
   }).join('');
+  const allMissionsDone=missions.every(m=>{
+    const prog=getMissionProgress(m,u);
+    return prog.cur>=prog.target;
+  });
+  const missionShareHTML=allMissionsDone?`<div class="mission-share-row"><button type="button" class="mission-card-share" onclick="shareMissionToX()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.749l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>Xに投稿する</button></div>`:'';
 
   const spotlight = window._missionSpotlightPending ? ' spotlight' : '';
   const calloutHTML = window._missionSpotlightPending
     ? `<div class="mission-callout"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v7"/><path d="M5 6l3 3 3-3"/><path d="M3 13h10"/></svg><span>今日のミッションはこれです。まず1つ、解いてみよう！</span></div>`
     : '';
-  wrap.innerHTML=`<div class="mission-card${spotlight}" id="today-mission-card">${calloutHTML}<div class="mode-card-header"><div class="mode-icon-wrap"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M8 3l5 5-5 5"/></svg></div><div class="mode-card-title">今日のミッション</div></div>${mHTML}</div>`;
+  wrap.innerHTML=`<div class="mission-card${spotlight}" id="today-mission-card">${calloutHTML}<div class="mode-card-header"><div class="mode-icon-wrap"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M8 3l5 5-5 5"/></svg></div><div class="mode-card-title">今日のミッション</div></div>${mHTML}${missionShareHTML}</div>`;
   if(window._missionSpotlightPending){
     window._missionSpotlightPending=false;
     setTimeout(()=>{
@@ -4539,9 +4488,12 @@ function checkMissionAllComplete(){
     const p = getMissionProgress(m, u);
     return p.cur >= p.target;
   });
-  if(allDone && !_missionWasAllDone){
-    showMissionPopup();
-    _missionWasAllDone = true;
+  if(allDone){
+    renderDailyStatus();
+    if(!_missionWasAllDone){
+      showMissionPopup();
+      _missionWasAllDone = true;
+    }
   }
 }
 
@@ -4726,13 +4678,27 @@ function tryOpenNextBadgeEarnPopup(){
 }
 
 const SHARE_URL = (SITE_CONFIG.siteOrigin || 'https://unkan-master.jp');
-const SHARE_TWITTER_HASHTAGS = [(SITE_CONFIG.examName || '運行管理者試験').replace(/[\s（）()]/g,''), '資格学習', (SITE_CONFIG.brandName || '運管マスター').replace(/[\s（）()]/g,'')].join(',');
+function twitterHashtagToken(value){
+  return String(value||'').trim().replace(/#/g,'').replace(/\s+/g,'');
+}
+function getShareTwitterHashtags(){
+  const tags=[
+    twitterHashtagToken(SITE_CONFIG.examShortName||SITE_CONFIG.examAbbrev||SITE_CONFIG.brandMark),
+    twitterHashtagToken(SITE_CONFIG.examName),
+    twitterHashtagToken(SITE_CONFIG.brandName),
+    '資格マスターテンプレ',
+  ].filter(Boolean);
+  return [...new Set(tags)].join(',');
+}
+function getSiteShareLabel(){
+  return `${SITE_CONFIG.brandName||'運管マスター'}（${SITE_CONFIG.examName||'運行管理者試験'}）`;
+}
 /** X Web Intent 用：本文・公式URL・ハッシュタグをパラメータで渡す（投稿欄に読み込まれる） */
 function openTwitterShareIntent(bodyCore){
   const params=new URLSearchParams();
   params.set('text', bodyCore.trim());
   params.set('url', SHARE_URL);
-  params.set('hashtags', SHARE_TWITTER_HASHTAGS);
+  params.set('hashtags', getShareTwitterHashtags());
   window.open(`https://twitter.com/intent/tweet?${params.toString()}`,'_blank','noopener,noreferrer');
 }
 let lastSessionShareData = null;
@@ -5262,7 +5228,7 @@ function saveBadgeShareImage(){
 async function shareMissionToX(){
   const now = new Date();
   const dateStr = `${now.getMonth()+1}月${now.getDate()}日`;
-  openTwitterShareIntent(`運管マスター（運行管理者試験）で今日のミッションをすべてクリアしました。\n${dateStr}も合格を目指して学習を続けています。`);
+  openTwitterShareIntent(`${getSiteShareLabel()}で今日のミッションをすべてクリアしました。\n${dateStr}も合格を目指して学習を続けています。`);
 }
 function buildKaisetsu(k, q){
   if(!k) return '';

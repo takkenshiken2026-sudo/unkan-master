@@ -208,7 +208,22 @@ def update_index_brand_mark(text: str) -> str:
         count=1,
         flags=re.S,
     )
-    text = re.sub(r"\s*<span class=\"topnav-logo-text\">[^<]*</span>", "", text, count=1)
+    name = html.escape(brand_name())
+    if 'class="topnav-logo-text"' in text:
+        text = re.sub(
+            r'(<span class="topnav-logo-text">)[^<]*(</span>)',
+            lambda m: f"{m.group(1)}{name}{m.group(2)}",
+            text,
+            count=1,
+        )
+    else:
+        insert = f'<span class="topnav-logo-text">{name}</span>\n          '
+        text = re.sub(
+            r'(<span class="topnav-logo-stack">\s*)',
+            lambda m: m.group(1) + insert,
+            text,
+            count=1,
+        )
     # 旧 update の残骸（二重 </span>）を除去
     text = re.sub(
         r'(</span></span>)\s*<span class="logo-mark-line logo-mark-line--sub">[^<]+</span></span>',
