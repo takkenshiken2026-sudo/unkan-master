@@ -209,34 +209,24 @@ def _ensure_topnav_logo_stack(text: str) -> str:
     """ヘッダー横に site-config のサイト名・試験名を必ず入れる。"""
     name = html.escape(brand_name())
     exam = html.escape(exam_name())
+    stack = (
+        f'<span class="topnav-logo-stack">\n'
+        f'          <span class="topnav-logo-text">{name}</span>\n'
+        f'          <span class="topnav-logo-sub">{exam}</span>\n'
+        f"        </span>"
+    )
     stack_re = re.compile(
-        r'(<span class="topnav-logo-stack">\s*)(.*?)(\s*</span>)',
+        r'<span class="topnav-logo-stack">.*?</span>\s*(?=</a>|</div>\s*</div>|</header>)',
         re.S,
     )
-
-    def repl(m: re.Match[str]) -> str:
-        inner = m.group(2)
-        if re.search(r'<span class="topnav-logo-text">', inner):
-            inner = re.sub(
-                r'(<span class="topnav-logo-text">)[^<]*(</span>)',
-                lambda mm: f"{mm.group(1)}{name}{mm.group(2)}",
-                inner,
-                count=1,
-            )
-        else:
-            inner = f'<span class="topnav-logo-text">{name}</span>\n          ' + inner.lstrip()
-        if re.search(r'<span class="topnav-logo-sub">', inner):
-            inner = re.sub(
-                r'(<span class="topnav-logo-sub">)[^<]*(</span>)',
-                lambda mm: f"{mm.group(1)}{exam}{mm.group(2)}",
-                inner,
-                count=1,
-            )
-        else:
-            inner = inner.rstrip() + f'\n          <span class="topnav-logo-sub">{exam}</span>'
-        return m.group(1) + inner + m.group(3)
-
-    return stack_re.sub(repl, text, count=1)
+    if stack_re.search(text):
+        return stack_re.sub(stack, text, count=1)
+    return re.sub(
+        r'(</div>\s*)(<span class="topnav-logo-stack">)',
+        r"\1" + stack,
+        text,
+        count=1,
+    )
 
 
 def update_index_brand_mark(text: str) -> str:
