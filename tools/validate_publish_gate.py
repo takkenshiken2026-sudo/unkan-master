@@ -23,6 +23,7 @@ def main() -> int:
     articles = ROOT / "articles"
     if articles.is_dir() and any(articles.iterdir()):
         run([py, "tools/validate_guide_html_coherence.py"])
+        run([py, "tools/audit_guide_prose_quality.py", "--root", str(ROOT), "--strict"])
     else:
         print("skip: validate_guide_html_coherence (articles/ not built yet — run build_article_pages first)")
     print("\nOK: publish gate passed")

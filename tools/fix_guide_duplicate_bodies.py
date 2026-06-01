@@ -65,20 +65,9 @@ def load_site_lib(root: Path) -> ModuleType:
     raise RuntimeError(f"no guide content lib for exam={exam!r} brand={brand!r}")
 
 
-def section_unique_tail(
-    *,
-    slug: str,
-    title: str,
-    topic: str,
-    heading: str,
-    idx: int,
-    official: str,
-) -> str:
-    short_title = title.split("【", 1)[0].strip() or title or slug
-    return (
-        f"記事 {slug}「{short_title}」では「{heading}」（第{idx}節）の要点を、"
-        f"{official}の最新要項と演習解説で照合しながら整理します。"
-    )
+def section_min_pad(*, heading: str, official: str) -> str:
+    """180字未満の節を補う読者向け1文（slug・節番号は出さない）。"""
+    return f"「{heading}」の詳細は{official}の最新要項と受験票で確認してください。"
 
 
 def ensure_visible_min(
@@ -121,6 +110,11 @@ def pad_all_visible_sections(rows: list[dict[str, str]], fieldnames: list[str], 
         topic = getattr(lib, "topic_from_row", lambda r: short_topic_from_title(title))(row)
         if not topic:
             topic = short_topic_from_title(title)
+        exam = getattr(lib, "EXAM", "")
+        exam_short = getattr(lib, "EXAM_SHORT", "")
+        from tools.guide_topic_normalize import strip_exam_prefix
+
+        topic = strip_exam_prefix(topic, exam, exam_short)
         for idx in range(1, 9):
             bcol = f"section_{idx}_body"
             heading = norm(row.get(f"section_{idx}_heading"))
@@ -129,20 +123,13 @@ def pad_all_visible_sections(rows: list[dict[str, str]], fieldnames: list[str], 
                 continue
             visible = reader_facing_text(row, bcol, raw)
             if len(visible) < 180:
-                tail = section_unique_tail(
-                    slug=slug,
-                    title=title,
-                    topic=topic,
-                    heading=heading,
-                    idx=idx,
-                    official=official,
-                )
-                row[bcol] = f"{visible}\n\n{tail}" if tail not in visible else visible
+                pad = section_min_pad(heading=heading, official=official)
+                row[bcol] = f"{visible}\n\n{pad}" if pad not in visible else visible
                 if ensure_visible_min(
                     row,
                     bcol,
                     180,
-                    filler=f"{topic}の「{heading}」は{official}で確認してください。",
+                    filler=section_min_pad(heading=heading, official=official),
                 ):
                     count += 1
     return count
@@ -186,6 +173,23 @@ def repair_coherence_faqs(rows: list[dict[str, str]], fieldnames: list[str], lib
     return count
 
 
+def slugs_with_coherence_errors(rows: list[dict[str, str]]) -> set[str]:
+    from tools.editorial_quality import is_published_guide  # noqa: E402
+    from tools.guide_coherence_rules import check_guide_row_coherence  # noqa: E402
+
+    targets: set[str] = set()
+    for row in rows:
+        slug = norm(row.get("slug"))
+        if not slug or not is_published_guide(row):
+            continue
+        if any(
+            issue.level == "ERROR"
+            for issue in check_guide_row_coherence(row, published=True)
+        ):
+            targets.add(slug)
+    return targets
+
+
 def slugs_with_duplicate_bodies(rows: list[dict[str, str]]) -> set[str]:
     from tools.audit_editorial_quality import audit_guide_cross_duplicates  # noqa: E402
 
@@ -211,6 +215,11 @@ def patch_row_sections(row: dict[str, str], fieldnames: list[str], lib: ModuleTy
     topic = getattr(lib, "topic_from_row", lambda r: short_topic_from_title(title))(row)
     if not topic:
         topic = short_topic_from_title(title)
+    exam = getattr(lib, "EXAM", "")
+    exam_short = getattr(lib, "EXAM_SHORT", "")
+    from tools.guide_topic_normalize import strip_exam_prefix
+
+    topic = strip_exam_prefix(topic, exam, exam_short)
     genre = norm(row.get("genre"))
     ctx: dict = {}
     official = getattr(lib, "OFFICIAL", "試験実施団体（公式）")
@@ -225,22 +234,15 @@ def patch_row_sections(row: dict[str, str], fieldnames: list[str], lib: ModuleTy
             continue
         if bcol not in fieldnames:
             continue
-        body = lib.section_body_for(heading, topic, slug, genre, ctx)
+        from tools.guide_section_resolve import section_body_from_lib  # noqa: E402
+
+        body = section_body_from_lib(lib, heading, topic, slug, genre, ctx)
         row[bcol] = sanitize_guide_text(body, slug)
-        unique = section_unique_tail(
-            slug=slug,
-            title=title,
-            topic=topic,
-            heading=heading,
-            idx=idx,
-            official=official,
-        )
-        row[bcol] = sanitize_guide_text(f"{row[bcol]}\n\n{unique}", slug)
         ensure_visible_min(
             row,
             bcol,
             180,
-            filler=f"{topic}の「{heading}」は{official}で確認してください。",
+            filler=section_min_pad(heading=heading, official=official),
         )
 
     for idx in range(1, 5):
@@ -269,6 +271,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="ガイド section 本文の使い回しを修復")
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--slug", action="append", help="明示 slug（省略時は duplicate 検出）")
+    parser.add_argument(
+        "--all-published",
+        action="store_true",
+        help="published 全 slug の section を lib から再生成",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--max-pass",
@@ -292,8 +299,19 @@ def main() -> int:
         rows = list(reader)
 
     patched: list[str] = []
+    from tools.editorial_quality import is_published_guide  # noqa: E402
+
+    all_published = {
+        norm(row.get("slug"))
+        for row in rows
+        if norm(row.get("slug")) and is_published_guide(row)
+    }
+
     for _pass in range(max(1, args.max_pass)):
-        targets = set(args.slug or []) or slugs_with_duplicate_bodies(rows)
+        if args.all_published:
+            targets = all_published
+        else:
+            targets = set(args.slug or []) or slugs_with_duplicate_bodies(rows) | slugs_with_coherence_errors(rows)
         if not targets and _pass > 0:
             break
         for row in rows:

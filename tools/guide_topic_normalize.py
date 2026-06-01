@@ -43,15 +43,21 @@ def exam_topic_clause(exam: str, topic: str, exam_short: str = "") -> str:
 
 
 def scrub_exam_duplication(text: str, exam: str, exam_short: str = "") -> str:
-    """CSV 既存文の「試験名＋短称」二重化を除去する。"""
-    if not text or not exam:
+    """CSV 既存文の「試験名＋短称」二重化・について。途切れを除去する。"""
+    if not text:
         return text
     out = text
-    aliases = [a for a in (exam_short, exam) if a]
-    for alias in sorted(set(aliases), key=len, reverse=True):
-        out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}\s+", f"{exam}の", out)
-        out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}の", f"{exam}の", out)
-        if alias != exam:
-            out = re.sub(rf"{re.escape(exam)}の{re.escape(exam)}", exam, out)
-    out = re.sub(rf"({re.escape(exam)}の)\1+", r"\1", out)
+    if exam:
+        aliases = [a for a in (exam_short, exam) if a]
+        for alias in sorted(set(aliases), key=len, reverse=True):
+            out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}\s+", f"{exam}の", out)
+            out = re.sub(rf"{re.escape(exam)}の{re.escape(alias)}の", f"{exam}の", out)
+            if alias != exam:
+                out = re.sub(rf"{re.escape(exam)}の{re.escape(exam)}", exam, out)
+        out = re.sub(rf"({re.escape(exam)}の)\1+", r"\1", out)
+    out = re.sub(
+        r"(「[^」]+」(?:では|に関する)[^。]+について)。(?=[^。\n]*(?:公式|受験要項))",
+        r"\1、",
+        out,
+    )
     return re.sub(r"[ \t]{2,}", " ", out).strip()
