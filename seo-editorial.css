@@ -212,6 +212,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 .seo-editorial.seo-article-card blockquote a,
 .seo-editorial.seo-article-card .seo-key-points-box a {
   color: var(--seo-link-inline);
+  font-size: inherit;
   font-weight: var(--seo-font-weight-heading);
   text-decoration: underline;
   text-decoration-thickness: 1.5px;

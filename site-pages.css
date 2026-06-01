@@ -5656,7 +5656,7 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 }
 .guide-article-page .related-link,
 .guide-article-page .quality-source-list a,
-.guide-article-page .article-body a {
+.guide-article-page .article-body:not(.seo-editorial) a {
   color: var(--ink);
   font-size: var(--fs-sub);
 }
