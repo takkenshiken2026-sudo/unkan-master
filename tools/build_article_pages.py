@@ -38,6 +38,7 @@ from tools.site_config import (  # noqa: E402
 )
 
 from tools.seo_editorial_chrome import (  # noqa: E402
+    seo_brand_asset_tags,
     seo_editorial_article_class,
     seo_editorial_head_fonts,
     seo_editorial_stylesheet_links,
@@ -587,6 +588,7 @@ def build_article_html(
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(rel_path)}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}｜{html.escape(brand_name())}</title>
 <meta name="description" content="{html.escape(desc)}">
@@ -596,7 +598,7 @@ def build_article_html(
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{html.escape(canonical)}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
 {json.dumps(json_ld, ensure_ascii=False, indent=2)}
 </script>
@@ -733,6 +735,7 @@ def build_index_html(articles: list[dict[str, str]]) -> str:
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(Path("articles/index.html"))}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
@@ -742,6 +745,7 @@ def build_index_html(articles: list[dict[str, str]]) -> str:
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{html.escape(canonical)}">
+<meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
 {ld_json}
 </script>

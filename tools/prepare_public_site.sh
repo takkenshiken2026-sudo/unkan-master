@@ -61,6 +61,10 @@ if [[ -f "$ROOT/docs/glossary-article-slugs.json" ]]; then
   mkdir -p "$OUT/docs"
   cp "$ROOT/docs/glossary-article-slugs.json" "$OUT/docs/"
 fi
+if [[ -d "$ROOT/assets/brand" ]]; then
+  mkdir -p "$OUT/assets"
+  cp -R "$ROOT/assets/brand" "$OUT/assets/"
+fi
 n="$(find "$OUT" -type f | wc -l | tr -d ' ')"
 if grep -q 'site-spa.css' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/site-spa.css" ]]; then
   echo "prepare_public_site.sh: index.html が site-spa.css を参照していますが public_site にありません。" >&2

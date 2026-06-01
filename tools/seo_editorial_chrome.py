@@ -62,3 +62,9 @@ def seo_editorial_article_class(*, extra: str = "") -> str:
     if extra.strip():
         return f"{base} {extra.strip()}"
     return base
+
+
+def seo_brand_asset_tags(rel_path: Path) -> str:
+    from tools.brand_assets import brand_head_markup
+
+    return brand_head_markup(rel_path)

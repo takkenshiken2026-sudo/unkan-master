@@ -32,6 +32,7 @@ from tools.site_config import (
     fields,
 )
 from tools.html_footer import site_page_footer, site_page_header, site_shell_footer
+from tools.brand_assets import inject_brand_head
 
 
 TEXT_TARGETS = [
@@ -337,6 +338,9 @@ def main() -> int:
             continue
         old = path.read_text(encoding="utf-8")
         new = replace_static_chrome(replace_all(old), path)
+        rel = path.relative_to(ROOT)
+        if path.suffix == ".html":
+            new = inject_brand_head(new, rel, site_root=ROOT)
         if path == ROOT / "index.html":
             new = ensure_index_theme(new)
             new = update_index_shell_footer(new)
