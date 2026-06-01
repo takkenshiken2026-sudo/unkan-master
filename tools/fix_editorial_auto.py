@@ -115,6 +115,22 @@ def fix_faq_questions(row: dict[str, str], *, prefix: str = "faq_", count: int =
 def split_long_sentences(text: str, *, max_chars: int = 72) -> str:
     if not text:
         return text
+
+    def _safe_cut(sent: str, cut: int) -> int:
+        while cut > 20:
+            head = sent[:cut]
+            if re.search(r"第\d*$", head):
+                cut -= 1
+                continue
+            if head.endswith("（") or head.endswith("("):
+                cut -= 1
+                continue
+            if cut < len(sent) and sent[cut] in "）)節":
+                cut -= 1
+                continue
+            break
+        return cut
+
     paras = split_paragraphs(text) or [text]
     out_paras: list[str] = []
     for para in paras:
@@ -135,8 +151,11 @@ def split_long_sentences(text: str, *, max_chars: int = 72) -> str:
                 head, sent = sent[: idx + 1].rstrip("、") + "。", sent[idx + 1 :].lstrip()
                 sentences.append(head)
             while len(sent) > max_chars:
-                head = sent[:max_chars].rstrip("、") + "。"
-                sent = sent[max_chars:].lstrip()
+                cut = _safe_cut(sent, max_chars)
+                if cut <= 20:
+                    break
+                head = sent[:cut].rstrip("、") + "。"
+                sent = sent[cut:].lstrip()
                 sentences.append(head)
             if sent:
                 if not sent.endswith(("。", "！", "？")):
@@ -732,8 +751,43 @@ def _official_url(root: Path) -> str:
     return str(cfg.get("siteOrigin") or "https://example.com")
 
 
-def fix_guide_rows(rows: list[dict[str, str]], *, header: list[str], official_url: str) -> int:
+def _exam_aliases(root: Path) -> tuple[str, str]:
+    try:
+        from tools.fix_guide_duplicate_bodies import load_site_lib
+
+        lib = load_site_lib(root)
+        return getattr(lib, "EXAM", ""), getattr(lib, "EXAM_SHORT", "")
+    except Exception:
+        cfg_path = root / "site-config.json"
+        if not cfg_path.is_file():
+            return "", ""
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        return str(cfg.get("examName") or ""), str(cfg.get("brandMark") or "")
+
+
+def scrub_exam_duplicate_fields(row: dict[str, str], exam: str, exam_short: str) -> None:
+    from tools.guide_topic_normalize import scrub_exam_duplication
+
+    cols: list[str] = ["lead", "user_intent", "meta_description", "action_items"]
+    cols.extend(f"section_{n}_body" for n in range(1, 8))
+    for col in cols:
+        text = norm(row.get(col))
+        if not text:
+            continue
+        cleaned = scrub_exam_duplication(text, exam, exam_short)
+        if cleaned != text:
+            row[col] = cleaned
+
+
+def fix_guide_rows(
+    rows: list[dict[str, str]],
+    *,
+    header: list[str],
+    official_url: str,
+    root: Path,
+) -> int:
     changed = 0
+    exam, exam_short = _exam_aliases(root)
     slug_pool = [
         norm(r.get("slug"))
         for r in rows
@@ -754,6 +808,7 @@ def fix_guide_rows(rows: list[dict[str, str]], *, header: list[str], official_ur
         fix_hub_usage_guide(row)
         fix_section_bodies(row)
         fix_guide_related_links(row, slug_pool=slug_pool)
+        scrub_exam_duplicate_fields(row, exam, exam_short)
         for col in ("lead", "user_intent", "meta_description"):
             text = norm(row.get(col))
             if text:
@@ -780,7 +835,7 @@ def fix_site(root: Path, *, dry_run: bool) -> dict[str, int]:
             _write_csv(glossary, header, rows)
     if guide.is_file():
         header, rows = _read_csv(guide)
-        stats["guide"] = fix_guide_rows(rows, header=header, official_url=official_url)
+        stats["guide"] = fix_guide_rows(rows, header=header, official_url=official_url, root=root)
         if not dry_run and stats["guide"]:
             _write_csv(guide, header, rows)
     return stats

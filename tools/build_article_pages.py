@@ -85,6 +85,12 @@ def split_semicolon(value: str) -> list[str]:
 
 
 GUIDE_INTERNAL_MARKER_RE = re.compile(r"（記事:[^）]+）")
+GUIDE_SECTION_META_TAIL_RE = re.compile(
+    r"記事\s+\S+\s*「[^」]+」では「[^」]+」（第[\d。]+節[^）]*）の[^。]*整理します。?"
+)
+GUIDE_KEYWORD_BOILER_RE = re.compile(
+    r"「[^」]+」では、[^。]+について。衛生管理者の現場判断と3分野[^。]+整理します。"
+)
 
 
 INCOMPLETE_SECTION_TAIL_RE = re.compile(r"^.+の「[^」]+」(?:では|で)[。、,]?\s*$")
@@ -99,9 +105,12 @@ SALT_LIST_ONLY_RE = re.compile(
 def sanitize_guide_text(text: str, slug: str = "") -> str:
     """量産テンプレの内部マーカー（記事:slug 等）を読者向け本文から除去する。"""
     out = GUIDE_INTERNAL_MARKER_RE.sub("", text or "")
+    out = GUIDE_SECTION_META_TAIL_RE.sub("", out)
+    out = GUIDE_KEYWORD_BOILER_RE.sub("", out)
     if slug:
         out = re.sub(rf"（{re.escape(slug)}）", "", out)
         out = re.sub(rf"\({re.escape(slug)}\)", "", out)
+        out = re.sub(rf"記事\s+{re.escape(slug)}\s*", "", out)
     out = re.sub(r"[^。!\?？\n]*の「[^」]+」(?:では|で)。", "", out)
     out = INCOMPLETE_INLINE_TAIL_RE.sub("", out)
     out = re.sub(
