@@ -65,9 +65,11 @@ def load_site_lib(root: Path) -> ModuleType:
     raise RuntimeError(f"no guide content lib for exam={exam!r} brand={brand!r}")
 
 
-def section_min_pad(*, heading: str, official: str) -> str:
-    """180字未満の節を補う読者向け1文（slug・節番号は出さない）。"""
-    return f"「{heading}」の詳細は{official}の最新要項と受験票で確認してください。"
+def section_min_pad(*, heading: str, topic: str, official: str) -> str:
+    """180字未満の節を補う読者向け具体文（メタ確認だけの1文は使わない）。"""
+    from tools.guide_content_shared import section_body_min_filler
+
+    return section_body_min_filler(heading, topic, official)
 
 
 def ensure_visible_min(
@@ -123,13 +125,13 @@ def pad_all_visible_sections(rows: list[dict[str, str]], fieldnames: list[str], 
                 continue
             visible = reader_facing_text(row, bcol, raw)
             if len(visible) < 180:
-                pad = section_min_pad(heading=heading, official=official)
+                pad = section_min_pad(heading=heading, topic=topic, official=official)
                 row[bcol] = f"{visible}\n\n{pad}" if pad not in visible else visible
                 if ensure_visible_min(
                     row,
                     bcol,
                     180,
-                    filler=section_min_pad(heading=heading, official=official),
+                    filler=section_min_pad(heading=heading, topic=topic, official=official),
                 ):
                     count += 1
     return count
@@ -168,7 +170,7 @@ def repair_coherence_faqs(rows: list[dict[str, str]], fieldnames: list[str], lib
                 row,
                 acol,
                 100,
-                filler=f"{topic}の要点は{official}で確認してください。",
+                filler=f"{topic}の論点は演習と{official}の要項で確認してください。",
             )
     return count
 
@@ -242,7 +244,7 @@ def patch_row_sections(row: dict[str, str], fieldnames: list[str], lib: ModuleTy
             row,
             bcol,
             180,
-            filler=section_min_pad(heading=heading, official=official),
+            filler=section_min_pad(heading=heading, topic=topic, official=official),
         )
 
     for idx in range(1, 5):
@@ -263,7 +265,7 @@ def patch_row_sections(row: dict[str, str], fieldnames: list[str], lib: ModuleTy
             row,
             acol,
             100,
-            filler=f"{topic}の要点は{official}で確認してください。",
+            filler=f"{topic}の論点は演習と{official}の要項で確認してください。",
         )
 
 

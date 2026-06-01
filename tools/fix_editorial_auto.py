@@ -156,6 +156,18 @@ def split_long_sentences(text: str, *, max_chars: int = 72) -> str:
                     idx = sent.rfind("、", 0, idx)
                     if idx <= 0:
                         break
+                if idx >= 3 and sent[idx - 3 : idx + 1] == "要点を、":
+                    idx = sent.rfind("、", 0, idx)
+                    if idx <= 0:
+                        break
+                if idx >= 3 and sent[idx - 3 : idx + 1] == "を開き、":
+                    idx = sent.rfind("、", 0, idx)
+                    if idx <= 0:
+                        break
+                if idx >= 3 and sent[idx - 3 : idx + 1] == "メモし、":
+                    idx = sent.rfind("、", 0, idx)
+                    if idx <= 0:
+                        break
                 head, sent = sent[: idx + 1].rstrip("、") + "。", sent[idx + 1 :].lstrip()
                 sentences.append(head)
             while len(sent) > max_chars:
@@ -317,13 +329,13 @@ def _guide_faq_body(row: dict[str, str], *, index: int, question: str) -> str:
 
     if "独学" in q:
         body = (
-            f"「{q_short}」→ 公式テキスト＋過去問演習＋用語解説の3点セットで進める。"
+            f"「{q_short}」については、公式テキスト＋過去問演習＋用語解説の3点セットで進める。"
             f"弱点は比較表で補強する。"
         )
         return _pad_faq(body, index=index, term=topic)
 
     if index == 0:
-        body = f"「{q_short}」→ {lead or topic}。最新の公式要項と照合する。"
+        body = f"「{q_short}」については、{lead or topic}。最新の公式要項と照合する。"
     elif index == 1:
         body = f"「{q_short}」は過去問演習で出題形式を把握し、正答後に用語解説で論点を復習する。"
     else:
@@ -663,8 +675,6 @@ def fix_section_bodies(row: dict[str, str]) -> None:
         text = apply_readability(text)
         text = split_long_sentences(text, max_chars=78)
         text = ensure_concreteness(text, term=norm(row.get("topic")) or norm(row.get("title")))
-        if len(text) < 180:
-            text = text.rstrip("。") + "。学習時は公式要項の最新版と照合してください。"
         row[col] = normalize_prose(text)
 
 

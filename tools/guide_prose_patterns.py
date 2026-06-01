@@ -29,6 +29,23 @@ VAGUE_CHECKLIST_RE = re.compile(
     r"禁止物品の有無をチェックリストに書き出|"
     r"持ち物（鉛筆・消しゴム・身分証など）、会場・開始時刻"
 )
+TAIL_SECTION_REF_RE = re.compile(
+    r"「[^」]+」の詳細は[^。]+(?:最新要項|演習解説|受験票)[^。]*(?:確認|照合)"
+)
+VAGUE_USER_INTENT_RE = re.compile(
+    r"行動チェックリストに沿って|"
+    r"確認すべき点と、演習・用語解説を使った復習の進め方"
+)
+SUBJECT_BOILER_RE = re.compile(r"条文や指針の主体（事業者・[^）]+）をセットで")
+FAQ_ARROW_RE = re.compile(r"FAQ\d+「」|「[^」]+」→")
+BROKEN_FALLBACK_RE = re.compile(r"の要点を。|要点を。\s")
+GENERIC_ACTION_RE = re.compile(
+    r"混同語を1周|分野タグ付き問題を10問|分野タグ付き(?:の)?演習|似た論点を1周"
+)
+META_CONFIRM_PAD_RE = re.compile(
+    r"学習時は公式要項の最新版と照合してください|"
+    r"の要点は[^。]+で確認してください。?$"
+)
 
 
 @dataclass(frozen=True)
@@ -71,6 +88,13 @@ def scan_prose_text(
         ("dup_official", DUP_OFFICIAL_RE),
         ("vague_checklist", VAGUE_CHECKLIST_RE),
         ("vague_access", VAGUE_ACCESS_RE),
+        ("tail_section_ref", TAIL_SECTION_REF_RE),
+        ("vague_user_intent", VAGUE_USER_INTENT_RE),
+        ("subject_boiler", SUBJECT_BOILER_RE),
+        ("faq_arrow", FAQ_ARROW_RE),
+        ("broken_fallback", BROKEN_FALLBACK_RE),
+        ("generic_action", GENERIC_ACTION_RE),
+        ("meta_confirm_pad", META_CONFIRM_PAD_RE),
     ]
     dup = exam_dup_re(exam, exam_short)
     if dup:

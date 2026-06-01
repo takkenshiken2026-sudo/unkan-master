@@ -45,19 +45,91 @@ def keyword_fallback_default(
     two_paragraphs_fn: Callable[[str, str], str],
 ) -> str:
     label = topic_label(topic, exam, exam_short)
-    if exam and exam not in label:
-        subject = f"{exam}の{label}"
-    else:
-        subject = label
     return two_paragraphs_fn(
-        f"「{heading}」に関する{subject}の要点を、{official}の受験要項と受験票で整理します。"
-        f"公式テキストの該当章を開きながら読むと、演習問題の解説とも対応づけやすくなります。",
+        f"「{heading}」は{label}の論点の一つです。"
+        f"{official}の受験要項と公式テキストで整理すると、演習問題の解説と対応づけやすくなります。",
         f"{official_note_fn()} {practice_note_fn(label)}",
     )
 
 
+def section_body_min_filler(heading: str, topic: str, official: str) -> str:
+    """180字未満の節を補う具体文（メタ確認だけの1文は使わない）。"""
+    label = (topic or heading).strip() or heading
+    return (
+        f"「{heading}」では、{label}について公式テキストの該当章を開き、"
+        f"主体・期限・数値をメモしながら演習問題で定着を確認します。"
+        f"数値・日程は{official}の最新要項で必ず照合してください。"
+    )
+
+
 def section_body_tail(heading: str, official: str) -> str:
-    return f"「{heading}」の詳細は{official}の最新要項と演習解説で照合してください。"
+    """後方互換。ensure_min 用は section_body_min_filler を使う。"""
+    return section_body_min_filler(heading, "", official)
+
+
+def user_intent_prose(
+    topic: str,
+    exam: str,
+    exam_short: str,
+    official: str,
+    genre: str = "",
+) -> str:
+    clause = exam_topic_clause(exam, topic, exam_short)
+    if genre == "試験概要":
+        return (
+            f"本記事を読むと、{clause}、"
+            f"受験資格・日程・合格基準の確認手順と、演習・用語解説を組み合わせた学習の始め方が分かります。"
+        )
+    if genre == "受験・申込":
+        return (
+            f"本記事を読むと、{clause}、"
+            f"申込前に要項で確認すべき項目と、受験票到着後の準備までの流れが整理できます。"
+        )
+    if genre == "用語ハブ活用法":
+        return (
+            f"本記事を読むと、{clause}、"
+            f"用語解説→演習→比較表の往復で弱点を埋める具体的な手順が分かります。"
+        )
+    return (
+        f"本記事を読むと、{clause}、"
+        f"公式テキストと{official}で押さえる論点と、演習→用語解説→1週間後の解き直しまでの復習順が具体的に分かります。"
+    )
+
+
+def action_items_prose(
+    topic: str,
+    exam: str,
+    exam_short: str,
+    official: str,
+    slug: str = "",
+    genre: str = "",
+) -> str:
+    _ = slug, genre
+    label = topic_label(topic, exam, exam_short)
+    return ";".join(
+        [
+            f"{official}で{label}の最新要項（日程・合格基準）を確認する",
+            f"演習で{label}に関連する設問を10問解き、誤答理由をノートに書く",
+            f"誤答に出た用語を用語解説で定義・試験論点まで確認する",
+            f"比較表・よくある誤答で{label}の混同しやすい語を整理する",
+            f"1週間後に同分野の演習を解き直し、定着を確認する",
+        ][:5]
+    )
+
+
+def faq_official_verify_answer(
+    question: str,
+    topic: str,
+    exam: str,
+    exam_short: str,
+    official: str,
+) -> str:
+    q = (question or "").strip().rstrip("？?")
+    label = topic_label(topic, exam, exam_short)
+    return (
+        f"「{q}」は{exam}の公式テキスト該当章と{official}で確認するのが確実です。"
+        f"{label}では、条文の要件（誰が・いつ・何を）を演習問題とセットで押さえてください。"
+    )
 
 
 EXAM_DAY_KEYWORD_CHECKS: tuple[tuple[tuple[str, ...], str], ...] = (
