@@ -52,6 +52,7 @@ from tools.html_footer import (
     static_footer_block,
     static_site_header,
 )
+from tools.seo_editorial_chrome import seo_brand_asset_tags
 from tools.site_config import brand_name, clean_origin, exam_name
 
 DATA_CSV = ROOT / "data" / "past_questions.csv"
@@ -706,6 +707,7 @@ def build_question_html(
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(rel_path)}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
@@ -715,7 +717,7 @@ def build_question_html(
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{html.escape(canonical)}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 {HEAD_FONTS}
 <link rel="stylesheet" href="{html.escape(css_href)}">
 <link rel="stylesheet" href="{html.escape(theme_href)}">
@@ -875,11 +877,13 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(Path("q/index.html"))}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(page_title)}</title>
 <meta name="description" content="{html.escape(page_desc)}">
 <meta property="og:title" content="{html.escape(page_title)}">
 <meta property="og:description" content="{html.escape(page_desc)}">
+<meta name="twitter:card" content="summary_large_image">
 {ROBOTS_INDEX_FOLLOW}
 <link rel="canonical" href="{html.escape(public_url(base_url, "q/index.html"))}">
 {HEAD_FONTS}

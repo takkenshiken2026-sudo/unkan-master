@@ -73,6 +73,7 @@ from tools.q_page_seo import (
     study_modes_note_html,
 )
 from tools.site_config import brand_name, category_order, clean_origin, exam_name
+from tools.seo_editorial_chrome import seo_brand_asset_tags
 
 PRACTICE_CSV = ROOT / "data" / "practice_questions.csv"
 ICHIMON_CSV = ROOT / "data" / "ichimon_questions.csv"
@@ -424,6 +425,7 @@ def build_practice_question_html(
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(rel_path)}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
@@ -433,7 +435,7 @@ def build_practice_question_html(
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{html.escape(canonical)}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 {HEAD_FONTS}
 <link rel="stylesheet" href="{html.escape(rel_css(rel_path))}">
 <link rel="stylesheet" href="{html.escape(rel_theme_css(rel_path))}">
@@ -569,6 +571,7 @@ def build_ichimon_question_html(
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(rel_path)}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
@@ -578,7 +581,7 @@ def build_ichimon_question_html(
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{html.escape(canonical)}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 {HEAD_FONTS}
 <link rel="stylesheet" href="{html.escape(rel_css(rel_path))}">
 <link rel="stylesheet" href="{html.escape(rel_theme_css(rel_path))}">
@@ -784,6 +787,7 @@ def build_mode_index(
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+{seo_brand_asset_tags(rel_path)}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(page_title)}</title>
 <meta name="description" content="{html.escape(desc)}">
