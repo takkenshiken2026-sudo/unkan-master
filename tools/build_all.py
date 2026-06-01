@@ -19,29 +19,7 @@ def run(cmd: list[str]) -> None:
 def main() -> int:
     py = sys.executable
     run([py, "tools/validate_csv.py"])
-    run([py, "tools/audit_editorial_quality.py"])
-    run([py, "tools/apply_site_config.py"])
-    run([py, "tools/csv_to_exam_site_past_js.py"])
-    run([py, "tools/csv_to_exam_site_ichimondou_js.py"])
-    run([py, "tools/build_past_question_pages.py"])
-    run([py, "tools/build_article_pages.py"])
-    run([py, "tools/validate_guide_html_coherence.py"])
-    run([py, "tools/build_glossary_pages.py"])
-    for hub_step in (
-        "tools/build_compare_pages.py",
-        "tools/build_numbers_mistakes_pages.py",
-    ):
-        if (ROOT / hub_step).is_file():
-            run([py, hub_step])
-    # 用語ページ生成後に一問一答を組み立て（terms へのリンクを正す）
-    run([py, "tools/build_practice_ichimon_pages.py"])
-    run([py, "tools/build_sitemap.py"])
-    run([py, "tools/validate_sitemap.py"])
-    run([py, "tools/validate_generated_seo.py"])
-    run([py, "tools/validate_site_integration.py"])
-    run([py, "tools/validate_internal_links.py"])
-    run([py, "tools/validate_public_content.py"])
-    run(["bash", "tools/prepare_public_site.sh"])
+    run(["bash", "tools/ci_deploy_build.sh"])
     return 0
 
 
