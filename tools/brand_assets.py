@@ -18,10 +18,34 @@ from tools.site_config import (
     theme,
 )
 
-FONT_BOLD = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
-FONT_REG = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 BRAND_DIR = "assets/brand"
 MARKER = "<!--BRAND_ASSET_HEAD-->"
+
+
+def _font_candidates(*, bold: bool) -> list[Path]:
+    if bold:
+        return [
+            Path("/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"),
+            Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
+            Path("/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc"),
+            Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+            Path("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
+        ]
+    return [
+        Path("/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"),
+        Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+        Path("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+        Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+    ]
+
+
+def _resolve_font_path(*, bold: bool) -> str:
+    for path in _font_candidates(bold=bold):
+        if path.is_file():
+            return str(path)
+    kind = "bold" if bold else "regular"
+    raise FileNotFoundError(f"No {kind} font found for brand asset generation")
 
 
 def theme_ink() -> str:
@@ -57,7 +81,7 @@ def assets_ready(site_root: Path | None = None) -> bool:
 def _fit_font(draw, text: str, max_w: int, start_size: int, *, bold: bool = True):
     from PIL import ImageFont
 
-    path = FONT_BOLD if bold else FONT_REG
+    path = _resolve_font_path(bold=bold)
     size = start_size
     while size >= 6:
         font = ImageFont.truetype(path, size, index=0)
