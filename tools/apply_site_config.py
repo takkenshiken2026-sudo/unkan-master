@@ -246,38 +246,66 @@ def update_index_brand_mark(text: str) -> str:
 INDEX_LOGO_MARK_CSS = """\
 .topnav-logo-mark,.site-footer-logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:var(--ink);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;font-family:var(--font);color:var(--bg2);box-sizing:border-box}
 .topnav-logo-mark .logo-mark-line,.site-footer-logo-mark .logo-mark-line{display:block;font-size:12px;font-weight:700;line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:.02em}
-.topnav-logo-mark .logo-mark-line--sub,.site-footer-logo-mark .logo-mark-line--sub{font-size:11px;letter-spacing:.04em}
-.site-footer-logo-mark{min-width:46px;min-height:30px;padding:4px 8px 3px;border-radius:3px}
-.site-footer-logo-mark .logo-mark-line{font-size:10px}
-.site-footer-logo-mark .logo-mark-line--sub{font-size:9px}"""
+.topnav-logo-mark .logo-mark-line--sub,.site-footer-logo-mark .logo-mark-line--sub{font-size:11px;letter-spacing:.04em}"""
+
+INDEX_LOGO_MOBILE_CSS = (
+    "  .topnav-logo-mark,.site-footer-logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}"
+    "  .topnav-logo-mark .logo-mark-line,.site-footer-logo-mark .logo-mark-line{font-size:11px}"
+    "  .topnav-logo-mark .logo-mark-line--sub,.site-footer-logo-mark .logo-mark-line--sub{font-size:10px}"
+)
+
+_LEGACY_FOOTER_LOGO_CSS_RES = (
+    re.compile(r"\.site-footer-logo-mark\{width:22px;height:22px[^}]+\}\n?", re.S),
+    re.compile(r"  \.site-footer-logo-mark\{width:20px;height:20px[^}]+\}\n?", re.S),
+    re.compile(r"  \.site-footer-logo-mark\{width:28px;height:20px[^}]+\}\n?", re.S),
+    re.compile(
+        r"\.site-footer-logo-mark\{min-width:46px;min-height:30px[^}]+\}\n?"
+        r"\.site-footer-logo-mark \.logo-mark-line\{font-size:10px\}\n?"
+        r"\.site-footer-logo-mark \.logo-mark-line--sub\{font-size:9px\}\n?",
+        re.S,
+    ),
+)
+
+
+def _strip_legacy_footer_logo_css(text: str) -> str:
+    for pattern in _LEGACY_FOOTER_LOGO_CSS_RES:
+        text = pattern.sub("", text)
+    return text
+
+
+def _normalize_index_logo_mark_css(text: str) -> str:
+    return re.sub(
+        r"(\.topnav-logo-mark \.logo-mark-line--sub,\.site-footer-logo-mark \.logo-mark-line--sub\{font-size:11px;letter-spacing:\.04em\})\n"
+        r"\.site-footer-logo-mark\{min-width:46px[^}]+\}\n"
+        r"\.site-footer-logo-mark \.logo-mark-line\{font-size:10px\}\n"
+        r"\.site-footer-logo-mark \.logo-mark-line--sub\{font-size:9px\}",
+        r"\1",
+        text,
+        count=1,
+    )
 
 
 def update_index_logo_styles(text: str) -> str:
-    if ".logo-mark-line" in text and INDEX_LOGO_MARK_CSS.splitlines()[0] in text:
-        return text
-    text = re.sub(
-        r"\.topnav-logo-mark\{width:28px;height:28px[^}]+\}",
-        INDEX_LOGO_MARK_CSS,
-        text,
-        count=1,
-    )
-    text = re.sub(
-        r"\.site-footer-logo-mark\{width:22px;height:22px[^}]+\}\n?",
-        "",
-        text,
-        count=1,
-    )
+    text = _strip_legacy_footer_logo_css(text)
+    text = _normalize_index_logo_mark_css(text)
+    if ".logo-mark-line" not in text or INDEX_LOGO_MARK_CSS.splitlines()[0] not in text:
+        text = re.sub(
+            r"\.topnav-logo-mark\{width:28px;height:28px[^}]+\}",
+            INDEX_LOGO_MARK_CSS,
+            text,
+            count=1,
+        )
     text = re.sub(
         r"  \.topnav-logo-mark\{width:26px;height:26px;font-size:11px\}",
-        "  .topnav-logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}"
-        "  .topnav-logo-mark .logo-mark-line{font-size:11px}"
-        "  .topnav-logo-mark .logo-mark-line--sub{font-size:10px}",
+        INDEX_LOGO_MOBILE_CSS,
         text,
         count=1,
     )
     text = re.sub(
-        r"  \.site-footer-logo-mark\{width:20px;height:20px[^}]+\}\n?",
-        "",
+        r"  \.topnav-logo-mark\{min-width:48px;min-height:32px;padding:5px 8px 4px\}"
+        r"  \.topnav-logo-mark \.logo-mark-line\{font-size:11px\}"
+        r"  \.topnav-logo-mark \.logo-mark-line--sub\{font-size:10px\}",
+        INDEX_LOGO_MOBILE_CSS,
         text,
         count=1,
     )

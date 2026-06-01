@@ -255,14 +255,11 @@ def _breadcrumb_ol(rel_path: Path, items: list[tuple[str, str | None]]) -> str:
     </nav>"""
 
 
-def _brand_logo_mark_html(*, variant: str = "header") -> str:
+def _brand_logo_mark_html() -> str:
+    """ヘッダー・フッター共通の2行ロゴマーク（同型 HTML）。"""
     top, bottom = brand_logo_lines()
     size_cls = brand_logo_size_class(top)
-    if variant == "footer":
-        base = "site-footer-logo-mark"
-    else:
-        base = "topnav-logo-mark"
-    cls = base + (f" {size_cls}" if size_cls else "")
+    cls = "topnav-logo-mark" + (f" {size_cls}" if size_cls else "")
     top_h = html.escape(top)
     bottom_h = html.escape(bottom)
     return (
@@ -270,11 +267,6 @@ def _brand_logo_mark_html(*, variant: str = "header") -> str:
         f'<span class="logo-mark-line">{top_h}</span>'
         f'<span class="logo-mark-line logo-mark-line--sub">{bottom_h}</span>'
         f"</div>"
-        if variant == "header"
-        else f'<span class="{cls}" aria-hidden="true">'
-        f'<span class="logo-mark-line">{top_h}</span>'
-        f'<span class="logo-mark-line logo-mark-line--sub">{bottom_h}</span>'
-        f"</span>"
     )
 
 
@@ -282,7 +274,7 @@ def _topnav_logo(rel_path: Path) -> str:
     root = html.escape(footer_href(rel_path, "index.html"))
     name = html.escape(brand_name())
     exam = html.escape(exam_name())
-    mark = _brand_logo_mark_html(variant="header")
+    mark = _brand_logo_mark_html()
     return f"""<a class="topnav-logo" href="{root}" aria-label="{name}、{exam}対策のトップへ">
           {mark}
           <span class="topnav-logo-stack">
@@ -347,7 +339,7 @@ def site_shell_footer(
     _ = fixed
     root = html.escape(footer_href(rel_path, "index.html"))
     title = html.escape(f"{brand_name()}（{exam_name()}対策）トップへ")
-    mark = _brand_logo_mark_html(variant="footer")
+    mark = _brand_logo_mark_html()
     links: list[str] = []
     for label, dest, key in SITE_FOOTER_NAV:
         suppress_footer_current = bool(
