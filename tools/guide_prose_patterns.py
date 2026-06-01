@@ -21,6 +21,10 @@ FIELD_BOILER_RE = re.compile(
 OLD_META_TAIL_RE = re.compile(r"の要点を、.*演習解説で照合しながら整理します")
 INTERNAL_MARKER_RE = re.compile(r"（記事:[^）]+）")
 DUP_OFFICIAL_RE = re.compile(r"（公式）で[^。]{0,24}（公式）")
+VAGUE_ACCESS_RE = re.compile(
+    r"受験票記載の会場、または.*所在地・交通アクセスを確認|"
+    r"会場案内で、所在地・交通"
+)
 VAGUE_CHECKLIST_RE = re.compile(
     r"禁止物品の有無をチェックリストに書き出|"
     r"持ち物（鉛筆・消しゴム・身分証など）、会場・開始時刻"
@@ -66,6 +70,7 @@ def scan_prose_text(
         ("internal_marker", INTERNAL_MARKER_RE),
         ("dup_official", DUP_OFFICIAL_RE),
         ("vague_checklist", VAGUE_CHECKLIST_RE),
+        ("vague_access", VAGUE_ACCESS_RE),
     ]
     dup = exam_dup_re(exam, exam_short)
     if dup:

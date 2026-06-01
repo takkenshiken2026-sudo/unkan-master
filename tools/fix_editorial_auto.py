@@ -309,9 +309,9 @@ def _guide_faq_body(row: dict[str, str], *, index: int, question: str) -> str:
 
     if "アクセス" in q or "住所" in q or "交通" in q or "会場" in q:
         routes = (
-            f"「{q_short}」は試験案内の所在地・交通アクセスを公式ページで確認する。",
-            f"会場までのルートは前日に地図で確認し、余裕を持った出発時刻を決める。",
-            f"アクセス不明点は受験票記載の問い合わせ先へ、住所・最寄り駅を控えて確認する。",
+            f"「{q_short}」は受験票と公式会場案内で、会場名・住所・最寄り駅・徒歩ルートを確認する。",
+            f"前日に地図アプリで自宅から会場までの所要時間を計り、開始30分前到着＋余裕30分の出発時刻を決める。",
+            f"予備ルートと問い合わせ先電話番号をメモし、当日のダイヤ変更・工事規制も前日に再確認する。",
         )
         return _pad_faq(routes[index % len(routes)], index=index, term=topic)
 
