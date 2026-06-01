@@ -20,6 +20,10 @@ from tools.site_config import (
 
 BRAND_DIR = "assets/brand"
 MARKER = "<!--BRAND_ASSET_HEAD-->"
+OG_WIDTH = 1200
+OG_HEIGHT = 630
+# SNS の 1:1 中央クロップ（630×630）でも切れないよう、コンテンツ幅をこの範囲に収める
+OG_SAFE_WIDTH = 620
 
 
 def _font_candidates(*, bold: bool) -> list[Path]:
@@ -172,42 +176,130 @@ def render_favicon(size: int):
 def render_og_image():
     from PIL import Image, ImageDraw
 
-    w, h = 1200, 630
+    w, h = OG_WIDTH, OG_HEIGHT
     top, bottom = brand_logo_lines()
     name = brand_name()
     exam = exam_name()
+    tagline = "過去問・演習・用語解説"
     bg = theme_page_bg()
     ink = theme_ink()
-    text = theme_text()
+    text_col = theme_text()
     muted = theme_text_muted()
+
+    measure = Image.new("RGB", (w, h), bg)
+    mdraw = ImageDraw.Draw(measure)
+
+    gap = 36
+    name_gap, exam_gap = 16, 22
+    layout = None
+    for box_w in (200, 180, 160, 140, 120):
+        box_h = max(110, int(box_w * 0.92))
+        text_max_w = OG_SAFE_WIDTH - box_w - gap
+        name_font, name_size = _fit_font(mdraw, name, text_max_w, 48, bold=True)
+        exam_font, exam_size = _fit_font(mdraw, exam, text_max_w, 30, bold=False)
+        tag_font, tag_size = _fit_font(mdraw, tagline, text_max_w, 28, bold=False)
+        text_w = max(
+            mdraw.textlength(name, font=name_font),
+            mdraw.textlength(exam, font=exam_font),
+            mdraw.textlength(tagline, font=tag_font),
+        )
+        text_h = name_size + name_gap + exam_size + exam_gap + tag_size
+        content_w = box_w + gap + int(text_w)
+        content_h = max(box_h, text_h)
+        if content_w <= OG_SAFE_WIDTH:
+            layout = {
+                "box_w": box_w,
+                "box_h": box_h,
+                "gap": gap,
+                "name_font": name_font,
+                "name_size": name_size,
+                "exam_font": exam_font,
+                "exam_size": exam_size,
+                "tag_font": tag_font,
+                "tag_size": tag_size,
+                "text_h": text_h,
+                "content_w": content_w,
+                "content_h": content_h,
+            }
+            break
 
     img = Image.new("RGB", (w, h), bg)
     draw = ImageDraw.Draw(img)
 
-    box_w, box_h = 300, 280
-    box_x, box_y = 80, (h - box_h) // 2
+    if layout is None:
+        # 横並びが収まらない場合: ロゴ＋テキストを縦積みで中央配置
+        mark_w, mark_h = 220, 200
+        text_max_w = OG_SAFE_WIDTH - 40
+        name_font, name_size = _fit_font(mdraw, name, text_max_w, 44, bold=True)
+        exam_font, exam_size = _fit_font(mdraw, exam, text_max_w, 28, bold=False)
+        tag_font, tag_size = _fit_font(mdraw, tagline, text_max_w, 26, bold=False)
+        stack_gap, line_gap = 28, 14
+        content_w = int(
+            max(
+                mark_w,
+                mdraw.textlength(name, font=name_font),
+                mdraw.textlength(exam, font=exam_font),
+                mdraw.textlength(tagline, font=tag_font),
+            )
+        )
+        content_h = mark_h + stack_gap + name_size + line_gap + exam_size + line_gap + tag_size
+        block_x = (w - content_w) // 2
+        block_y = (h - content_h) // 2
+        _draw_logo_mark(
+            draw,
+            x=block_x + (content_w - mark_w) // 2,
+            y=block_y,
+            width=mark_w,
+            height=mark_h,
+            top=top,
+            bottom=bottom,
+            bg=ink,
+            fg="#ffffff",
+            radius=12,
+        )
+        ty = block_y + mark_h + stack_gap
+        draw.text((block_x + (content_w - mdraw.textlength(name, font=name_font)) / 2, ty), name, fill=text_col, font=name_font)
+        ty += name_size + line_gap
+        draw.text((block_x + (content_w - mdraw.textlength(exam, font=exam_font)) / 2, ty), exam, fill=muted, font=exam_font)
+        ty += exam_size + line_gap
+        draw.text((block_x + (content_w - mdraw.textlength(tagline, font=tag_font)) / 2, ty), tagline, fill=muted, font=tag_font)
+        return img
+
+    block_x = (w - layout["content_w"]) // 2
+    block_y = (h - layout["content_h"]) // 2
+    box_x = block_x
+    box_y = block_y + (layout["content_h"] - layout["box_h"]) // 2
+    tx = block_x + layout["box_w"] + layout["gap"]
+    ty = block_y + (layout["content_h"] - layout["text_h"]) // 2
+
     _draw_logo_mark(
         draw,
         x=box_x,
         y=box_y,
-        width=box_w,
-        height=box_h,
+        width=layout["box_w"],
+        height=layout["box_h"],
         top=top,
         bottom=bottom,
         bg=ink,
         fg="#ffffff",
         radius=12,
     )
-
-    tx = box_x + box_w + 56
-    name_font, name_size = _fit_font(draw, name, w - tx - 80, 64, bold=True)
-    exam_font, exam_size = _fit_font(draw, exam, w - tx - 80, 40, bold=False)
-    tagline = "過去問・演習・用語解説"
-    tag_font, _ = _fit_font(draw, tagline, w - tx - 80, 34, bold=False)
-
-    draw.text((tx, box_y + 24), name, fill=text, font=name_font)
-    draw.text((tx, box_y + 24 + name_size + 20), exam, fill=muted, font=exam_font)
-    draw.text((tx, box_y + 24 + name_size + 20 + exam_size + 28), tagline, fill=muted, font=tag_font)
+    draw.text((tx, ty), name, fill=text_col, font=layout["name_font"])
+    draw.text(
+        (tx, ty + layout["name_size"] + name_gap),
+        exam,
+        fill=muted,
+        font=layout["exam_font"],
+    )
+    draw.text(
+        (
+            tx,
+            ty + layout["name_size"] + name_gap + layout["exam_size"] + exam_gap,
+        ),
+        tagline,
+        fill=muted,
+        font=layout["tag_font"],
+    )
     return img
 
 
