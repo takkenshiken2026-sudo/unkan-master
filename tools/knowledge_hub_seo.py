@@ -1312,7 +1312,10 @@ def _legal_explain_sentence(law: str, entry: dict) -> str:
                 break
 
     if main_core:
-        text = f"{law}は、{main_core}について定めた条文です"
+        if main_core.endswith("について"):
+            text = f"{law}は、{main_core}定めた条文です"
+        else:
+            text = f"{law}は、{main_core}について定めた条文です"
         if extras:
             text += f"。{extras[0]}"
         return text + "。"
