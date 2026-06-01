@@ -205,26 +205,45 @@ _TOPNAV_LOGO_MARK_RE = re.compile(
 )
 
 
+def _ensure_topnav_logo_stack(text: str) -> str:
+    """ヘッダー横に site-config のサイト名・試験名を必ず入れる。"""
+    name = html.escape(brand_name())
+    exam = html.escape(exam_name())
+    stack_re = re.compile(
+        r'(<span class="topnav-logo-stack">\s*)(.*?)(\s*</span>)',
+        re.S,
+    )
+
+    def repl(m: re.Match[str]) -> str:
+        inner = m.group(2)
+        if re.search(r'<span class="topnav-logo-text">', inner):
+            inner = re.sub(
+                r'(<span class="topnav-logo-text">)[^<]*(</span>)',
+                lambda mm: f"{mm.group(1)}{name}{mm.group(2)}",
+                inner,
+                count=1,
+            )
+        else:
+            inner = f'<span class="topnav-logo-text">{name}</span>\n          ' + inner.lstrip()
+        if re.search(r'<span class="topnav-logo-sub">', inner):
+            inner = re.sub(
+                r'(<span class="topnav-logo-sub">)[^<]*(</span>)',
+                lambda mm: f"{mm.group(1)}{exam}{mm.group(2)}",
+                inner,
+                count=1,
+            )
+        else:
+            inner = inner.rstrip() + f'\n          <span class="topnav-logo-sub">{exam}</span>'
+        return m.group(1) + inner + m.group(3)
+
+    return stack_re.sub(repl, text, count=1)
+
+
 def update_index_brand_mark(text: str) -> str:
     mark = _index_logo_mark_html()
 
     text = _TOPNAV_LOGO_MARK_RE.sub(mark, text, count=1)
-    name = html.escape(brand_name())
-    if 'class="topnav-logo-text"' in text:
-        text = re.sub(
-            r'(<span class="topnav-logo-text">)[^<]*(</span>)',
-            lambda m: f"{m.group(1)}{name}{m.group(2)}",
-            text,
-            count=1,
-        )
-    else:
-        insert = f'<span class="topnav-logo-text">{name}</span>\n          '
-        text = re.sub(
-            r'(<span class="topnav-logo-stack">\s*)',
-            lambda m: m.group(1) + insert,
-            text,
-            count=1,
-        )
+    text = _ensure_topnav_logo_stack(text)
     # 旧 update の残骸（二重 </span>）を除去
     text = re.sub(
         r'(</span></span>)\s*<span class="logo-mark-line logo-mark-line--sub">[^<]+</span></span>',
