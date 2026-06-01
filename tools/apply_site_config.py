@@ -199,16 +199,16 @@ def _index_logo_mark_html() -> str:
 
 
 
+_TOPNAV_LOGO_MARK_RE = re.compile(
+    r'<div class="[^"]*\btopnav-logo-mark\b[^"]*"[^>]*>.*?</div>',
+    re.S,
+)
+
+
 def update_index_brand_mark(text: str) -> str:
     mark = _index_logo_mark_html()
 
-    text = re.sub(
-        r'<div class="topnav-logo-mark"[^>]*>.*?</div>',
-        mark,
-        text,
-        count=1,
-        flags=re.S,
-    )
+    text = _TOPNAV_LOGO_MARK_RE.sub(mark, text, count=1)
     name = html.escape(brand_name())
     if 'class="topnav-logo-text"' in text:
         text = re.sub(
