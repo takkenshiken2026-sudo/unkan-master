@@ -115,6 +115,9 @@ def fix_faq_questions(row: dict[str, str], *, prefix: str = "faq_", count: int =
 def split_long_sentences(text: str, *, max_chars: int = 72) -> str:
     if not text:
         return text
+    # 具体チェックリスト（- 行）を含む本文は、読点分割で項目が壊れるためそのまま返す
+    if re.search(r"(?m)^-\s", text):
+        return text
 
     def _safe_cut(sent: str, cut: int) -> int:
         while cut > 20:

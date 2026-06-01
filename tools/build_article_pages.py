@@ -756,7 +756,8 @@ def build_index_html(articles: list[dict[str, str]]) -> str:
 def load_articles() -> list[dict[str, str]]:
     if not ARTICLES_CSV.is_file():
         raise FileNotFoundError(str(ARTICLES_CSV))
-    rows = list(csv.DictReader(ARTICLES_CSV.read_text(encoding="utf-8-sig").splitlines()))
+    with ARTICLES_CSV.open(encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
     return sorted(rows, key=lambda x: int(norm(x.get("priority")) or 9999))
 
 
