@@ -144,12 +144,19 @@ def inject_enumeration_lists(text: str) -> str:
     return inject_comma_sentence_list(merged)
 
 
+_MD_LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")
+
+
 def _render_paragraph(text: str, *, term_hrefs: dict[str, str] | None = None, linked_terms: set[str] | None = None) -> str:
+    from tools.inline_markup import render_inline_markup
+
+    if _MD_LINK.search(text):
+        return f"<p>{render_inline_markup(text)}</p>"
     if term_hrefs and linked_terms is not None:
         from tools.internal_links import link_terms_in_plaintext
 
         return f"<p>{link_terms_in_plaintext(text, term_hrefs, linked_terms)}</p>"
-    return f"<p>{html.escape(text).replace(chr(10), '<br>')}</p>"
+    return f"<p>{render_inline_markup(text)}</p>"
 
 
 def _render_block(
@@ -162,13 +169,17 @@ def _render_block(
     non_empty = [ln for ln in lines if ln.strip()]
     if non_empty and all(ln.lstrip().startswith("- ") for ln in non_empty):
         items = [ln.lstrip()[2:].strip() for ln in non_empty]
-        return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in items) + "</ul>"
+        from tools.inline_markup import render_inline_markup
+
+        return "<ul>" + "".join(f"<li>{render_inline_markup(item)}</li>" for item in items) + "</ul>"
 
     if ";" in block or "；" in block:
         if "\n" not in block:
             items = split_semicolon(block)
             if len(items) >= 2:
-                return "<ul>" + "".join(f"<li>{html.escape(item)}</li>" for item in items) + "</ul>"
+                from tools.inline_markup import render_inline_markup
+
+        return "<ul>" + "".join(f"<li>{render_inline_markup(item)}</li>" for item in items) + "</ul>"
 
     if block.startswith("### "):
         heading = block[4:].split("\n", 1)[0].strip()

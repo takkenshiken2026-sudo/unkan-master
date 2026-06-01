@@ -153,12 +153,14 @@ def hub_article_section(sec_id: str, label: str, body_html: str, number: int | N
 
 def faq_items_html(items: list[dict[str, str]]) -> str:
     """FAQ を details で出力（FAQPage JSON-LD と併用）。すべて open。"""
+    from tools.inline_markup import render_inline_markup
+
     if not items:
         return ""
     return "".join(
         '<details class="term-faq-item" open>'
         f'<summary>{html.escape(item["question"])}</summary>'
-        f'<div>{html.escape(item["answer"])}</div>'
+        f'<div>{render_inline_markup(item["answer"])}</div>'
         "</details>"
         for item in items
     )

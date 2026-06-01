@@ -58,6 +58,11 @@ def row_needs_patch(row: dict[str, str], is_stub) -> bool:
     slug = norm(row.get("slug"))
     if not slug or not is_tier_a_slug(slug) or is_venue_slug(slug):
         return False
+    if any(
+        issue.level == "ERROR"
+        for issue in check_guide_row_coherence(row, published=is_published_guide(row))
+    ):
+        return True
     for col in list(row.keys()):
         if not col.endswith("_body") and col not in ("lead", "user_intent", "action_items"):
             continue
@@ -113,7 +118,9 @@ def patch_row(row: dict[str, str], fieldnames: list[str], lib) -> dict[str, str]
                 row[bcol] = ""
             continue
         if bcol in fieldnames:
-            body = lib.section_body_for(heading, topic, slug, genre, ctx)
+            from tools.guide_section_resolve import section_body_from_lib  # noqa: E402
+
+            body = section_body_from_lib(lib, heading, topic, slug, genre, ctx)
             row[bcol] = sanitize_guide_text(body, slug)
             unique = section_unique_tail(
                 slug=slug,

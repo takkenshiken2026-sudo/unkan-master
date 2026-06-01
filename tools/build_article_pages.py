@@ -495,13 +495,47 @@ def build_article_html(
     reviewer = apply_vars(article.get("reviewer_name", ""))
     sources = parse_source_links(article.get("primary_sources", ""))
     official = primary_external_link()
+    slug = norm(article.get("slug"))
+    venue_links_html = ""
+    try:
+        from tools.exam_venue_official_links import is_exam_center_slug, is_venue_guide_slug, venue_page_for_slug, venue_official_md
+
+        if is_exam_center_slug(slug):
+            page = venue_page_for_slug(slug)
+            if page:
+                label, url = page
+                venue_links_html = (
+                    f"会場の所在地・アクセスマップは"
+                    f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">{html.escape(label)}</a>'
+                    f"で確認してください。"
+                )
+        elif is_venue_guide_slug(slug):
+            label_url = venue_page_for_slug(slug)
+            if not label_url:
+                # site_root 不明時は primary_sources 先頭を使う
+                if sources:
+                    label, url = sources[0]["label"], sources[0]["url"]
+                else:
+                    label, url = official["label"], official["url"]
+            else:
+                label, url = label_url
+            if url:
+                venue_links_html = (
+                    f"会場の所在地・アクセスは"
+                    f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">{html.escape(label)}</a>'
+                    f"などの公式案内で確認してください。"
+                )
+    except ImportError:
+        pass
     official_box = (
         '<section class="seo-article-section" aria-labelledby="official-info-title">'
         '<h2 id="official-info-title">公式情報の確認</h2>'
         '<blockquote><p><strong>公式情報の確認：</strong>'
         f'{html.escape(exam_name())}の最新情報は、'
         f'<a href="{html.escape(official["url"])}" target="_blank" rel="noopener noreferrer">{html.escape(official["label"])}</a>'
-        "などの公式情報を必ず確認してください。</p></blockquote></section>"
+        "などの公式情報を必ず確認してください。"
+        f"{venue_links_html}"
+        "本人に割り当てられた試験会場は受験票の表記が正本です。</p></blockquote></section>"
     )
     info_table = article_info_table(article)
     crumb_items = [("トップ", "index.html"), ("試験ガイド", "articles/index.html"), (title, None)]

@@ -427,7 +427,7 @@ def parse_related_link_tokens(
             else:
                 target, label = rest.strip(), ""
         else:
-            kind, target, label = "page", token.strip(), token.strip()
+            kind, target, label = "page", token.strip(), ""
 
         if kind in ("guide", "article"):
             slug = target

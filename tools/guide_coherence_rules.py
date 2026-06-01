@@ -38,6 +38,9 @@ STUDY_PREP_PHRASES = (
 # 会場記事に学習テンプレが混入
 VENUE_WRONG_PHRASES = (
     "現場判断と3分野",
+    "現場判断と4分野",
+    "現場判断と5分野",
+    "現場判断と10分野",
     "演習で同テーマの設問を1問以上",
     "付箋を付けながら読み",
     "の観点で整理します",
@@ -173,6 +176,23 @@ def faq_coherence_issues(row: dict[str, str]) -> list[EditorialIssue]:
     return issues
 
 
+def prose_pattern_issues(text: str, column: str, *, slug: str = "") -> list[EditorialIssue]:
+    from tools.build_article_pages import sanitize_guide_text
+    from tools.guide_prose_patterns import scan_prose_text
+
+    cleaned = sanitize_guide_text(text, slug)
+    issues: list[EditorialIssue] = []
+    for hit in scan_prose_text(cleaned, column=column):
+        issues.append(
+            EditorialIssue(
+                "ERROR",
+                column,
+                f"読者向け本文に品質問題（{hit.pattern}）: …{hit.snippet[:72]}…",
+            )
+        )
+    return issues
+
+
 def check_guide_row_coherence(row: dict[str, str], *, published: bool) -> list[EditorialIssue]:
     if not published:
         return []
@@ -197,6 +217,7 @@ def check_guide_row_coherence(row: dict[str, str], *, published: bool) -> list[E
         if not text:
             continue
         issues.extend(internal_marker_issues(text, col))
+        issues.extend(prose_pattern_issues(text, col, slug=slug))
         if tier_a:
             issues.extend(long_seo_title_issues(title, text, col))
 
@@ -210,6 +231,14 @@ def check_guide_row_coherence(row: dict[str, str], *, published: bool) -> list[E
                     "ERROR",
                     bcol,
                     "会場・申込系（A級）記事に学習量産テンプレの定型句が含まれています",
+                )
+            )
+        if any(p in body for p in VENUE_WRONG_PHRASES):
+            issues.append(
+                EditorialIssue(
+                    "ERROR",
+                    bcol,
+                    "節本文に量産テンプレの定型句（現場判断とN分野等）が含まれています",
                 )
             )
 
