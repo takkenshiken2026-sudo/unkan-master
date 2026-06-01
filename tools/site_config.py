@@ -51,6 +51,30 @@ def brand_mark() -> str:
     return str(CONFIG.get("brandMark") or brand_name()[:1] or "S")
 
 
+def brand_logo_lines() -> tuple[str, str]:
+    """長方形ロゴ（2行）の上段・下段。brandLogoTop/Bottom > brandLogoText > brandName から自動分割。"""
+    top = str(CONFIG.get("brandLogoTop") or "").strip()
+    bottom = str(CONFIG.get("brandLogoBottom") or "").strip()
+    if top and bottom:
+        return top, bottom
+    logo_text = str(CONFIG.get("brandLogoText") or "").strip()
+    if logo_text:
+        return logo_text, "マスター"
+    name = brand_name()
+    if name.endswith("マスター"):
+        return name[: -len("マスター")], "マスター"
+    return brand_mark(), name
+
+
+def brand_logo_size_class(top_line: str) -> str:
+    n = len(top_line)
+    if n >= 7:
+        return "logo-mark--compact"
+    if n >= 5:
+        return "logo-mark--narrow"
+    return ""
+
+
 def exam_name() -> str:
     return str(CONFIG.get("examName") or "◯◯試験")
 

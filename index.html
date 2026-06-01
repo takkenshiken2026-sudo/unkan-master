@@ -224,7 +224,12 @@ body{font-family:var(--font);font-size:var(--fs-body);background:#f0f0f1;color:v
 .topnav{position:sticky;top:0;z-index:30;background:#ffffff;border-bottom:1px solid var(--border)}
 .topnav-inner{max-width:1080px;margin:0 auto;padding:0 20px;height:54px;display:flex;align-items:center;gap:0}
 .topnav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--text);cursor:pointer;margin-right:28px;flex-shrink:0;pointer-events:auto}
-.topnav-logo-mark{width:28px;height:28px;border-radius:7px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg2);flex-shrink:0;font-family:var(--font)}
+.topnav-logo-mark,.site-footer-logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:var(--ink);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;font-family:var(--font);color:var(--bg2);box-sizing:border-box}
+.topnav-logo-mark .logo-mark-line,.site-footer-logo-mark .logo-mark-line{display:block;font-size:12px;font-weight:700;line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:.02em}
+.topnav-logo-mark .logo-mark-line--sub,.site-footer-logo-mark .logo-mark-line--sub{font-size:11px;letter-spacing:.04em}
+.site-footer-logo-mark{min-width:46px;min-height:30px;padding:4px 8px 3px;border-radius:3px}
+.site-footer-logo-mark .logo-mark-line{font-size:10px}
+.site-footer-logo-mark .logo-mark-line--sub{font-size:9px}
 .topnav-logo-text{font-size:16px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap}
 .topnav-logo-stack{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15;min-width:0}
 .topnav-logo-sub{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0;line-height:1.25;white-space:normal;max-width:min(220px,52vw)}
@@ -782,7 +787,7 @@ details.rich-detail summary{display:none}
   .topnav-hamburger{display:flex}
   .topnav-inner{padding:0 10px;height:52px}
   .topnav-logo{margin-right:8px}
-  .topnav-logo-mark{width:26px;height:26px;font-size:11px}
+  .topnav-logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}  .topnav-logo-mark .logo-mark-line{font-size:11px}  .topnav-logo-mark .logo-mark-line--sub{font-size:10px}
   .topnav-logo-text{font-size:15px}
   .topnav-logo-sub{font-size:9px;max-width:min(200px,58vw)}
   .focus-btn{margin-left:auto;margin-right:6px;width:34px;height:34px}
@@ -904,7 +909,6 @@ details.rich-detail summary{display:none}
     gap:8px 10px;
     padding:6px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));
   }
-  .site-footer-logo-mark{width:20px;height:20px;font-size:9px;border-radius:5px}
   .site-footer-site-name{font-size:11px}
   .site-footer-legal{gap:8px 10px}
   .site-footer-legal a{font-size:10px}
@@ -983,7 +987,6 @@ body.is-solving .site-footer{display:none!important}
 }
 .site-footer-brand{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--text);flex:0 0 auto;transition:opacity .15s}
 .site-footer-brand:hover{opacity:.88}
-.site-footer-logo-mark{width:22px;height:22px;border-radius:6px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg2);flex-shrink:0;font-family:var(--font)}
 .site-footer-site-name{font-size:12px;font-weight:700;letter-spacing:-0.02em;color:var(--text);white-space:nowrap}
 .site-footer-sep{width:1px;height:14px;background:var(--border2);flex:0 0 auto;align-self:center;opacity:.85}
 .site-footer-legal{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:10px 14px;flex:0 0 auto}
@@ -1319,9 +1322,8 @@ body.is-solving .site-footer{display:none!important}
   <nav class="topnav">
     <div class="topnav-inner">
       <a class="topnav-logo" href="/" onclick="event.preventDefault();gotoPage('quiz-start')" aria-label="運管マスター、運行管理者試験対策のトップへ">
-        <div class="topnav-logo-mark" title="運管マスター">運</div>
+        <div class="topnav-logo-mark" aria-hidden="true"><span class="logo-mark-line">運管</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></div>
         <span class="topnav-logo-stack">
-          <span class="topnav-logo-text">運管マスター</span>
           <span class="topnav-logo-sub">運行管理者試験</span>
         </span>
       </a>
@@ -1782,8 +1784,7 @@ body.is-solving .site-footer{display:none!important}
       <div class="site-footer-scroll">
         <div class="site-footer-inner">
           <a class="site-footer-brand" href="index.html" title="運管マスター（運行管理者試験対策）トップへ">
-            <span class="site-footer-logo-mark" title="サービス略称（差し替え）">運</span>
-            <span class="site-footer-site-name">運管マスター</span>
+            <span class="site-footer-logo-mark" aria-hidden="true"><span class="logo-mark-line">運管</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></span>
           </a>
           <span class="site-footer-sep" aria-hidden="true"></span>
           <nav class="site-footer-legal" aria-label="サイト情報・ポリシー">

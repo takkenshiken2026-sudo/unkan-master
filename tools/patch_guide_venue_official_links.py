@@ -97,7 +97,8 @@ def patch_file(path: Path) -> list[str]:
     if path.name == "eisei2shu_guide_content_lib.py":
         old_basic = re.search(
             r"def _heading_試験会場基本情報\(topic: str, slug: str, _genre: str, _ctx: dict\) -> str:.*?"
-            r"return exam_venue_access_prose\(official=OFFICIAL, topic=topic, venue_page_md=venue_page_md\)\n",
+            r"        venue_page_md=venue_page_md,\n"
+            r"    \)\n",
             new,
             re.DOTALL,
         )
@@ -112,6 +113,12 @@ def patch_file(path: Path) -> list[str]:
         if old_basic:
             new = new[: old_basic.start()] + BASIC_FN + new[old_basic.end() :]
             changes.append("basic_fn")
+
+    if "_heading_試験会場アクセス" not in new and "_heading_試験会場基本情報" in new:
+        anchor = new.find("def _heading_試験日程確認")
+        if anchor != -1:
+            new = new[:anchor] + ACCESS_FN + new[anchor:]
+            changes.append("access_fn_restore")
 
     if new != text:
         path.write_text(new, encoding="utf-8")

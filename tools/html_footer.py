@@ -14,7 +14,8 @@ import html
 from pathlib import Path
 
 from tools.site_config import (
-    brand_mark,
+    brand_logo_lines,
+    brand_logo_size_class,
     brand_name,
     contact_url,
     copyright_text,
@@ -254,15 +255,37 @@ def _breadcrumb_ol(rel_path: Path, items: list[tuple[str, str | None]]) -> str:
     </nav>"""
 
 
+def _brand_logo_mark_html(*, variant: str = "header") -> str:
+    top, bottom = brand_logo_lines()
+    size_cls = brand_logo_size_class(top)
+    if variant == "footer":
+        base = "site-footer-logo-mark"
+    else:
+        base = "topnav-logo-mark"
+    cls = base + (f" {size_cls}" if size_cls else "")
+    top_h = html.escape(top)
+    bottom_h = html.escape(bottom)
+    return (
+        f'<div class="{cls}" aria-hidden="true">'
+        f'<span class="logo-mark-line">{top_h}</span>'
+        f'<span class="logo-mark-line logo-mark-line--sub">{bottom_h}</span>'
+        f"</div>"
+        if variant == "header"
+        else f'<span class="{cls}" aria-hidden="true">'
+        f'<span class="logo-mark-line">{top_h}</span>'
+        f'<span class="logo-mark-line logo-mark-line--sub">{bottom_h}</span>'
+        f"</span>"
+    )
+
+
 def _topnav_logo(rel_path: Path) -> str:
     root = html.escape(footer_href(rel_path, "index.html"))
-    mark = html.escape(brand_mark())
     name = html.escape(brand_name())
     exam = html.escape(exam_name())
+    mark = _brand_logo_mark_html(variant="header")
     return f"""<a class="topnav-logo" href="{root}" aria-label="{name}、{exam}対策のトップへ">
-          <div class="topnav-logo-mark" title="サービス略称（差し替え）">{mark}</div>
+          {mark}
           <span class="topnav-logo-stack">
-            <span class="topnav-logo-text">{name}</span>
             <span class="topnav-logo-sub">{exam}</span>
           </span>
         </a>"""
@@ -322,9 +345,8 @@ def site_shell_footer(
     """index.html の site-footer と同型（画面下固定。site-pages.css で position:fixed）。"""
     _ = fixed
     root = html.escape(footer_href(rel_path, "index.html"))
-    mark = html.escape(brand_mark())
-    name = html.escape(brand_name())
     title = html.escape(f"{brand_name()}（{exam_name()}対策）トップへ")
+    mark = _brand_logo_mark_html(variant="footer")
     links: list[str] = []
     for label, dest, key in SITE_FOOTER_NAV:
         suppress_footer_current = bool(
@@ -348,8 +370,7 @@ def site_shell_footer(
     <div class="site-footer-scroll">
       <div class="site-footer-inner">
         <a class="site-footer-brand" href="{root}" title="{title}">
-          <span class="site-footer-logo-mark" title="サービス略称（差し替え）">{mark}</span>
-          <span class="site-footer-site-name">{name}</span>
+          {mark}
         </a>
         <span class="site-footer-sep" aria-hidden="true"></span>
         <nav class="site-footer-legal" aria-label="サイト情報・ポリシー">

@@ -144,24 +144,52 @@ a.site-page-brand:hover,
   margin-right: 28px;
   flex-shrink: 0;
 }
-.topnav-logo-mark {
+.topnav-logo-mark,
+.site-footer-logo-mark {
   width: auto;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 7px;
+  min-width: 54px;
+  height: auto;
+  min-height: 36px;
+  padding: 6px 10px 5px;
+  border-radius: 4px;
   background: var(--ink);
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
+  gap: 2px;
   flex-shrink: 0;
   font-family: var(--font);
-  letter-spacing: -0.02em;
-  line-height: 1;
+  color: #fff;
+  box-sizing: border-box;
+}
+.topnav-logo-mark .logo-mark-line,
+.site-footer-logo-mark .logo-mark-line {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.topnav-logo-mark .logo-mark-line--sub,
+.site-footer-logo-mark .logo-mark-line--sub {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.logo-mark--narrow .logo-mark-line {
+  font-size: 10px;
+}
+.logo-mark--narrow .logo-mark-line--sub {
+  font-size: 9px;
+}
+.logo-mark--compact .logo-mark-line {
+  font-size: 8px;
+}
+.logo-mark--compact .logo-mark-line--sub {
+  font-size: 8px;
+  letter-spacing: 0;
 }
 .topnav-logo-text {
   font-size: 16px;
@@ -284,23 +312,26 @@ a.site-page-brand:hover,
   flex: 0 0 auto;
 }
 .site-footer-logo-mark {
-  width: auto;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: var(--ink);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 46px;
+  min-height: 30px;
+  padding: 4px 8px 3px;
+  border-radius: 3px;
+}
+.site-footer-logo-mark .logo-mark-line {
   font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-  font-family: var(--font);
-  letter-spacing: -0.02em;
-  line-height: 1;
-  white-space: nowrap;
+}
+.site-footer-logo-mark .logo-mark-line--sub {
+  font-size: 9px;
+}
+.site-footer-logo-mark.logo-mark--narrow .logo-mark-line {
+  font-size: 8px;
+}
+.site-footer-logo-mark.logo-mark--narrow .logo-mark-line--sub {
+  font-size: 7px;
+}
+.site-footer-logo-mark.logo-mark--compact .logo-mark-line,
+.site-footer-logo-mark.logo-mark--compact .logo-mark-line--sub {
+  font-size: 7px;
 }
 .site-footer-site-name {
   font-size: 12px;
@@ -4469,9 +4500,14 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     margin-right: 8px;
   }
   .site-shell-header .topnav-logo-mark {
-    min-width: 26px;
-    height: 26px;
-    padding: 0 7px;
+    min-width: 48px;
+    min-height: 32px;
+    padding: 5px 8px 4px;
+  }
+  .site-shell-header .topnav-logo-mark .logo-mark-line {
+    font-size: 11px;
+  }
+  .site-shell-header .topnav-logo-mark .logo-mark-line--sub {
     font-size: 10px;
   }
   .site-shell-header .topnav-logo-text {

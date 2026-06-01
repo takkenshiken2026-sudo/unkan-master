@@ -15,6 +15,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.site_config import (
+    brand_logo_lines,
+    brand_logo_size_class,
     brand_mark,
     brand_name,
     category_to_field_map,
@@ -183,25 +185,83 @@ def update_index_shell_footer(text: str) -> str:
     )
 
 
-def update_index_brand_mark(text: str) -> str:
-    mark = html.escape(brand_mark())
+def _index_logo_mark_html() -> str:
+    top, bottom = brand_logo_lines()
+    size_cls = brand_logo_size_class(top)
+    cls = "topnav-logo-mark" + (f" {size_cls}" if size_cls else "")
+    return (
+        f'<div class="{cls}" aria-hidden="true">'
+        f'<span class="logo-mark-line">{html.escape(top)}</span>'
+        f'<span class="logo-mark-line logo-mark-line--sub">{html.escape(bottom)}</span>'
+        f"</div>"
+    )
 
-    def _inject_mark(m: re.Match[str]) -> str:
-        return f"{m.group(1)}{mark}{m.group(3)}"
+
+
+def update_index_brand_mark(text: str) -> str:
+    mark = _index_logo_mark_html()
 
     text = re.sub(
-        r'(<div class="topnav-logo-mark"[^>]*>)(.*?)(</div>)',
-        _inject_mark,
+        r'<div class="topnav-logo-mark"[^>]*>.*?</div>',
+        mark,
         text,
         count=1,
         flags=re.S,
     )
+    text = re.sub(r"\s*<span class=\"topnav-logo-text\">[^<]*</span>", "", text, count=1)
+    # 旧 update の残骸（二重 </span>）を除去
     text = re.sub(
-        r'(<span class="site-footer-logo-mark"[^>]*>)(.*?)(</span>)',
-        _inject_mark,
+        r'(</span></span>)\s*<span class="logo-mark-line logo-mark-line--sub">[^<]+</span></span>',
+        r"\1",
+        text,
+    )
+    return text
+
+
+INDEX_LOGO_MARK_CSS = """\
+.topnav-logo-mark,.site-footer-logo-mark{min-width:54px;min-height:36px;padding:6px 10px 5px;border-radius:4px;background:var(--ink);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;font-family:var(--font);color:var(--bg2);box-sizing:border-box}
+.topnav-logo-mark .logo-mark-line,.site-footer-logo-mark .logo-mark-line{display:block;font-size:12px;font-weight:700;line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:.02em}
+.topnav-logo-mark .logo-mark-line--sub,.site-footer-logo-mark .logo-mark-line--sub{font-size:11px;letter-spacing:.04em}
+.site-footer-logo-mark{min-width:46px;min-height:30px;padding:4px 8px 3px;border-radius:3px}
+.site-footer-logo-mark .logo-mark-line{font-size:10px}
+.site-footer-logo-mark .logo-mark-line--sub{font-size:9px}"""
+
+
+def update_index_logo_styles(text: str) -> str:
+    if ".logo-mark-line" in text and INDEX_LOGO_MARK_CSS.splitlines()[0] in text:
+        return text
+    text = re.sub(
+        r"\.topnav-logo-mark\{width:28px;height:28px[^}]+\}",
+        INDEX_LOGO_MARK_CSS,
         text,
         count=1,
-        flags=re.S,
+    )
+    text = re.sub(
+        r"\.site-footer-logo-mark\{width:22px;height:22px[^}]+\}\n?",
+        "",
+        text,
+        count=1,
+    )
+    text = re.sub(
+        r"  \.topnav-logo-mark\{width:26px;height:26px;font-size:11px\}",
+        "  .topnav-logo-mark{min-width:48px;min-height:32px;padding:5px 8px 4px}"
+        "  .topnav-logo-mark .logo-mark-line{font-size:11px}"
+        "  .topnav-logo-mark .logo-mark-line--sub{font-size:10px}",
+        text,
+        count=1,
+    )
+    text = re.sub(
+        r"  \.site-footer-logo-mark\{width:20px;height:20px[^}]+\}\n?",
+        "",
+        text,
+        count=1,
+    )
+    text = re.sub(
+        r"  \.topnav-logo-mark\{width:32px;height:26px[^}]+\}\n?"
+        r"  \.site-footer-logo-mark\{width:28px;height:20px[^}]+\}\n?",
+        "",
+        text,
+        count=1,
     )
     return text
 
@@ -266,6 +326,7 @@ def main() -> int:
             new = ensure_index_theme(new)
             new = update_index_shell_footer(new)
             new = update_index_brand_mark(new)
+            new = update_index_logo_styles(new)
             new = update_index_glossary_excerpt(new)
         if new != old:
             path.write_text(new, encoding="utf-8")

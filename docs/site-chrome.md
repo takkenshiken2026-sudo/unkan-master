@@ -149,7 +149,7 @@ def _learning_nav_href(rel_path, dest):
 | 項目 | ルール |
 |------|--------|
 | クラス | `<header class="topnav site-shell-header">`（一覧のみ `site-shell-header--wide` 可） |
-| ロゴ | `_topnav_logo()` — ブランド名・試験名は `site-config` 由来 |
+| ロゴ | `_topnav_logo()` — 長方形2行（`brandLogoTop`/`brandLogoBottom` または `brandName` から自動分割）。試験名は横のサブ表記 |
 | 学習ナビ 6 項目 | 一問一答 / 過去問 / 実践演習 / 記録・分析 / 復習 / 用語解説（順序固定） |
 | フッター | `site-footer` + `navigation.footer` のリンクセット |
 | body | `site-shell-column-page` を含める（`shell_body_class()`） |
