@@ -23,7 +23,7 @@ MARKER = "<!--BRAND_ASSET_HEAD-->"
 OG_WIDTH = 1200
 OG_HEIGHT = 630
 # SNS の 1:1 中央クロップ（630×630）でも切れないよう、コンテンツ幅をこの範囲に収める
-OG_SAFE_WIDTH = 620
+OG_SAFE_WIDTH = 630
 
 
 def _font_candidates(*, bold: bool) -> list[Path]:
@@ -189,15 +189,15 @@ def render_og_image():
     measure = Image.new("RGB", (w, h), bg)
     mdraw = ImageDraw.Draw(measure)
 
-    gap = 36
-    name_gap, exam_gap = 16, 22
+    gap = 32
+    name_gap, exam_gap = 18, 24
     layout = None
-    for box_w in (200, 180, 160, 140, 120):
-        box_h = max(110, int(box_w * 0.92))
+    for box_w in (260, 250, 240, 230, 220, 210, 200, 190, 180, 170, 160, 150, 140, 130, 120):
+        box_h = max(120, int(box_w * 0.95))
         text_max_w = OG_SAFE_WIDTH - box_w - gap
-        name_font, name_size = _fit_font(mdraw, name, text_max_w, 48, bold=True)
-        exam_font, exam_size = _fit_font(mdraw, exam, text_max_w, 30, bold=False)
-        tag_font, tag_size = _fit_font(mdraw, tagline, text_max_w, 28, bold=False)
+        name_font, name_size = _fit_font(mdraw, name, text_max_w, 56, bold=True)
+        exam_font, exam_size = _fit_font(mdraw, exam, text_max_w, 36, bold=False)
+        tag_font, tag_size = _fit_font(mdraw, tagline, text_max_w, 32, bold=False)
         text_w = max(
             mdraw.textlength(name, font=name_font),
             mdraw.textlength(exam, font=exam_font),
@@ -228,12 +228,12 @@ def render_og_image():
 
     if layout is None:
         # 横並びが収まらない場合: ロゴ＋テキストを縦積みで中央配置
-        mark_w, mark_h = 220, 200
-        text_max_w = OG_SAFE_WIDTH - 40
-        name_font, name_size = _fit_font(mdraw, name, text_max_w, 44, bold=True)
-        exam_font, exam_size = _fit_font(mdraw, exam, text_max_w, 28, bold=False)
-        tag_font, tag_size = _fit_font(mdraw, tagline, text_max_w, 26, bold=False)
-        stack_gap, line_gap = 28, 14
+        mark_w, mark_h = 260, 240
+        text_max_w = OG_SAFE_WIDTH - 20
+        name_font, name_size = _fit_font(mdraw, name, text_max_w, 52, bold=True)
+        exam_font, exam_size = _fit_font(mdraw, exam, text_max_w, 34, bold=False)
+        tag_font, tag_size = _fit_font(mdraw, tagline, text_max_w, 30, bold=False)
+        stack_gap, line_gap = 32, 16
         content_w = int(
             max(
                 mark_w,
