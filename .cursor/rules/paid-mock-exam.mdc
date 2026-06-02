@@ -1,0 +1,28 @@
+---
+description: 有料模試（note）導線の設置・文言・配色ルール
+globs:
+  - "**/index.html"
+  - "**/site-config.json"
+  - "**/site-config.js"
+---
+
+# 有料模試（note）導線
+
+**正本:** `docs/paid-mock-exam.md`
+
+## 必須
+
+- `site-config.json` の `paidMockExam.url` があるサイトだけ表示。なければ UI 非表示
+- **05番**（弱点04の次）+ **結果画面**スコア下 CTA。位置・クラス名はテンプレに合わせる
+- バナー色は **`--paid-mock-accent`（#c0392b）**。サイト `theme.accent` は使わない
+- 外部リンク: `target="_blank"` + `rel="noopener noreferrer"`
+
+## 設定
+
+`modeTitle` / `modePurpose` / `priceLabel` / `footnote` 必須。`scoreMeta`・`scoreLead` で結果画面文言をサイト別に。
+
+## 作業フロー
+
+1. 変更は **exam-site-shell テンプレ**の `index.html` から（未反映サイトは sync）
+2. サイト repo に `paidMockExam` 追加 → `site_config.py` → 目視確認 → デプロイ
+3. 回数・価格は note 商品と一致させる（例: メンタル=3回、乙4=2回/35問×2）

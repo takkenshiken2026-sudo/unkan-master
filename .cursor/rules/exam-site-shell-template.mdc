@@ -15,7 +15,7 @@ alwaysApply: true
 
 - **Start here:** `docs/ORGANIZATION.md` — folder roles, master docs, daily workflow.
 - **Index:** `docs/README.md` — full doc list.
-- **Cursor (2 files):** `.cursor/rules/site-workflow.mdc` (UI・q・sync), `.cursor/rules/content-authoring.mdc` (CSV・記事・用語). 詳細は常に `docs/` 正本。
+- **Cursor (2 files):** `.cursor/rules/site-workflow.mdc` (UI・q・sync), `.cursor/rules/content-authoring.mdc` (CSV・記事・用語). 有料模試は `.cursor/rules/paid-mock-exam.mdc` → `docs/paid-mock-exam.md`. 詳細は常に `docs/` 正本。
 - **Multi-site:** `docs/multi-site-workflow.md` — `sync_from_template.py --target ~/Projects/<site>`.
 - **This file:** template-wide defaults and build requirements.
 

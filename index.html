@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <!--BRAND_ASSET_HEAD-->
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/brand/favicon-48.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/apple-touch-icon.png">
-<meta property="og:image" content="https://unkan-master.jp/assets/brand/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:image" content="https://unkan-master.jp/assets/brand/og-image.png">
+
 <!--SITE_VERIFICATION_META_INJECT-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>運管マスター｜運行管理者試験 過去問・一問一答・用語解説で合格を目指す無料学習サイト</title>
@@ -27,11 +26,18 @@
 <meta property="og:url" content="https://unkan-master.jp/">
 <meta property="og:title" content="運管マスター｜運行管理者試験 無料学習プラットフォーム">
 <meta property="og:description" content="過去問演習・実践演習・一問一答・重要用語解説を網羅。年度別・分野別に絞った効率学習で合格を目指す。">
+<meta property="og:image" content="https://unkan-master.jp/assets/brand/og-image.png">
+<meta property="og:image:secure_url" content="https://unkan-master.jp/assets/brand/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="運管マスター（運行管理者試験）">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://unkan-master.jp/assets/brand/og-image.png">
+<meta name="twitter:image:alt" content="運管マスター｜運行管理者試験 無料学習プラットフォーム">
 <meta name="twitter:title" content="運管マスター｜運行管理者試験 無料学習プラットフォーム">
 <meta name="twitter:description" content="過去問演習・実践演習・一問一答・重要用語解説を網羅。年度別・分野別に絞った効率学習で合格を目指す。">
 
@@ -365,6 +371,7 @@ h2.section-label .tip-icon{width:13px;height:13px;font-size:9px}
 .ichi-score-summary{display:flex;justify-content:center;gap:28px;margin-bottom:24px;flex-wrap:wrap;font-size:14px;color:var(--text2)}
 .ichi-score-summary strong{font-family:var(--mono);font-size:18px;color:var(--text);margin-left:6px}
 .ichi-score-btns{display:flex;flex-direction:column;gap:10px}
+.ichi-score-paid-mock-wrap{text-align:left;max-width:480px;margin:24px auto 0}
 .mode-card-v2{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r2);padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;box-shadow:var(--sh);transition:all .18s}
 .mode-card-v2:hover{box-shadow:var(--sh2);border-color:var(--text2);transform:translateY(-1px);background:var(--bg3)}
 .mode-num-v2{font-size:12px;font-family:var(--mono);color:var(--text3);flex-shrink:0;width:20px;text-align:center}
@@ -378,7 +385,6 @@ h2.section-label .tip-icon{width:13px;height:13px;font-size:9px}
 .mode-purpose-v2--paid{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mode-paid-tag{font-size:10px;font-weight:700;background:var(--paid-mock-accent);color:var(--paid-mock-accent-text);padding:1px 7px;border-radius:999px;letter-spacing:.04em;line-height:1.5;flex-shrink:0}
 .mode-arrow-v2--ext{color:var(--text3);font-weight:400}
-.mode-paid-footnote{font-size:12px;color:var(--text2);margin:6px 0 0 2px;line-height:1.5}
 .mode-card{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r2);padding:18px;cursor:pointer;transition:all .18s;box-shadow:var(--sh);position:relative;display:flex;flex-direction:column}
 .mode-card:hover{box-shadow:var(--sh2);border-color:var(--text2);transform:translateY(-1px)}
 .mode-card.selected{border-color:var(--ink);box-shadow:0 0 0 3px rgba(0,0,0,0.06)}
@@ -594,7 +600,16 @@ details.rich-detail summary{display:none}
 .score-detail-card{background:var(--bg3);border-radius:var(--r);padding:12px 14px;border:1px solid var(--border)}
 .score-detail-label{font-size:var(--fs-caption);color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .score-detail-val{font-size:var(--fs-title);font-weight:700;font-family:var(--mono);letter-spacing:-0.5px;line-height:1.1}
-.score-q-list{margin-bottom:20px}
+.score-q-list{margin-bottom:0}
+.score-q-accordion{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--bg2)}
+.score-q-accordion-summary{display:flex;align-items:center;gap:8px;padding:12px 14px;font-size:var(--fs-sub);font-weight:700;color:var(--text);cursor:pointer;user-select:none;list-style:none}
+.score-q-accordion-summary::-webkit-details-marker{display:none}
+.score-q-accordion-summary::marker{display:none}
+.score-q-accordion-title{flex:1;min-width:0}
+.score-q-accordion-meta{font-size:var(--fs-caption);font-weight:500;color:var(--text3);font-family:var(--mono);flex-shrink:0}
+.score-q-accordion-chevron{font-size:10px;color:var(--text3);transition:transform .2s;flex-shrink:0;line-height:1}
+.score-q-accordion[open] .score-q-accordion-chevron{transform:rotate(180deg)}
+.score-q-accordion .score-q-list{padding:0 14px 12px;border-top:1px solid var(--border)}
 .score-q-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:var(--fs-body);line-height:1.45}
 .score-q-item.score-q-click{cursor:pointer;border-radius:var(--r);margin:0 -6px;padding:9px 6px;transition:background .12s}
 .score-q-item.score-q-click:hover{background:var(--bg3)}
@@ -613,7 +628,6 @@ details.rich-detail summary{display:none}
 .score-paid-mock-strip-title{display:block;font-size:var(--fs-body);font-weight:700;color:var(--text);margin-bottom:2px;line-height:1.35}
 .score-paid-mock-strip-meta{font-size:var(--fs-caption);color:var(--text2)}
 .score-paid-mock-strip-cta{font-size:var(--fs-sub);font-weight:700;color:var(--paid-mock-accent);flex-shrink:0;white-space:nowrap}
-.score-paid-mock-footnote{font-size:var(--fs-caption);color:var(--text2);margin-top:10px;line-height:1.5}
 
 /* ===== DASHBOARD ===== */
 .stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
@@ -1560,6 +1574,7 @@ body.is-solving .site-footer{display:none!important}
           <button class="btn-ghost" onclick="shareIchiResultToX()" style="font-size:15px;padding:13px">Xに投稿する</button>
           <button class="btn-ghost" onclick="gotoPage('quiz-start')" style="font-size:15px;padding:13px">他の問題を解く</button>
         </div>
+        <div id="ichi-score-paid-mock-wrap" class="score-paid-mock-wrap ichi-score-paid-mock-wrap" hidden></div>
       </div>
     </div>
 
@@ -1605,8 +1620,14 @@ body.is-solving .site-footer{display:none!important}
         <div id="score-session-msg" style="margin-bottom:16px"></div>
         <div class="score-ring-wrap" id="score-ring-wrap"></div>
         <div class="score-detail-grid" id="score-details"></div><div id="score-badges-earned" style="margin-bottom:8px"></div>
-        <h2 class="section-label">問題別結果</h2>
-        <div class="score-q-list" id="score-q-list"></div>
+        <details class="score-q-accordion" id="score-q-accordion">
+          <summary class="score-q-accordion-summary">
+            <span class="score-q-accordion-title">問題別結果</span>
+            <span class="score-q-accordion-meta" id="score-q-accordion-meta"></span>
+            <span class="score-q-accordion-chevron" aria-hidden="true">▼</span>
+          </summary>
+          <div class="score-q-list" id="score-q-list"></div>
+        </details>
         <div class="score-btns">
           <button class="btn-ghost" onclick="shareSessionResultToX()">Xに投稿する</button>
           <button class="btn-ghost"   onclick="gotoPage('quiz-start')">他の問題を解く</button>
@@ -3084,7 +3105,7 @@ const PAGE_SEO = {
 };
 
 function publicCanonicalUrl(seoPath) {
-  const base = 'https://unkan-master.jp';
+  const base = String((window.SITE_CONFIG && SITE_CONFIG.siteOrigin) || 'https://unkan-master.jp').replace(/\/$/, '');
   const p = (seoPath || '/').trim();
   if (!p || p === '/' || p === '/index.html') return base + '/';
   // SPA の /#past 等はトップに正規化（ハッシュは別URLとして扱わない）
@@ -3747,6 +3768,7 @@ function showIchiScore() {
   const ratio = att > 0 ? s / att : 0;
   const li = Math.min(Math.floor(ratio * (labels.length - 0.001)), labels.length - 1);
   document.getElementById('ichi-score-label').textContent = labels[Math.max(0, li)];
+  renderScorePaidMockPromo({ wrapId: 'ichi-score-paid-mock-wrap', variant: 'ichi' });
 }
 function shareIchiResultToX(){
   const s = ichiState.score;
@@ -4835,14 +4857,19 @@ const SHARE_URL = (SITE_CONFIG.siteOrigin || 'https://unkan-master.jp');
 function twitterHashtagToken(value){
   return String(value||'').trim().replace(/#/g,'').replace(/\s+/g,'');
 }
-function getShareTwitterHashtags(){
+function getShareTwitterHashtagList(){
   const tags=[
-    twitterHashtagToken(SITE_CONFIG.examShortName||SITE_CONFIG.examAbbrev||SITE_CONFIG.brandMark),
     twitterHashtagToken(SITE_CONFIG.examName),
     twitterHashtagToken(SITE_CONFIG.brandName),
-    '資格マスターテンプレ',
+    '資格マスター',
   ].filter(Boolean);
-  return [...new Set(tags)].join(',');
+  return [...new Set(tags)].map(tag=>'#'+tag);
+}
+function appendShareTwitterHashtags(bodyCore){
+  const tags=getShareTwitterHashtagList();
+  const text=String(bodyCore||'').trim();
+  if(!tags.length) return text;
+  return text+'\n\n'+tags.join('\n');
 }
 function getSiteShareLabel(){
   return `${SITE_CONFIG.brandName||'運管マスター'}（${SITE_CONFIG.examName||'運行管理者試験'}）`;
@@ -4850,9 +4877,8 @@ function getSiteShareLabel(){
 /** X Web Intent 用：本文・公式URL・ハッシュタグをパラメータで渡す（投稿欄に読み込まれる） */
 function openTwitterShareIntent(bodyCore){
   const params=new URLSearchParams();
-  params.set('text', bodyCore.trim());
+  params.set('text', appendShareTwitterHashtags(bodyCore));
   params.set('url', SHARE_URL);
-  params.set('hashtags', getShareTwitterHashtags());
   window.open(`https://twitter.com/intent/tweet?${params.toString()}`,'_blank','noopener,noreferrer');
 }
 let lastSessionShareData = null;
@@ -5658,6 +5684,10 @@ function showScore(){
     earnedEl.innerHTML='<div class="section-label" style="margin-bottom:8px">バッジ獲得</div><div class="score-badges-row">'
       +sessionNewBadges.map(b=>`<div class="score-earned-badge"><span class="badge-icon" style="width:24px;height:24px;border-radius:6px">${badgeIconHTML(b.icon)}</span>${b.name}</div>`).join('')+'</div>';
   }else if(earnedEl){ earnedEl.innerHTML=''; }
+  const scoreAccordion=document.getElementById('score-q-accordion');
+  if(scoreAccordion) scoreAccordion.open=false;
+  const scoreAccordionMeta=document.getElementById('score-q-accordion-meta');
+  if(scoreAccordionMeta) scoreAccordionMeta.textContent='全'+res.length+'問';
   document.getElementById('score-q-list').innerHTML=res.map((r,idx)=>`
     <div class="score-q-item score-q-click" role="button" tabindex="0" onclick="openScoreQuestion(${idx})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openScoreQuestion(${idx});}">
       <div class="score-q-icon">${r.correct?'○':'×'}</div>
@@ -7149,7 +7179,6 @@ function getPaidMockExamConfig(){
     priceLabel: String(cfg.priceLabel||'¥590').trim(),
     scoreMeta: String(cfg.scoreMeta||'PDF').trim(),
     scoreLead: String(cfg.scoreLead||'本番形式の予想模試').trim(),
-    footnote: String(cfg.footnote||'※ note で販売する有料コンテンツです。サイト内の無料演習とは別商品です。').trim(),
   };
 }
 
@@ -7167,13 +7196,21 @@ function injectPaidMockExamCard(modeList){
         <div class="mode-title-v2">${escapeAttr(m.modeTitle)}</div>
       </div>
       <div class="mode-arrow-v2 mode-arrow-v2--ext" aria-hidden="true">↗</div>
-    </a>
-    <p class="mode-paid-footnote">${escapeAttr(m.footnote)}</p>`;
+    </a>`;
   modeList.appendChild(wrapper);
 }
 
-function renderScorePaidMockPromo(){
-  const wrap=document.getElementById('score-paid-mock-wrap');
+function scorePaidMockLeadHtml(m, variant){
+  if(variant==='ichi'){
+    return `一問一答の次は、<strong>${escapeAttr(m.scoreLead)}</strong>で本番形式を試しませんか？`;
+  }
+  return `セット演習の次は、<strong>${escapeAttr(m.scoreLead)}</strong>で時間配分を確認しませんか？`;
+}
+
+function renderScorePaidMockPromo(opts){
+  opts=opts||{};
+  const wrapId=opts.wrapId||'score-paid-mock-wrap';
+  const wrap=document.getElementById(wrapId);
   if(!wrap) return;
   const m=getPaidMockExamConfig();
   if(!m.url){
@@ -7182,9 +7219,10 @@ function renderScorePaidMockPromo(){
     return;
   }
   const label=`${m.modeTitle}（有料・note・${m.priceLabel}）`;
+  const leadHtml=opts.leadHtml!=null?opts.leadHtml:scorePaidMockLeadHtml(m,opts.variant);
   wrap.hidden=false;
   wrap.innerHTML=`
-    <p class="score-paid-mock-lead">セット演習の次は、<strong>${escapeAttr(m.scoreLead)}</strong>で時間配分を確認しませんか？</p>
+    <p class="score-paid-mock-lead">${leadHtml}</p>
     <a class="score-paid-mock-strip" href="${escapeAttr(m.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeAttr(label)}">
       <span class="score-paid-mock-strip-tag">有料</span>
       <span class="score-paid-mock-strip-body">
@@ -7192,8 +7230,7 @@ function renderScorePaidMockPromo(){
         <span class="score-paid-mock-strip-meta">${escapeAttr(m.scoreMeta)} · ${escapeAttr(m.priceLabel)} · note</span>
       </span>
       <span class="score-paid-mock-strip-cta">詳細 ↗</span>
-    </a>
-    <p class="score-paid-mock-footnote">${escapeAttr(m.footnote)}</p>`;
+    </a>`;
 }
 window.renderScorePaidMockPromo=renderScorePaidMockPromo;
 

@@ -1,4 +1,3 @@
-echo "sync_gh_pages_branch.sh: 非推奨 — GitHub Actions デプロイへ移行してください（exam-site-shell/docs/DEPLOY.md）" >&2
 #!/usr/bin/env bash
 # 本番が gh-pages ブランチ配信のリポジトリ向け: ビルド済み main を gh-pages に同期する。
 # kikenbutsu-master / kangyou-master など。リモートに gh-pages が無い場合は何もしない。
