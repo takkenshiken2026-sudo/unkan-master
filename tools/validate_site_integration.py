@@ -21,7 +21,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.index_seo_head import INDEX_SEO_MARKER_END, INDEX_SEO_MARKER_START  # noqa: E402
-from tools.site_config import load_config  # noqa: E402
+from tools.index_spa_patch import (  # noqa: E402
+    INDEX_FIELDS_FALLBACK_START,
+    INDEX_NOSCRIPT_MARKER_END,
+    INDEX_NOSCRIPT_MARKER_START,
+)
+from tools.site_config import exam_name, load_config  # noqa: E402
 
 
 @dataclass
@@ -526,6 +531,34 @@ def _viewport_and_static_css(root: Path) -> list[Issue]:
                 issues.append(
                     Issue("index.html: head 内に takken-master.jp が残っています（apply_site_config を再実行）")
                 )
+        if INDEX_NOSCRIPT_MARKER_START not in text or INDEX_NOSCRIPT_MARKER_END not in text:
+            issues.append(
+                Issue(
+                    "index.html: INDEX_NOSCRIPT マーカーがありません"
+                    "（tools/apply_site_config.py を実行してください）"
+                )
+            )
+        fields_pos = text.find("var FIELDS =")
+        cfg_pos = text.find('src="site-config.js"')
+        if fields_pos >= 0 and cfg_pos >= 0 and cfg_pos > fields_pos:
+            issues.append(
+                Issue(
+                    "index.html: site-config.js が FIELDS 定義より後にあります"
+                    "（apply_site_config / sync_index_spa_from_template を実行）"
+                )
+            )
+        if INDEX_FIELDS_FALLBACK_START not in text:
+            issues.append(
+                Issue(
+                    "index.html: INDEX_FIELDS_FALLBACK マーカーがありません"
+                    "（apply_site_config を実行してください）"
+                )
+            )
+        en = exam_name()
+        if en != "◯◯試験（プレースホルダー）" and "◯◯試験（プレースホルダー）" in text.split("<noscript>", 1)[-1][:800]:
+            issues.append(
+                Issue("index.html: noscript 内にテンプレ placeholder の試験名が残っています（apply_site_config）")
+            )
     return issues
 
 

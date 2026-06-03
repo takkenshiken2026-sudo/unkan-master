@@ -1,0 +1,7 @@
+# index.html 部分同期 — 1行1マーカー名（tools/index_spa_patch.py PATCH_REGIONS）
+# index.html は template_site_only.paths でフル同期しない。エンジン更新時:
+#   python3 tools/sync_index_spa_from_template.py --target /path/to/site --apply-config
+INDEX_SEO_HEAD
+INDEX_NOSCRIPT
+INDEX_FIELDS_FALLBACK
+INDEX_SPA_PAGE_SEO

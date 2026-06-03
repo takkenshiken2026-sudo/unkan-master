@@ -40,6 +40,13 @@ from tools.index_seo_head import (
     migrate_legacy_takken_leaks,
     update_index_spa_seo_js,
 )
+from tools.index_spa_patch import (
+    INDEX_NOSCRIPT_MARKER_END,
+    INDEX_NOSCRIPT_MARKER_START,
+    ensure_site_config_before_fields,
+    inject_index_fields_fallback,
+    inject_index_noscript,
+)
 
 
 TEXT_TARGETS = [
@@ -399,7 +406,10 @@ def main() -> int:
         if path.suffix == ".html":
             new = inject_brand_head(new, rel, site_root=ROOT)
         if path == ROOT / "index.html":
+            new = ensure_site_config_before_fields(new)
             new = inject_index_seo_head(new)
+            new = inject_index_noscript(new)
+            new = inject_index_fields_fallback(new)
             new = update_index_spa_seo_js(new)
             new = fix_spa_breadcrumb_top(new)
             new = ensure_index_theme(new)

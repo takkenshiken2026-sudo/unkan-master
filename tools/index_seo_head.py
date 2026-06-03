@@ -223,6 +223,7 @@ def migrate_legacy_takken_leaks(text: str) -> str:
 
 
 _SPA_PAGE_SEO_JS = """\
+/*INDEX_SPA_PAGE_SEO*/
 // ページごとのSEOメタ情報（SITE_CONFIG から組み立て）
 function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || 'Sampleマスター'; }
 function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }
@@ -243,9 +244,11 @@ const PAGE_SEO = {
   'dash': _pageSeo('記録・学習分析', '学習日記カレンダー・獲得バッジ・レベルや分野別正答率で、学習の振り返りと弱点把握ができます。', '/#dash', '#dash'),
   'review': _pageSeo('復習', '不正解・未解答の演習問題を分野別にまとめて復習。弱点問題を集中的に解いて定着率を上げる。', '/#review', '#review'),
   'ichimondou': _pageSeo('一問一答', '{exam}の重要知識を一問一答形式で確認。短時間で基礎知識の定着を進められます。', '/#ichimondou', '#ichimondou')
-};"""
+};
+/*/INDEX_SPA_PAGE_SEO*/"""
 
 _PAGE_SEO_LEGACY_RE = re.compile(
+    r"/\*INDEX_SPA_PAGE_SEO\*/[\s\S]*?/\*/INDEX_SPA_PAGE_SEO\*/|"
     r"// ページごとのSEOメタ情報(?:（SITE_CONFIG から組み立て）)?[\s\S]*?const PAGE_SEO = \{[\s\S]*?\};",
 )
 

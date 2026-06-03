@@ -1859,7 +1859,7 @@ body.is-solving .site-footer{display:none!important}
 
     </div>
 
-    <!-- JS無効時のフォールバック (SEOクローラー向け静的コンテンツ) -->
+    <!--INDEX_NOSCRIPT-->
     <noscript>
       <div style="max-width:860px;margin:40px auto;padding:0 20px;font-family:sans-serif;line-height:1.8">
         <h1>運管マスター｜運行管理者試験 無料学習プラットフォーム</h1>
@@ -1867,19 +1867,22 @@ body.is-solving .site-footer{display:none!important}
         <h2>主な機能</h2>
         <ul>
           <li><strong>過去問演習</strong>：年度別・科目別に絞り込んで効率的に学習</li>
-          <li><strong>実践演習</strong>：法令・制度・契約実務・設備等の分野別練習（独自問題集）</li>
+          <li><strong>実践演習</strong>：貨物自動車運送事業法関係・道路運送車両法関係・道路交通法関係・労働基準法関係の分野別練習（独自問題集）</li>
           <li><strong>用語解説</strong>：重要用語をわかりやすく解説（静的ページ）</li>
           <li><strong>記録・学習分析</strong>：学習日記・バッジ・レベルに加え、正答率や科目別成績で進捗を可視化</li>
         </ul>
         <h2>対応科目</h2>
         <ul>
-          <li>法令・制度（法令・制度・登録・遵守事項・監督処分など）</li>
-          <li>契約・実務（契約・実務論点・応用論点・重要事項説明など）</li>
-          <li>設備・その他（設備・その他・不動産証券化など）</li>
+          <li>貨物自動車運送事業法関係（貨物自動車運送事業法関係・事業法関係・貨物事業法など）</li>
+          <li>道路運送車両法関係（道路運送車両法関係・車両法関係・車両法など）</li>
+          <li>道路交通法関係（道路交通法関係・道交法関係・道交法など）</li>
+          <li>労働基準法関係（労働基準法関係・労基法関係・労基法など）</li>
+          <li>実務上の知識及び能力（実務上の知識及び能力・実務・設備・その他など）</li>
         </ul>
-        <p style="margin-top:24px;font-size:14px;line-height:2"><a href="about.html">このサイトについて</a> ・ <a href="q/index.html">過去問一覧</a> ・ <a href="q/practice/index.html">実践演習一覧</a> ・ <a href="q/ichimon/index.html">一問一答一覧</a> ・ <a href="terms/index.html">用語集</a> ・ <a href="articles/index.html">試験ガイド</a> ・ <a href="related-sites.html">関連リンク</a> ・ <a href="privacy.html">プライバシー</a> ・ <a href="https://forms.gle/Rfovea3QJhVo24NYA" target="_blank" rel="noopener noreferrer">お問い合わせ</a></p>
+        <p style="margin-top:24px;font-size:14px;line-height:2"><a href="about.html">このサイトについて</a> ・ <a href="q/index.html">過去問一覧</a> ・ <a href="q/practice/index.html">実践演習一覧</a> ・ <a href="q/ichimon/index.html">一問一答一覧</a> ・ <a href="terms/index.html">用語集</a> ・ <a href="articles/index.html">試験ガイド</a> ・ <a href="related-sites.html">関連リンク</a> ・ <a href="privacy.html">プライバシー</a> ・ <a href="https://forms.gle/c2SxYVPDbdThhnYw8" target="_blank" rel="noopener noreferrer">お問い合わせ</a></p>
       </div>
     </noscript>
+    <!--/INDEX_NOSCRIPT-->
 
   </main>
 
@@ -1908,6 +1911,8 @@ body.is-solving .site-footer{display:none!important}
     </footer>
 </div>
 
+<link rel="stylesheet" href="site-theme.css">
+<script src="site-config.js"></script>
 <!-- CSV 取り込みデータを QUESTIONS 等へ反映する（exam-site-data-past.js の末尾から呼ばれる） -->
 <script>
 var SITE_CONFIG = window.SITE_CONFIG || {};
@@ -1920,11 +1925,13 @@ var FIELDS = (Array.isArray(SITE_CONFIG.fields) && SITE_CONFIG.fields.length)
         legacyGlossaryCat: String(f.legacyGlossaryCat || f.id)
       };
     })
-  : [
-      { id: 'law', name: '法令・制度', aliases:['法令・制度','関連法令'], legacyGlossaryCat:'law' },
-      { id: 'rights', name: '契約・実務', aliases:['契約・実務','実務'], legacyGlossaryCat:'rights' },
-      { id: 'limit', name: '設備・その他', aliases:['設備・その他','その他'], legacyGlossaryCat:'limit' }
-    ];
+  : /*INDEX_FIELDS_FALLBACK*/ [
+      { id: "jigyo", name: "貨物自動車運送事業法関係", aliases: ["貨物自動車運送事業法関係", "事業法関係", "貨物事業法", "事業法", "契約・実務"], legacyGlossaryCat: "jigyo" },
+      { id: "vehicle", name: "道路運送車両法関係", aliases: ["道路運送車両法関係", "車両法関係", "車両法"], legacyGlossaryCat: "vehicle" },
+      { id: "traffic", name: "道路交通法関係", aliases: ["道路交通法関係", "道交法関係", "道交法", "法令・制度"], legacyGlossaryCat: "traffic" },
+      { id: "labor", name: "労働基準法関係", aliases: ["労働基準法関係", "労基法関係", "労基法"], legacyGlossaryCat: "labor" },
+      { id: "practice", name: "実務上の知識及び能力", aliases: ["実務上の知識及び能力", "実務", "設備・その他"], legacyGlossaryCat: "practice" }
+    ] /*/INDEX_FIELDS_FALLBACK*/;
 function getFieldLabel(fieldId){
   var f = FIELDS.find(function(x){ return x.id === fieldId; });
   return f ? f.name : (fieldId || '—');
@@ -1954,7 +1961,6 @@ function applyCsvImportedQuestions() {
 }
 </script>
 <link rel="stylesheet" href="site-theme.css">
-<script src="site-config.js"></script>
 <script src="exam-site-data-practice.js"></script>
 <script src="exam-site-data-past.js"></script>
 <script src="exam-site-data-ichimondou.js"></script>
@@ -3134,8 +3140,8 @@ const PAGE_TITLES={'quiz-start':'問題を解く','past-config':'過去問','qui
 const NAV_PAGE_MAP = {'orig':'orig','quiz-start':'quiz-start','dash':'dash','review':'review','ichimondou':'ichimondou'};
 
 // ページごとのSEOメタ情報（SITE_CONFIG から組み立て）
-function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || 'Sampleマスター'; }
-function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }
+function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || '運管マスター'; }
+function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '運行管理者試験'; }
 function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }
 function _pageSeo(pageTitle, descTemplate, path, hash) {
   const exam = _cfgExam();
