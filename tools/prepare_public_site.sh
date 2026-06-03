@@ -26,6 +26,7 @@ for f in \
   robots.txt \
   sitemap.xml \
   .nojekyll \
+  favicon.ico \
   exam-site-data-past.js \
   exam-site-data-practice.js \
   exam-site-data-ichimondou.js
@@ -64,6 +65,9 @@ fi
 if [[ -d "$ROOT/assets/brand" ]]; then
   mkdir -p "$OUT/assets"
   cp -R "$ROOT/assets/brand" "$OUT/assets/"
+fi
+if [[ -f "$ROOT/favicon.ico" ]]; then
+  cp "$ROOT/favicon.ico" "$OUT/favicon.ico"
 fi
 if [[ -d "$ROOT/images" ]]; then
   cp -R "$ROOT/images" "$OUT/"
