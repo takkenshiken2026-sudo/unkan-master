@@ -32,6 +32,16 @@ def load_affiliate_brief(slug: str, *, root: Path | None = None) -> dict[str, An
     return data
 
 
+def _product_rank_key(product: dict[str, Any]) -> tuple[int, int | str]:
+    raw = product.get("rank")
+    if raw is None or raw == "":
+        return (1, 999)
+    try:
+        return (0, int(raw))
+    except (TypeError, ValueError):
+        return (0, str(raw))
+
+
 def brief_products(brief: dict[str, Any]) -> list[dict[str, Any]]:
     products = brief.get("products") or []
     if not isinstance(products, list):
@@ -40,7 +50,7 @@ def brief_products(brief: dict[str, Any]) -> list[dict[str, Any]]:
     for item in products:
         if isinstance(item, dict) and norm(str(item.get("name") or "")):
             out.append(item)
-    return sorted(out, key=lambda p: int(p.get("rank") or 999))
+    return sorted(out, key=_product_rank_key)
 
 
 def brief_has_product_comparison(brief: dict[str, Any] | None) -> bool:
