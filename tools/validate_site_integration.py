@@ -26,7 +26,7 @@ from tools.index_spa_patch import (  # noqa: E402
     INDEX_NOSCRIPT_MARKER_END,
     INDEX_NOSCRIPT_MARKER_START,
 )
-from tools.site_config import exam_name, load_config  # noqa: E402
+from tools.site_config import clean_origin, exam_name, load_config  # noqa: E402
 
 
 @dataclass
@@ -525,12 +525,52 @@ def _viewport_and_static_css(root: Path) -> list[Issue]:
             )
         elif 'property="og:title"' not in text:
             issues.append(Issue("index.html: og:title がありません（SNSカード用 SEO head 未適用）"))
-        elif "takken-master.jp" in text.split("</head>", 1)[0]:
-            origin = str(load_config().get("siteOrigin") or "")
-            if "takken-master.jp" not in origin:
+        else:
+            head = text.split("</head>", 1)[0]
+            origin = clean_origin().rstrip("/")
+            og_url_m = re.search(r'property="og:url"\s+content="([^"]+)"', head)
+            if og_url_m and og_url_m.group(1).rstrip("/") != origin:
                 issues.append(
-                    Issue("index.html: head 内に takken-master.jp が残っています（apply_site_config を再実行）")
+                    Issue(
+                        f"index.html: og:url が siteOrigin と不一致です"
+                        f"（現在: {og_url_m.group(1)!r}、期待: {origin + '/'}）"
+                        " — tools/apply_site_config.py を実行してください"
+                    )
                 )
+            canon_m = re.search(r'id="canonical-link"\s+href="([^"]+)"', head)
+            if not canon_m:
+                canon_m = re.search(r'rel="canonical"\s+href="([^"]+)"', head)
+            if canon_m and canon_m.group(1).rstrip("/") != origin:
+                issues.append(
+                    Issue(
+                        f"index.html: canonical が siteOrigin と不一致です"
+                        f"（現在: {canon_m.group(1)!r}、期待: {origin + '/'}）"
+                        " — tools/apply_site_config.py を実行してください"
+                    )
+                )
+            site_host = origin.replace("https://", "").replace("http://", "").strip("/")
+            for leak in (
+                "mentalhealth-master.jp",
+                "chintaikanrishi-master.jp",
+                "mankan-master.jp",
+                "kikenbutsu-master.jp",
+                "takken-master.jp",
+                "eisei1shu-master.jp",
+                "eisei2shu-master.jp",
+                "kangyou-master.jp",
+                "unkan-master.jp",
+                "boiler-master.jp",
+            ):
+                if leak == site_host:
+                    continue
+                if leak in head:
+                    issues.append(
+                        Issue(
+                            f"index.html: head 内に他サイトのドメイン {leak!r} が残っています"
+                            "（apply_site_config を再実行）"
+                        )
+                    )
+                    break
         if INDEX_NOSCRIPT_MARKER_START not in text or INDEX_NOSCRIPT_MARKER_END not in text:
             issues.append(
                 Issue(
