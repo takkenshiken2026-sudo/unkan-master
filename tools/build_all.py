@@ -11,12 +11,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def ensure_python_deps() -> None:
+    """GitHub Actions 等で PyYAML が未導入のとき build を止めない。"""
+    py = sys.executable
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        subprocess.run([py, "-m", "pip", "install", "--quiet", "pyyaml"], check=True)
+
+
 def run(cmd: list[str]) -> None:
     print("+", " ".join(cmd))
     subprocess.run(cmd, cwd=ROOT, check=True)
 
 
 def main() -> int:
+    ensure_python_deps()
     py = sys.executable
     run([py, "tools/validate_csv.py"])
     run([py, "tools/generate_brand_assets.py"])
