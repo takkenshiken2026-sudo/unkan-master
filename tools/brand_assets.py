@@ -407,11 +407,10 @@ def inject_brand_head(html_text: str, rel_path: Path, *, site_root: Path | None 
         '<meta name="twitter:card" content="summary">',
         '<meta name="twitter:card" content="summary_large_image">',
     )
-    if html_text.count('meta name="theme-color"') > 1:
-        html_text = re.sub(
-            r'\n<meta name="theme-color" content="[^"]*">',
-            "",
-            html_text,
-            count=1,
-        )
+    accent = html.escape(theme_ink())
+    html_text = re.sub(
+        r'(<meta name="theme-color" content=")[^"]*(">)',
+        rf"\g<1>{accent}\2",
+        html_text,
+    )
     return html_text
