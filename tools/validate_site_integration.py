@@ -559,6 +559,20 @@ def _viewport_and_static_css(root: Path) -> list[Issue]:
             issues.append(
                 Issue("index.html: noscript 内にテンプレ placeholder の試験名が残っています（apply_site_config）")
             )
+        if re.search(r'id="ichi-field-chips">\s*<button', text):
+            issues.append(
+                Issue(
+                    "index.html: 一問一答 #ichi-field-chips に静的 chip が残っています"
+                    "（buildIchiFieldChips による FIELDS 動的描画に更新してください）"
+                )
+            )
+        if "function buildIchiFieldChips" not in text:
+            issues.append(
+                Issue(
+                    "index.html: buildIchiFieldChips がありません"
+                    "（テンプレ index.html を同期してください）"
+                )
+            )
     return issues
 
 
