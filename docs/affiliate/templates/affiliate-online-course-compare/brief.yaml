@@ -1,0 +1,65 @@
+# data/affiliate-briefs/affiliate-online-course-compare.yaml
+
+slug: affiliate-online-course-compare
+theme_key: online-course-compare
+search_intent: オンライン講座を比較して独学に組み込みたい
+
+title: ◯◯試験のオンライン講座比較【独学との併用】
+genre: 独学対策
+layout: product-comparison
+asp_primary: a8
+comparison_kind: courses
+
+comparison_title: おすすめオンライン講座2選（比較）
+price_disclaimer: 料金・キャンペーン・受講期間は執筆時点（2026-06-02）の公式参考です。申込前に必ず各講座の公式ページで最新条件を確認してください。
+
+products:
+  - rank: 1
+    offer_type: course
+    name: 【講座A・買い切り型】◯◯試験 合格講座
+    provider: 【提供会社A】
+    plan_name: 2026年度版
+    price_yen: 49800
+    billing_type: lump
+    price_note: キャンペーン時は変動
+    duration: 受講期間12か月
+    lecture_hours: 150
+    support: 質問サポート・進捗管理
+    image_file: sample-course-a-2026.webp
+    a8_url: https://px.a8.net/svt/ejp?a8mat=DEMOCOURSE001
+    trial_label: 無料体験あり
+    trial_url: https://px.a8.net/svt/ejp?a8mat=DEMOCOURSE001T
+    for_who: 独学でつまずきやすい論点を動画で補強したい人
+    highlights:
+      - 全分野の動画講義＋確認テスト付き
+      - 買い切りで受講期間内は繰り返し視聴可
+      - 当サイトの過去問演習と章立てを並行しやすい
+  - rank: 2
+    offer_type: course
+    name: 【講座B・月額型】◯◯試験 オンライン講座
+    provider: 【提供会社B】
+    plan_name: スタンダードプラン
+    price_yen: 9800
+    billing_type: monthly
+    price_note: 税込・解約条件は公式参照
+    duration: 最短3か月〜
+    lecture_hours: 80
+    support: チャット質問（平日）
+    image_file: sample-course-b-2026.webp
+    affiliate_url: https://px.a8.net/svt/ejp?a8mat=DEMOCOURSE002
+    for_who: 試験直前まで柔軟に学習時間を調整したい人
+    highlights:
+      - 月額のため短期集中に向く
+      - スマホ視聴・倍速再生対応
+      - 無料の過去問演習と併用しやすい
+
+related_links:
+  - self-study-roadmap:独学の進め方
+  - study-plan:学習計画
+  - ../../q/index.html:過去問を解く（無料）
+
+operator_note: |
+  ASP: A8.net / afb（サイト登録に合わせる）
+  講座: 提供会社A/B（公式LP URL・報酬条件）
+  料金: キャンペーン表記は fact_checked_at と四半期ごとに照合
+  画像: python3 tools/fetch_affiliate_product_images.py --slug affiliate-online-course-compare

@@ -12,6 +12,8 @@
 
 「テンプレを再現する」= マニフェストのファイルを同期し、本番で `build_all.py` を回して生成物を揃える、という意味に統一します。
 
+**アフィリエイト記事**（比較表・商品カード UI）を新規・リライトするときは、共通エンジン同期に加え [affiliate/multi-site-affiliate-workflow.md](./affiliate/multi-site-affiliate-workflow.md) を参照してください（`docs/affiliate/` 一式と `affiliate_*.py` がマニフェストに含まれます）。
+
 **過去問ハブ・フッター・用語一覧を同時に直すとき**は、先に [integration-checklist.md](./integration-checklist.md) の契約一覧と検証手順に従ってください（個別修正だけだと再発しやすい項目をまとめています）。
 
 ## ファイル一覧

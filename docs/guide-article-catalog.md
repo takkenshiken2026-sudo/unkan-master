@@ -259,7 +259,11 @@
 
 ## アフィリエイト記事（10本目安）
 
-試験ガイドの一部として `articles/` に公開する。**`tags` に `アフィリエイト` を必ず含める**（`validate_csv.py` が本数カウント）。詳細ルールは **[seo-article-guidelines.md](./seo-article-guidelines.md)** の「アフィリエイト記事」。
+- **ASP / 商品 URL が確定してから** `guide_articles.csv` に行を追加し HTML を公開する。リンク未用意の slug は **記事を作らない**（`build_article_pages.py` も HTML を生成しない）。
+- 既に CSV 行だけある場合は **`content_status=draft`（非公開）** のまま置き、ASP URL 確定後に `published` へ切り替える。
+
+- **`tags` に `アフィリエイト`**（リンク済み行のみ本数カウント）
+- 詳細: **[seo-article-guidelines.md](./seo-article-guidelines.md)** / **[affiliate/affiliate-article-rules.md](./affiliate/affiliate-article-rules.md)**
 
 | slug | genre | 主なASP |
 |------|-------|---------|
@@ -274,6 +278,7 @@
 | affiliate-retake-short-course | 学習計画 | A8.net / afb |
 | affiliate-qualification-support-service | 受験・申込 | A8.net / afb（試験に該当サービスがある場合のみ） |
 
+- 上記 slug は **ASP URL 確定後に1本ずつ追加** する。プレースホルダー行を先に10本作らない。
 - 上記のうち不要な行（取得支援サービスがない試験など）は省略し、別カテゴリで10本に届ける。
 - 既存の「教材選び（6）」slug と **検索意図が重複しない** よう、選び方ガイドかおすすめ比較のどちらかに寄せる。
 

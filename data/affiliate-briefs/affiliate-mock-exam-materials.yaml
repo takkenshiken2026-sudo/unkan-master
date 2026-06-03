@@ -1,0 +1,69 @@
+slug: affiliate-mock-exam-materials
+theme_key: mock-exam-materials
+search_intent: 運行管理者試験のCBT・重要問題集を比較して選びたい
+title: 運行管理者試験のCBT対策問題集3選【重要問題・令和8年8月版】
+layout: product-comparison
+asp_primary: amazon
+comparison_kind: books
+comparison_title: CBT・重要問題3選（比較）
+price_disclaimer: 価格は執筆時点（2026-06-04）のAmazon税込参考です。試験方式・実施回は公益財団法人 運行管理者試験センター（公式）で必ず確認してください。
+products:
+- rank: 1
+  offer_type: book
+  name: 運行管理者試験 重要問題厳選集 貨物編 2026-2027
+  publisher: 公論出版
+  edition: 2026-2027
+  price_yen: 2200
+  price_note: Amazon税込参考・送料別
+  pages: 256
+  format: B5判
+  asin: '4862753728'
+  image_file: unkan-book-4862753728.webp
+  amazon_url: https://www.amazon.co.jp/dp/4862753728/ref=nosim?tag=ue083093-22
+  for_who: 貨物試験で頻出論点を絞って演習したい人
+  highlights:
+  - 重要問題を厳選して演習量を効率化
+  - CBT移行期の出題傾向整理に向く
+  - テキスト読了後の総仕上げにも使える
+- rank: 2
+  offer_type: book
+  name: 運行管理者試験 重要問題厳選集 旅客編 2026-2027
+  publisher: 公論出版
+  edition: 2026-2027
+  price_yen: 2200
+  price_note: Amazon税込参考・送料別
+  pages: 256
+  format: B5判
+  asin: '4862753736'
+  image_file: unkan-book-4862753736.webp
+  amazon_url: https://www.amazon.co.jp/dp/4862753736/ref=nosim?tag=ue083093-22
+  for_who: 旅客試験で頻出論点を短期集中で押さえたい人
+  highlights:
+  - 旅客向け重要問題を1冊に集約
+  - 貨物合格後の旅客対策の演習メインに向く
+  - 厳選集で直前期の弱点補強に使いやすい
+- rank: 3
+  offer_type: book
+  name: 運行管理者試験 問題と解説 貨物編 令和8年8月CBT試験受験版
+  publisher: 公論出版
+  edition: 令和8年8月CBT受験版
+  price_yen: 2860
+  price_note: Amazon税込参考・送料別
+  pages: 304
+  format: B5判
+  asin: '4862753760'
+  image_file: unkan-book-4862753760.webp
+  amazon_url: https://www.amazon.co.jp/dp/4862753760/ref=nosim?tag=ue083093-22
+  for_who: CBT本番形式で貨物試験の演習をしたい人
+  highlights:
+  - 令和8年8月CBT受験向けの問題と解説
+  - PC試験の時間感覚を養う練習に向く
+  - 重要問題厳選集と併用して演習量を確保しやすい
+related_links:
+- exam-overview:試験概要
+- past-question-strategy:過去問の使い方
+- pass-score:合格点と合格基準
+- affiliate-textbooks-recommend:おすすめテキスト
+- affiliate-problem-books:おすすめ問題集
+- study-plan-beginner:初学者向け学習計画
+operator_note: Amazon tag=ue083093-22。旅客CBT版 4862753779 は本文・FAQで言及。 2026-06-04 価格確認。

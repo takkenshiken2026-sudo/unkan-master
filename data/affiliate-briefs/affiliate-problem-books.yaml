@@ -1,0 +1,69 @@
+slug: affiliate-problem-books
+theme_key: problem-books
+search_intent: 運行管理者試験の過去問・問題集を比較して選びたい
+title: 運行管理者試験のおすすめ問題集3選【過去問2026】
+layout: product-comparison
+asp_primary: amazon
+comparison_kind: books
+comparison_title: おすすめ問題集3選（比較）
+price_disclaimer: 価格・在庫は執筆時点（2026-06-04）のAmazon税込参考です。購入前に販売ページで最新版を確認してください。
+products:
+- rank: 1
+  offer_type: book
+  name: 2026年版 ユーキャンの運行管理者＜貨物＞ 過去6回問題集
+  publisher: ユーキャン / 自由国民社
+  edition: 2026年版
+  price_yen: 2750
+  price_note: Amazon税込参考・送料別
+  pages: 320
+  format: B5判
+  asin: '4426616662'
+  image_file: unkan-book-4426616662.webp
+  amazon_url: https://www.amazon.co.jp/dp/4426616662/ref=nosim?tag=ue083093-22
+  for_who: 貨物試験で直近6回分を解説付きで解きたい人
+  highlights:
+  - ユーキャン合格テキストと組み合わせやすい
+  - 過去6回分で演習量を一気に確保できる
+  - 本試験形式に慣れる練習向き
+- rank: 2
+  offer_type: book
+  name: 詳解 運行管理者＜貨物＞過去問題集 '25-'26年版
+  publisher: 成美堂出版
+  edition: '''25-''26年版'
+  price_yen: 2420
+  price_note: Amazon税込参考・送料別
+  pages: 288
+  format: B5判
+  asin: '4415240216'
+  image_file: unkan-book-4415240216.webp
+  amazon_url: https://www.amazon.co.jp/dp/4415240216/ref=nosim?tag=ue083093-22
+  for_who: 貨物向けに解説の厚い過去問演習がしたい人
+  highlights:
+  - 詳解付きで復習しやすい
+  - 成美堂シリーズで他教材との併用がしやすい
+  - 時間配分の練習に向く
+- rank: 3
+  offer_type: book
+  name: 詳解 運行管理者＜旅客＞過去問題集 '25-'26年版
+  publisher: 成美堂出版
+  edition: '''25-''26年版'
+  price_yen: 2420
+  price_note: Amazon税込参考・送料別
+  pages: 288
+  format: B5判
+  asin: '4415240224'
+  image_file: unkan-book-4415240224.webp
+  amazon_url: https://www.amazon.co.jp/dp/4415240224/ref=nosim?tag=ue083093-22
+  for_who: 旅客試験で本試験形式の演習量を確保したい人
+  highlights:
+  - 旅客向け過去問を解説付きで収録
+  - 貨物合格後の旅客対策のメイン演習に向く
+  - 成美堂貨物版と使い分けやすい
+related_links:
+- past-questions-by-year:年度別過去問
+- self-study-roadmap:独学ロードマップ
+- pass-score:合格点と合格基準
+- affiliate-textbooks-recommend:おすすめテキスト
+- affiliate-mock-exam-materials:CBT対策問題集
+- past-question-strategy:過去問の使い方
+operator_note: Amazon tag=ue083093-22。4426616662 / 4415240216 / 4415240224。

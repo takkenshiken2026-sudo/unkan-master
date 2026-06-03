@@ -1,0 +1,81 @@
+# コピー先: data/affiliate-briefs/affiliate-textbooks-recommend.yaml
+# ASP URL・価格・ASIN を実値に差し替え → fetch_affiliate_product_images.py で表紙取得
+
+slug: affiliate-textbooks-recommend
+theme_key: textbooks-recommend
+search_intent: 独学で使うおすすめテキストを比較して選びたい
+
+title: ◯◯試験のおすすめテキスト3選【独学・初心者向け】
+genre: 独学対策
+layout: product-comparison
+asp_primary: amazon
+
+comparison_kind: books
+comparison_title: おすすめテキスト3選（比較）
+price_disclaimer: 価格・在庫・版情報は執筆時点（2026-06-02）のAmazon税込参考です。購入前に必ず販売ページでご確認ください。
+
+products:
+  - rank: 1
+    name: 2026年度版 ◯◯試験 完全攻略テキスト
+    publisher: 学習支援出版
+    edition: 2026年6月改訂
+    price_yen: 3080
+    price_note: Amazon税込・送料別
+    pages: 512
+    format: A5判
+    asin: B0DEMO0001
+    image_file: sample-textbook-a-2026.webp
+    amazon_url: https://www.amazon.co.jp/dp/B0DEMO0001
+    workbook_name: 2026年度版 ◯◯試験 完全攻略問題集
+    workbook_image_file: sample-textbook-a-workbook-2026.webp
+    workbook_amazon_url: https://www.amazon.co.jp/dp/B0DEMO0001W
+    for_who: 初学者で基礎から体系的に学びたい人
+    highlights:
+      - 全出題範囲を章立てで1冊に集約（512ページ）
+      - 例題→解説→確認問題の3ステップ構成
+      - 過去問頻出論点を別色で明示
+      - 同一シリーズの問題集と章番号が対応
+  - rank: 2
+    name: 2026 ◯◯試験 要点整理テキスト
+    publisher: 資格試験Press
+    edition: 2026年版
+    price_yen: 2420
+    price_note: Amazon税込・送料別
+    pages: 368
+    format: B5判
+    asin: B0DEMO0002
+    image_file: sample-textbook-b-2026.webp
+    amazon_url: https://www.amazon.co.jp/dp/B0DEMO0002
+    for_who: 過去問演習を早めに始めたい人
+    highlights:
+      - 各章末に確認問題（計420問）
+      - 要点BOXで直前期の総復習がしやすい
+      - 図表・フローでイメージ記憶向き
+  - rank: 3
+    name: 2026 ◯◯試験 イラストで理解するテキスト
+    publisher: みんなの資格Books
+    edition: 2026年5月版
+    price_yen: 2750
+    price_note: Amazon税込・送料別
+    pages: 448
+    format: A5判
+    asin: B0DEMO0003
+    image_file: sample-textbook-c-2026.webp
+    amazon_url: https://www.amazon.co.jp/dp/B0DEMO0003
+    for_who: 復習のしやすさ・視覚的理解を優先したい人
+    highlights:
+      - 図解・表が多く暗記が苦手な人向け
+      - 1見開き1テーマで読み進めやすい
+      - 模擬問題80問付き
+
+related_links:
+  - self-study-roadmap:独学の進め方
+  - study-plan:学習計画
+  - ../../q/index.html:過去問を解く（無料）
+
+operator_note: |
+  ASP: Amazonアソシエイト
+  プログラムID: （サイトのトラッキングID）
+  商品: テキストA/B/C（ISBN・ASIN・短縮URL）
+  価格: fact_checked_at と四半期ごとに照合
+  画像: python3 tools/fetch_affiliate_product_images.py --slug affiliate-textbooks-recommend

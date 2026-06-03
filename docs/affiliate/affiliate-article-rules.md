@@ -1,287 +1,495 @@
 # 資格試験サイト アフィリエイト記事ルール
 
-試験ガイド内のアフィリエイト記事（参考書・問題集・通信講座など）の作成・更新ルール。  
-**exam-site-shell** テンプレートおよび各資格サイトの `articles/{slug}/` 実装を前提にする。
+試験ガイド内のアフィリエイト記事（参考書・問題集・通信講座など）の **作成・更新・公開** ルール。  
+**exam-site-shell** テンプレートおよび各資格サイトの `articles/{slug}/` を前提とする。
 
-> テンプレート共通の識別・法務・ASP方針は `docs/seo-article-guidelines.md` の「アフィリエイト記事」を正本とする。本書は **商品比較型・Amazon中心** の記事の実装詳細を補う。
+## 文書の役割分担
 
----
-
-## 0. 適用範囲
-
-| 対象 | 内容 |
+| 文書 | 内容 |
 |------|------|
-| 記事種別 | 試験ガイド（`data/guide_articles.csv`）の1行 = 1 URL |
-| 識別 | `tags` に **`アフィリエイト`** を必ず含める |
-| 本数目安 | 本番 **10本前後**（`tools/validate_csv.py` がカウント） |
-| 収益チャネル | Amazonアソシエイト、A8.net、afb 等（記事ごとに主軸を決める） |
+| **本書** | 作成手順・UI・画像・ASP・チェックリスト |
+| [multi-site-affiliate-workflow.md](./multi-site-affiliate-workflow.md) | **全サイト**への同期・新規・リライト手順 |
+| [seo-article-guidelines.md](../seo-article-guidelines.md) の「アフィリエイト記事」 | 識別・法務・本数・内部リンク方針 |
+| [guide-article-catalog.md](../guide-article-catalog.md) | 標準 slug 一覧（10本目安） |
+| [auto-create-workflow.md](./auto-create-workflow.md) | CLI / AI による雛形生成フロー |
 
-資格名・ドメイン・教材名はサイトごとに差し替える。以下の `{資格}` `{slug}` `{ドメイン}` はプレースホルダー。
+各本番サイトの `docs/affiliate/` は **[PRODUCTION-SITE-STUB.md](./PRODUCTION-SITE-STUB.md)** の短い案内のみ。**旧版フルコピーは置かない**。
 
 ---
 
-## 1. 記事の置き場所とビルド
+## 1. いつ記事を作るか（最重要）
+
+### 作る条件
+
+次が **すべて揃ってから** CSV 追記・公開 HTML 生成を行う。
+
+1. **ASP / 商品 URL が確定**（Amazon・A8.net・afb 等。プレースホルダー不可）
+2. 1記事 = 1検索意図が決まっている
+3. 比較対象・訴求ポイントがブリーフまたは `original_note` に書ける
+4. **各商品の最新価格を ASP / 公式 URL で確認済み**（[§3 執筆の必須原則 A](#a-価格は必ず-url-から最新を調査する)）
+5. **タイトル・商品に沿ったオリジナル本文が完成している**（[§3 執筆の必須原則 B](#b-機械的な量産文を書かず記事ごとにオリジナル執筆する)）
+
+### 作らない・待つ
+
+| 状況 | 対応 |
+|------|------|
+| URL 未確定 | **CSV 行を作らない**。ブリーフ YAML だけ用意してよい |
+| 既に CSV 行だけある | `content_status=draft` のまま。**HTML は生成されない** |
+| 標準10 slug を一括追加 | **禁止**。URL が付いた slug から1本ずつ |
+
+### 公開の流れ
+
+```
+ASP URL 確定 → 各商品ページで価格確認 → brief 記入
+→ オリジナル本文執筆 → scaffold --append（または CSV 更新）
+→ content_status=published → build → デプロイ
+```
+
+**例外:** `affiliate-free-vs-paid-study` など **asp=internal**（収益リンクなし・内部導線のみ）と明示したテーマ。
+
+---
+
+## 2. 識別・本数
+
+| 項目 | ルール |
+|------|--------|
+| 記事種別 | 試験ガイド（`data/guide_articles.csv`）の1行 = 1 URL |
+| 識別 | `tags` に **`アフィリエイト`**（CSV・validate 用） |
+| 公開ページ | **`アフィリエイト` タグは表・一覧に出さない** |
+| 本数目安 | **ASP リンク済み・公開 HTML あり** の行を **10本前後** |
+| genre | 原則 `独学対策`。模試系 `過去問活用`、セット系 `学習計画`、申込系 `受験・申込` も可 |
+
+---
+
+## 3. コンテンツ・表記
+
+### 載せる
+
+- 読者向けの比較・選び方・学習との組み合わせ
+- 信頼性パネル（執筆・確認・事実確認日）。Amazon 利用時はプログラム名
+- 内部リンク（過去問・用語・学習計画）**2件以上**
+
+### 載せない
+
+- **【PR・広告】等の PR 定型文**（本文・表・一覧すべて）
+- `アフィリエイト` タグ（公開ページの基本情報表・試験ガイド一覧）
+- ASP プログラム ID・報酬条件（→ `original_note` に非公開で記録）
+- 運用者向け文言（CSV 手順・テンプレ説明など）
+- **テンプレのプレースホルダー文言をそのまま公開する文章**（後述「執筆の必須原則」）
+
+### 執筆の必須原則（必ず運用）
+
+以下2点は **すべてのアフィリエイト記事** で例外なく守る。AI・人のどちらが執筆しても同じ。
+
+#### A. 価格は必ず URL から最新を調査する
+
+価格の誤記は読者損害・信頼低下につながるため、**公開・更新のたびに** 各商品の ASP / 公式 URL を開き、**その時点の表示価格** を確認してから brief・CSV に反映する。
+
+| 項目 | ルール |
+|------|--------|
+| 調査元 | brief の `amazon_url` / `a8_url` / `affiliate_url` 等 **リンク先の販売ページ**（短縮 URL も必ず遷移先まで確認） |
+| 反映先 | brief の `price_yen` / `price_label` / `price_note`、本文・比較表に載る数値 |
+| タイミング | 新規執筆時、**公開前**、価格改定・キャンペーン期の **再公開前** |
+| 禁止 | テンプレ・他記事・記憶・推測からの価格転記、未確認のまま `published` |
+| 記録 | CSV の **`fact_checked_at` 列**（brief フィールドではない）を更新。必要なら `revision_note` に確認日を残す |
+
+**書籍（Amazon）:** 商品ページの税込価格・版・在庫状況を確認。  
+**講座（A8 / afb / 公式）:** 通常料金・キャンペーン料金・月額/一括・受講期限を公式 LP で確認。キャンペーン表記は執筆日と整合させる。
+
+brief の `price_yen` と本文の価格表記が **不一致のまま公開しない**。
+
+#### B. 機械的な量産文を書かず、記事ごとにオリジナル執筆する
+
+`guide-row.yaml` や scaffold 出力は **構成の雛形** であり、公開可能な完成原稿ではない。  
+**1記事 = 1検索意図 = 1回のオリジナル執筆** とし、タイトル・紹介商品・資格・読者像に合わせて **section ごとに中身を書き直す**。
+
+| 項目 | ルール |
+|------|--------|
+| 必須 | 当該記事の **タイトル・検索意図・brief の商品** に沿った独自の論旨・具体例・向き不向き |
+| 禁止 | テンプレの `◯◯試験` 差し替えだけ、他 slug の本文流用、同一フレーズの使い回し、SEO 用の空疎な定型段落の連続 |
+| 商品詳細 section | 各商品の **目次構成・解説量・強み弱み・組み合わせ** を個別に記述（3商品なら3パターンが読めること） |
+| AI 利用時 | 雛形をベースに **全面リライト**。一括生成で複数 slug を同時に仕上げない |
+| 公開ゲート | 「テンプレから機械置換しただけ」と判断できる段落が残っていたら **公開しない** |
+
+読者が「この記事だけの比較・選び方」と感じられることを合格基準とする。
+
+### リンクの分離
+
+| 用途 | 置き場 |
+|------|--------|
+| 公式・一次情報 | `primary_sources` |
+| ASP / 商品 | 本文 CTA・brief の `products.*_url`（**関連ボックスには出さない**） |
+| 内部ガイド | `related_links` の `slug:ラベル` |
+
+### 関連記事・知識ハブ（アフィリエイト記事）
+
+公開ページ末尾の関連ボックスは **最大6件**。
+
+| 種別 | 件数 | 例 |
+|------|------|-----|
+| その他コンテンツ（非アフィリエイト） | 3件 | 独学ガイド、過去問の回し方、用語解説への導線 |
+| 別のアフィリエイト記事 | 3件 | テキスト比較、問題集比較、講座比較 |
+
+- `related_links` には上記6件を **非アフィリエイト3 → アフィリエイト3** の順で記載
+- 自動付与の知識ハブリンク（用語一覧・過去問演習など）は **付けない**
+- Amazon / A8 等の **外部商品 URL は `related_links` に書かない**（関連ボックスに出ない）。ASP URL は brief・本文 CTA に置く
+
+外部リンク属性: `target="_blank" rel="nofollow sponsored noopener noreferrer"`
+
+---
+
+## 4. 作成手順
+
+### 4.1 新規1本
+
+```bash
+# 1. テーマ確認
+python3 tools/scaffold_affiliate_article.py --list-themes
+
+# 2. ブリーフに ASP URL を記入してから追記（URL 無しはエラー）
+python3 tools/scaffold_affiliate_article.py \
+  --from-brief data/affiliate-briefs/affiliate-textbooks-recommend.yaml \
+  --append
+
+# 3. 本文・画像を完成 → 公開状態へ
+#    content_status=published（CSV）
+
+# 4. 検証・ビルド
+python3 tools/validate_csv.py
+python3 tools/build_article_pages.py   # または build_all.py
+
+# 5. デプロイ（各サイト main → GitHub Pages）
+```
+
+### 4.2 本番サイト（マルチサイト）
+
+[multi-site-affiliate-workflow.md](./multi-site-affiliate-workflow.md) を参照。
+
+1. `sync_from_template.py` で affiliate ツール + CSS を同期
+2. brief / CSV は **本番リポジトリ** で管理
+3. `fetch_affiliate_product_images.py` → `prepare_public_site.sh` で images デプロイ
+
+### 4.3 リライト
+
+1. 各 ASP URL で価格・版を再確認 → brief / CSV 更新
+2. CSV **`fact_checked_at`** 更新
+3. section 本文をオリジナルで全面見直し
+4. `validate_csv.py` → `build_article_pages.py` → デプロイ
+
+### 4.4 リンク未設定行を draft に戻す
+
+```bash
+python3 tools/draft_unlinked_affiliate_articles.py
+```
+
+### 4.5 PR 定型文の除去（既存 CSV 用）
+
+```bash
+python3 tools/strip_affiliate_pr_disclaimer.py
+```
+
+---
+
+## 5. データとビルド
 
 | 項目 | 内容 |
 |------|------|
-| 記事データ | `data/guide_articles.csv`（メタ・リード・関連リンク等） |
-| 本文 | CSVの `body_sections` **または** 複雑な商品UIは `tools/articles_{slug}.py` 等でHTML生成しビルド時にマージ |
-| ビルド | `python3 tools/build_all.py`（推奨）または `python3 tools/build_article_pages.py` |
-| 公開URL | `https://{ドメイン}/articles/{slug}/` |
-| 旧URL | リネーム時は `tools/build_legacy_redirects.py` で `articles/{slug}/` へ301 |
-| デプロイ | 各サイトの運用（例: `main` → GitHub Pages） |
+| 記事データ | `data/guide_articles.csv` |
+| テーマ入力 | `data/affiliate-briefs/{slug}.yaml` |
+| 本文 | CSV の `section_*`。**product-comparison brief なら商品名を本文から自動リンク** |
+| ビルド | `python3 tools/build_article_pages.py` / `build_all.py` |
+| 公開 URL | `https://{ドメイン}/articles/{slug}/` |
+| 生成物 | `articles/{slug}/index.html`（**手編集しない**） |
 
-**注意:** 記事HTMLはビルドで生成する。`articles/` 配下の生成物を手編集しても次回ビルドで上書きされる。
-
-### 1.1 新規アフィリエイト記事を増やす手順
-
-1. `data/guide_articles.csv` に行を追加（`tags` に `アフィリエイト`、`genre` は原則 `独学対策` 等）
-2. リードに **広告・PR（アフィリエイト）** の明示を入れる（`validate_csv.py` が検査）
-3. 本文を CSV セクションで書く **または** `tools/articles_*.py` で本文・商品カードを定義し `build_article_pages.py` に接続
-4. `data/seo_config.json` に slug を追加（サイトで使っている場合）
-5. 表紙・ロゴ画像を `images/` 以下に配置（命名は §2）
-6. 記事固有スタイルは `site-pages.css` の既存 `.affiliate-*` 等を **流用優先**。新規クラスは最小限
-7. `python3 tools/build_all.py` → ローカル確認 → デプロイ
+**ビルド時の挙動:** `tags` に `アフィリエイト` があり **ASP URL が無い行は HTML を生成しない**（試験ガイド一覧にも出ない）。
 
 ---
 
-## 2. 表紙・商品画像のルール
+## 6. 紹介対象の種類（書籍・講座）
 
-### 2.1 基本方針
+アフィリエイト記事は **書籍（Amazon）** と **講座・サービス（A8 / afb 等）** の両方を扱う。  
+brief の `comparison_kind` と各 `products[].offer_type` で UI・比較表・リンク先を切り替える。
 
-- **SVGプレースホルダーは使わない**（文字化け・見た目の問題があるため非推奨）。
-- 画像は **自サイトにホスト** する（外部URLのホットリンクはしない）。
-- 画像が無い間は **CSSプレースホルダー**（出版社名・書名・年度）を表示する。
-- 画像データは運用者が **ファイル添付 or 入手URL** で渡し、サイトの `images/` 配下に配置する。
+| 種別 | `comparison_kind` | `offer_type` | 主 ASP | 比較表の主な列 |
+|------|-------------------|--------------|--------|----------------|
+| テキスト・問題集 | `books` | `book`（省略可） | Amazon | 価格・ページ数 |
+| オンライン講座・通信・予備校 | `courses` | `course` | A8 / afb / 公式 ASP | 料金・学習期間 |
 
-### 2.2 ファイル名（命名規則）
+### brief フィールド（書籍）
 
-資格・商品ごとに一意で、年度が分かる名前にする。
+| フィールド | 用途 |
+|------------|------|
+| `name`, `publisher`, `edition` | 商品名・出版社・版 |
+| `price_yen`, `price_note`, `pages`, `format` | 価格・仕様 |
+| `asin`, `amazon_url`, `image_file` | Amazon リンク・表紙 |
+| `workbook_name`, `workbook_amazon_url`, `workbook_image_file` | セット問題集（任意） |
+| `for_who`, `highlights` | 比較表・カード |
 
-```
-{資格略称}-{商品略称}-{年度}.{拡張子}
-{資格略称}-{商品略称}-workbook-{年度}.{拡張子}   # 問題集などテキストと別商品のとき
-```
+### brief フィールド（講座）
 
-| 例（宅建の場合） | 意味 |
-|------------------|------|
-| `takken-minna-2026.jpg` | テキストA・2026版 |
-| `takken-minna-workbook-2026.jpg` | 同シリーズの問題集 |
+| フィールド | 用途 |
+|------------|------|
+| `name`, `provider` | 講座名・提供会社 |
+| `price_yen`, `billing_type` (`monthly` / `lump`), `price_label` | 料金（複雑な表記は `price_label`） |
+| `duration`, `lecture_hours`, `support` | 期間・学習量・サポート |
+| `a8_url`, `affiliate_url`, `afb_url` | ASP リンク（いずれか必須） |
+| `trial_label`, `trial_url` | 無料体験など（カード下部・本文リンク） |
+| `image_file`, `image_url` | サムネイル（LP の og:image 取得可） |
+| `for_who`, `highlights` | 比較表・カード |
 
-| 例（汎用） | 意味 |
+**混在:** 1記事に書籍と講座を混在させることも可能だが、検索意図がブレやすいので **原則は `comparison_kind` ごとに1記事**。
+
+### 完成テンプレ
+
+| テンプレ | 用途 |
 |----------|------|
-| `{exam}-textbook-a-2026.webp` | 参考書1 |
-| `{exam}-course-b-mock-2026.jpg` | 模試教材B |
+| [affiliate-textbooks-recommend](./templates/affiliate-textbooks-recommend/) | おすすめテキスト比較 |
+| [affiliate-online-course-compare](./templates/affiliate-online-course-compare/) | オンライン講座比較 |
 
-- 拡張子の優先: `.webp` → `.jpg` / `.jpeg` → `.png`
-- 推奨サイズ: 幅 **320px 前後**、縦横比 **約 5:7**（書籍表紙比率）
-- 配置例: `images/textbooks/`（サイトで README を置き、命名一覧を追記する）
-
-### 2.3 画像の入手（運用メモ）
-
-実装時は **権利・利用規約を確認したうえで** ダウンロードし、§2.2 のファイル名で保存する。
-
-- 出版社・スクールの **公式商品ページ**
-- Amazon 商品ページの高解像度JPEG（`m.media-amazon.com` 等）※公式サムネが極小の場合
-- 書店・ECの商品画像（利用条件を確認）
-
-`amzn.to` 等の短縮URLは **商品リンク用** であり、画像URLとして使えないことが多い。
+```bash
+python3 tools/apply_affiliate_article_template.py --template affiliate-textbooks-recommend
+python3 tools/apply_affiliate_article_template.py --template affiliate-online-course-compare
+```
 
 ---
 
-## 3. アフィリエイトリンク（外部）
+## 7. 表紙・商品画像
 
-### 3.1 管理のしかた
+- **SVG プレースホルダー禁止**。自サイト `images/affiliate/` にホスト
+- 画像が無い間は CSS プレースホルダー（出版社名 / 提供元・商品名・年度）
+- 命名: `{資格略称}-{商品略称}-{年度}.webp`（問題集は `-workbook-`、講座は `-course-` 等）
 
-| チャネル | 用途 | 記事での扱い |
-|----------|------|----------------|
-| Amazonアソシエイト | 参考書・問題集 | 商品カード・比較表の CTA。短縮URL（`amzn.to`）可 |
-| A8.net / afb | 通信講座・予備校・高単価 | `related_links` の `https://...:ラベル` または本文CTA |
-| 公式サイト | 制度・試験情報 | **アフィリエイトリンクと混同しない**（`primary_sources` は公式向け） |
+| 種別 | 推奨比率 | 取得元 |
+|------|----------|--------|
+| 書籍 | 約 5:7（縦長） | Amazon ASIN / 商品 URL |
+| 講座 | 16:9（横長） | 公式 LP の og:image（`fetch_affiliate_product_images.py`） |
 
-- リンクごとに **テキスト用URLと問題集用URL** を分ける（例: `href` と `workbook_href`）。取り違えない。
-- 属性: `target="_blank" rel="nofollow sponsored noopener noreferrer"`
-- 価格・キャンペーンは **`fact_checked_at` と本文の確認日** を揃え、断定しすぎない。
-- 非公開の `original_note` に ASP名・プログラムID・報酬条件を残す。
-
-### 3.2 記事内の表記
-
-- 信頼性パネル（執筆・確認・事実確認日）に **Amazonアソシエイト**（該当する場合）等のプログラム表記を入れる。
-- リードまたは冒頭に **広告・PR** を明示（ステマ規制・読者信頼）。
-
-具体的な短縮URL・ASINは **サイトごとの運用表**（スプレッドシートや `original_note`）で管理し、本ルールには固定値を書かない。
+- 推奨幅: 320px 前後
+- `amzn.to` は **商品リンク用**。画像 URL として使えないことが多い
 
 ---
 
-## 4. ページ構成（参考書おすすめ・比較型の例）
+## 8. ページ構成（商品比較型 `product-comparison`）
 
-検索意図が「おすすめ教材を比較して選びたい」記事向け。講座比較・模試比較はセクション名を差し替える。
+`layout: product-comparison` の brief があるアフィリエイト記事の **完成形レイアウト**。
 
-上から順:
+| # | ブロック | データ源 |
+|---|----------|----------|
+| 1 | タイトル・メタ・リード | CSV |
+| 2 | **この記事の要点** | `user_intent` + brief 商品名 + 任意 `key_points` |
+| 3 | 目次 | ビルド自動 |
+| 4 | 信頼性パネル | CSV / site-config |
+| 5 | **section 1: 選び方の基準** | CSV `section_1_*`（例: テキスト選びの3つのポイント） |
+| 6 | **商品比較 hub**（比較表 + 商品カード） | brief → **section 1 の直後**に自動挿入 |
+| 7 | section 2〜: 各商品詳細・組み合わせ方など | CSV |
+| 8 | FAQ | CSV |
+| 9 | 記事基本情報・公式情報 | CSV |
+| 10 | 関連記事（非アフィリ3 + アフィリ3） | CSV `related_links` |
 
-1. タイトル・メタ・リード文（**広告・PR明示**）
-2. **ヒーロー**（上位N件の表紙・順位・一言・比較表へのアンカー）← リード直下
-3. 目次
-4. 信頼性パネル（執筆・確認・**アソシエイト表記**）
-5. この記事でできること
-6. 選び方（3ポイント程度）
-7. 比較表 ＋ 商品カード（N枚）
-8. 各商品の詳細（順位順）＋ 単体カード
-9. 派生商品セクション（例: 問題集・模試）＋ 表とカード
-10. FAQ・記事情報・公式情報・関連記事
+### 使わないもの
 
-ヒーロー・比較・カードは **同じ表紙画像** を参照してよい（表示サイズはCSSで調整）。
+| 項目 | 理由 |
+|------|------|
+| **「この記事でわかること」section** | 要点ボックスに統合。CSV に残っていても **ビルド時スキップ**（本文・目次・セクション番号から除外） |
+| **「この記事でできること」独立ブロック** | 一般ガイドと同様、要点ボックスへ統合済み |
+| ヒーロー（上位 N 件バナー） | 要点右端の1位表紙 + hub で代替 |
 
----
-
-## 5. UI・レスポンシブ
-
-### 5.1 商品カード
-
-- 表紙・順位・書名・メタ（出版社・価格・ページ・版など）・向いている人・CTA（「Amazonで確認する」等）
-- 比較表: PC/タブレットで表示、**760px以下は非表示**（カードで代替）
-- 比較表のセルはタップ可能（該当商品のリンク）
-
-### 5.2 グリッド
-
-| 幅 | 商品カード |
-|----|------------|
-| 961px〜 | 3列 |
-| 761〜960px | 2列 |
-| 760px以下 | 1列（最大幅約400px・中央） |
-
-### 5.3 ヒーロー（ページ上部）
-
-- PC: 3列カード（商品数が2〜4のときは列数を調整）
-- スマホ: **横スクロール**（スワイプで全件）
-
-### 5.4 関連記事
-
-- **日本語タイトル**を表示（slugだけにしない）
-- コロン形式: `slug:表示ラベル`
-- コロンなし: CSVの記事タイトルを使用
-- カード形式、**テキストは左揃え**
-- 内部リンクは試験ガイド・過去問・用語へ **2件以上**（無料コンテンツとの組み合わせを書く）
-
-### 5.5 表紙画像のCSS
-
-- カード内: `object-fit: contain`（切れないように）
-- 問題集・派生商品カードもテキスト表紙と同様に `contain`（極小サムネ用クラスを流用しない）
+新規テンプレ（`guide-row.yaml`）では **section 1 を選び方基準から始める**。`この記事でわかること` 見出しは書かない。
 
 ---
 
-## 6. 関連リンクの書き方（CSV）
+## 8.1 この記事の要点（アフィリエイト + product-comparison）
+
+ビルド: `tools/affiliate_product_ui.py` → `affiliate_key_points_box_html()`  
+CSS: `.seo-key-points-box--affiliate`, `.seo-key-points-aside`（右下配置）
+
+| 要素 | ルール |
+|------|--------|
+| 見出し | 「この記事の要点」（固定） |
+| イントロ | CSV `user_intent` |
+| リスト先頭 | brief `products[].name` を **フルネームで上位3件**（`affiliate_product_key_points()`） |
+| リスト追加分 | CSV `key_points`（`;` 区切り、**最大2件推奨**）。商品名と重複・「この記事でわかること」は除外 |
+| 右端表紙 | **1位商品**（`products[0]`）のみ。表紙下に **商品名・講座名ラベル** |
+| 表紙下ラベル | ASP リンク（表紙＋名称を1リンク）。**黒文字・黒下線・最大2行**（`.seo-key-points-aside-label`） |
+| レイアウト | 左: テキストリスト / **右下**: 表紙1枚 + 名称ラベル（列幅 `clamp(5rem, 20%, 7rem)`） |
+
+**CSV `key_points` 例**（書籍比較）:
 
 ```text
-{slug-pass-rate}:{資格}の合格率・難易度はこちら
-{slug-study-hours}:{資格}の勉強時間・スケジュールはこちら
-../../q/index.html:過去問を解いてみる（無料）
-{slug-material-guide}:{資格}の教材の選び方
-https://example-affiliate.example/:通信講座の公式案内（ラベルは具体的に）
+選び方の基準;過去問との併用
 ```
 
-- 内部記事: `slug` のみ or `slug:ラベル`
-- 外部・相対パス: URL ＋ ラベル（ASPは `https://` で明示）
-- フッター一括貼り付けはしない。学習段階に合った **1〜2本** に絞る
+**brief `products[].name` 例**（要点リスト先頭3件になる）:
 
-slug 例の一覧: テンプレートの `docs/guide-article-catalog.md`「アフィリエイト記事（10本目安）」。
-
----
-
-## 7. 記事タイプ別の目安（10本の配分）
-
-| タイプ | 検索意図例 | 主なASP |
-|--------|------------|---------|
-| テキストおすすめ | 独学・初心者向け参考書 | Amazon |
-| 問題集おすすめ | 過去問演習の教材 | Amazon |
-| 通信講座比較 | 独学 vs 講座 | A8 / afb |
-| 予備校・塾 | 通学・オンライン塾 | A8 / afb |
-| 模試・直前教材 | 試験直前の買い足し | Amazon + A8 |
-| 学習セット（初心者） | 何を揃えればよいか | Amazon + 講座A8 |
-| 再受験向け短期 | 短期集中プラン | A8 / afb |
-| 無料 vs 有料 | コスト意識 | 内部リンク中心（アフィリ弱め可） |
-| 申込・サポート連携 | 資格に該当サービスがある場合のみ | A8 / afb |
-
-1記事 = 1検索意図。細分化しすぎず、**更新・ASP案件** で差別化する。
-
----
-
-## 8. チェックリスト（公開前）
-
-### CSV・法務
-
-- [ ] `tags` に `アフィリエイト` がある
-- [ ] リードに広告・PR（アフィリエイト）の明示がある
-- [ ] `genre` が許可リスト内（通常 `独学対策` 等）
-- [ ] `related_links` に内部 slug が2件以上ある
-- [ ] ASPリンクと公式URLを混同していない
-
-### 商品・UI
-
-- [ ] テキスト・問題集（または別SKU）のリンクがそれぞれ正しいか
-- [ ] 表紙画像が自サイトパスで表示されるか（404・文字化けなし）
-- [ ] スマホで比較表が隠れ、カードで選べるか
-- [ ] ヒーロー・関連記事が意図どおり表示されるか
-- [ ] 信頼性パネルにアソシエイト表記があるか
-
-### ビルド・検証
-
-- [ ] `python3 tools/build_all.py` がエラーなく完了する
-- [ ] 内部リンク検証に失敗していない
-- [ ] 生成HTMLに運用者向け行・独自メモが出ていない
-
----
-
-## 9. 主なファイル一覧（テンプレート基準）
-
-```
-site-config.json              # サイト名・ドメイン・テーマ
-data/guide_articles.csv       # 記事メタ・tags・related_links
-data/seo_config.json          # 必要に応じて
-tools/build_article_pages.py  # 記事HTML生成
-tools/articles_{slug}.py      # 商品比較型の本文（任意）
-tools/build_legacy_redirects.py
-tools/validate_csv.py
-images/textbooks/             # 表紙（READMEで命名を共有）
-site-pages.css                # .affiliate-* 等
-articles/{slug}/index.html    # 生成物（手編集しない）
-docs/seo-article-guidelines.md
-docs/guide-article-catalog.md
+```text
+【2026年度版 ◯◯試験 完全攻略テキスト】;【2026 ◯◯試験 要点整理テキスト】;【2026 ◯◯試験 イラストで理解するテキスト】
 ```
 
+`key_points` / `action_items` が無くても brief 商品名があれば要点ボックスは生成される。
+
 ---
 
-## 10. サイト固有メモ（任意）
+## 8.2 商品名・講座名の表記（ビルド時自動）
 
-資格ごとに追記する欄。宅建・簿記・行政書士など、**本ルールには載せない**具体値をここに書く。
+ビルド: `tools/affiliate_body_links.py`
+
+| 処理 | 内容 |
+|------|------|
+| **対象テキスト** | リード、各 section 本文、FAQ（質問は括るのみ / 回答は括り + リンク） |
+| **括る対象** | brief の `name` / `workbook_name` / `trial_label` + 講座定型名（`AFFILIATE_COURSE_NAMES`、サイト固有はコード側に追加） |
+| **形式** | 「商品名」 |
+| **リンク化** | 括った後 `[「商品名」](asp_url)`（`【】` / `『』` 表記もリンク対象） |
+| **除外** | 既に `「」『』【】` 内、Markdown リンク内、**比較表・要点表紙ラベル・商品カード内の名称**（構造化 HTML で別途リンク化） |
+
+CSV 本文には商品名を **括弧なし** で書いてよい。ビルド時に統一される。
+
+---
+
+## 8.3 商品比較 hub
+
+| 項目 | 値 |
+|------|-----|
+| 挿入位置 | **section 1 の直後**（`affiliate_hub_after_section=1`） |
+| 目次 | hub 見出しを section 1 の次に追加（`affiliate_hub_toc_item()`） |
+| 前提 | brief に `layout: product-comparison` |
+
+`comparison_kind` に応じて比較表の列・CTA 文言（「Amazonで見る」/「公式サイトで見る」）が切り替わる。  
+表紙・サムネは `fetch_affiliate_product_images.py` で `images/affiliate/` に取得。
+
+### 比較表（書籍・講座共通）
+
+| 項目 | 仕様 |
+|------|------|
+| 商品名 / 講座名列 | brief `products[].name` を **ASP テキストリンク**（`.affiliate-compare-name-link`） |
+| リンク色 | **黒文字**（`var(--seo-text-title)`） |
+| 下線 | **黒下線**（薄い青リンクスタイルは使わない） |
+| 生成 | `affiliate_product_ui.py` → `product_name_link_html()` |
+
+### 書籍カード UI（`comparison_kind: books`）
+
+| 項目 | 仕様 |
+|------|------|
+| グリッド | **縦1列**（全幅カード、`data-comparison-kind="books"`） |
+| カード内 | 表紙左・本文右（480px 以下は縦積み） |
+| 表紙幅 | `clamp(7.5rem, 22%, 9.5rem)`、`max-height: 10.5rem` |
+| カード meta | **価格のみ**（ページ数・判型は比較表側） |
+| 問題集 | カード下部 supplement リンク（`workbook_name` + `workbook_amazon_url`） |
+
+### 講座カード UI（`comparison_kind: courses`）
+
+| 項目 | 仕様 |
+|------|------|
+| 比較表 | 上記「比較表（書籍・講座共通）」 |
+| 商品カード grid | 961px〜3列 / 761〜960px 2列 / 760px以下 1列。**2商品は `data-product-count="2"` で2列** |
+| CTA | 「公式サイトで見る」 |
+| 要点右端 | 16:9 サムネ（`.seo-key-points-aside-cover--course`）+ **表紙下ラベル（黒下線・最大2行）** |
+
+### レスポンシブ（講座・汎用 grid）
+
+| 幅 | 商品カード grid |
+|----|-----------------|
+| 961px〜 | 3列 |
+| 761〜960px | 2列 |
+| 760px以下 | 1列。比較表は非表示（カードで代替） |
+
+書籍 hub は常に **1列**（上記 grid ルールより優先）。
+
+### CSS キャッシュ
+
+`seo-editorial.css` を変更したら `tools/seo_editorial_chrome.py` の `SEO_EDITORIAL_CSS_VER` を更新する（例: `20260603-affiliate-aside-label`）。
+
+---
+
+## 9. 関連リンク（CSV 例）
+
+```text
+self-study-roadmap:独学の進め方
+study-plan:学習計画の立て方
+../../q/index.html:過去問を解く（無料）
+affiliate-problem-books:おすすめ問題集
+affiliate-online-course-compare:オンライン講座比較
+affiliate-beginner-material-set:初学者向け教材
+```
+
+- 内部: 同 CSV に存在する slug のみ（**非アフィリ3 + アフィリ3 = 6件** 推奨）
+- 外部 ASP URL: **`related_links` には書かない**（brief `products.*_url` と本文 CTA へ）
+- フッター一括貼り付けはしない
+
+---
+
+## 10. 標準10 slug の配分
+
+[guide-article-catalog.md](../guide-article-catalog.md) を参照。資格に不要な行（申込支援サービスがない等）は省略し、別テーマで10本に届ける。
+
+| タイプ | 主な ASP | brief |
+|--------|----------|-------|
+| テキスト・問題集 | Amazon | `comparison_kind: books` |
+| オンライン講座・通信・予備校 | A8 / afb | `comparison_kind: courses` |
+| 模試・直前 | Amazon + A8 | 混在可（要検索意図整理） |
+| 無料 vs 有料 | internal（収益リンクなし可） | — |
+
+---
+
+## 11. 公開前チェックリスト
+
+### 必須
+
+- [ ] ASP / 商品 URL が related_links・本文・brief のいずれかに **実 URL** で入っている
+- [ ] **各商品の価格を ASP / 公式 URL で確認**し、brief・本文・比較表が一致している
+- [ ] **本文がオリジナル執筆**（テンプレ置換・他記事流用・機械的量産文でない）
+- [ ] `content_status=published`
+- [ ] `tags` に `アフィリエイト`
+- [ ] `genre` が許可リスト内
+- [ ] `related_links` に内部 slug **2件以上**
+- [ ] 公開本文・表に `【PR・広告】` がない
+- [ ] ASP と公式 URL を混同していない
+- [ ] `python3 tools/validate_csv.py` がエラーなし
+- [ ] `python3 tools/build_article_pages.py` 後、当該 slug の HTML が生成されている
+
+### 商品比較 UI がある場合
+
+- [ ] **「この記事でわかること」section が無い**（あってもビルドで非表示になるが、新規は書かない）
+- [ ] 要点ボックスに brief 商品名3件 + 右下1位表紙 **+ 表紙下名称（黒下線・最大2行）**
+- [ ] 比較 hub が **section 1（選び方）の直後** にある
+- [ ] 比較表の **商品名・講座名が ASP 黒テキストリンク（黒下線）** になっている
+- [ ] 要点リスト内リンク（青）と表紙下ラベル（黒）が混在してもスタイルが崩れない
+- [ ] 本文・FAQ の商品名が「」括り + ASP リンクになっている
+- [ ] 表紙・サムネが自サイトパスで表示（404 なし）
+- [ ] スマホでカードが選べる
+- [ ] **書籍:** テキスト用・問題集用 URL の取り違えなし
+- [ ] **講座:** `a8_url` / `affiliate_url` が実 ASP、`billing_type` と本文の料金表記が一致
+- [ ] `comparison_kind` と `offer_type` が記事の検索意図と一致
+
+---
+
+## 12. ツール一覧
+
+| ツール | 用途 |
+|--------|------|
+| `scaffold_affiliate_article.py` | ブリーフ + CSV 行生成（`--append` は URL 必須） |
+| `affiliate_links.py` | ASP リンク有無の判定（ビルド・validate 共通） |
+| `draft_unlinked_affiliate_articles.py` | 未リンク行を `draft` に一括変更 |
+| `strip_affiliate_pr_disclaimer.py` | PR 定型文を CSV から除去 |
+| `validate_csv.py` | 本数・リンク・genre 検査 |
+| `build_article_pages.py` | 記事 HTML 生成（要点・hub 挿入位置・skip section） |
+| `affiliate_body_links.py` | 商品名「」括り + 本文 ASP リンク自動化 |
+| `affiliate_product_ui.py` | 商品カード・比較表・要点右端表紙 |
+| `fetch_affiliate_product_images.py` | Amazon 表紙・講座 LP サムネを `images/affiliate/` に取得 |
+| `build_affiliate_template_preview.py` | テンプレ HTML プレビュー |
+| `apply_affiliate_article_template.py` | テンプレ YAML → CSV 反映 |
+
+---
+
+## 13. サイト固有メモ（任意）
+
+資格ごとに追記。具体 URL・教材名・Amazon 短縮 URL 一覧はここか `original_note` に書く。
 
 | 項目 | 例 |
 |------|-----|
 | ドメイン | `https://example.jp/` |
-| 代表slug | `affiliate-textbooks-recommend` |
+| 公開済み slug | （現状の本数と ASP） |
 | 画像ディレクトリ | `images/textbooks/` |
-| 比較対象教材名 | （3〜5商品） |
-| Amazon短縮URL一覧 | （運用表へのリンク） |
 
 ---
 
-## 11. 記事テーマからの自動作成
-
-テーマを入れると **ブリーフ YAML + CSV 行** まで自動生成する。詳細手順は [auto-create-workflow.md](./auto-create-workflow.md)。
-
-```bash
-python3 tools/scaffold_affiliate_article.py --list-themes
-python3 tools/scaffold_affiliate_article.py --theme textbooks-recommend --append
-```
-
-| 成果物 | パス |
-|--------|------|
-| テーマ入力テンプレ | `docs/affiliate/theme-brief.template.yaml` |
-| 生成ブリーフ | `data/affiliate-briefs/{slug}.yaml` |
-| 記事データ | `data/guide_articles.csv` |
-
-AI への依頼文・チェックリストは `auto-create-workflow.md` の「AI（Cursor）への依頼テンプレ」を使う。
-
----
-
-*最終更新: 2026-05-21（テーマ自動作成ワークフロー追加）*
+*最終更新: 2026-06-03（価格 URL 確認・オリジナル執筆の必須原則を追加）*

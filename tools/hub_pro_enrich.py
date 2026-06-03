@@ -232,12 +232,7 @@ def enrich_csv(path: Path) -> int:
 
 
 def main() -> None:
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--root", type=Path, default=None, help="Site root (default: script parent)")
-    args = parser.parse_args()
-    root = (args.root or Path(__file__).resolve().parents[1]).resolve()
+    root = Path(__file__).resolve().parents[1]
     data = root / "data"
     total = 0
     for name in ("comparisons.csv", "numbers.csv", "mistakes.csv"):

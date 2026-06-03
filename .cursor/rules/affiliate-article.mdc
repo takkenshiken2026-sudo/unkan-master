@@ -1,53 +1,75 @@
 ---
-description: Affiliate guide articles — theme input to CSV/brief generation
+description: アフィリエイト記事の CSV・brief 編集時のルール（exam-site-shell 正本）
+globs: data/guide_articles.csv,data/affiliate-briefs/**,docs/affiliate/**,tools/scaffold_affiliate_article.py,tools/affiliate_links.py,tools/affiliate_brief.py,tools/affiliate_product_ui.py,tools/affiliate_body_links.py,tools/build_article_pages.py,seo-editorial.css
 alwaysApply: false
-globs: data/affiliate-briefs/**,data/guide_articles.csv,tools/scaffold_affiliate_article.py,tools/articles_*.py,docs/affiliate/**
 ---
 
-# Affiliate Article Auto-Create
+# アフィリエイト記事ルール
 
-Use when the user gives an **article theme** or edits affiliate briefs / affiliate-tagged guide rows.
+正本: `docs/affiliate/affiliate-article-rules.md` §3（執筆の必須原則）・§8
 
-**Rules (full):** `docs/affiliate/affiliate-article-rules.md`  
-**Workflow:** `docs/affiliate/auto-create-workflow.md`  
-**SEO/CSV identity:** `docs/seo-article-guidelines.md` (アフィリエイト section)
+## 執筆の必須原則（最優先・必ず運用）
 
-## Step 1 — Scaffold (if slug/row missing)
+### 価格は URL から最新を調査
 
-```bash
-python3 tools/scaffold_affiliate_article.py --list-themes
-python3 tools/scaffold_affiliate_article.py --theme <key> --slug <slug> --append --write-brief
-```
+- 公開・更新前に **各商品の ASP / 公式 URL を開き**、表示価格を確認してから brief・本文に反映
+- テンプレ・他記事・推測からの転記禁止。brief `price_yen` と本文表記を一致させる
+- 確認後 `fact_checked_at` を更新
 
-Or from filled brief: `--from-brief data/affiliate-briefs/<slug>.yaml --append`
+### オリジナル執筆（機械的量産禁止）
 
-## Step 2 — Complete content
+- テンプレ・scaffold 出力は **構成の雛形のみ**。公開原稿としてそのまま使わない
+- **1記事 = 1検索意図 = 1回の全面リライト**。タイトル・紹介商品・資格に沿った独自の section を書く
+- 他 slug 流用・◯◯差し替えだけ・同一定型文の使い回し禁止
+- 複数 slug の本文を一括生成して仕上げない
 
-1. Read `data/affiliate-briefs/{slug}.yaml` (`search_intent`, `products`, `asp_primary`, `layout`).
-2. Update the matching row in `data/guide_articles.csv`:
-   - `tags` must include `アフィリエイト`
-   - `lead` must include 広告 / PR / アフィリエイト
-   - Fill every `section_*_body` (180–300 chars, no operator/template jargon)
-   - `related_links`: only slugs that exist in CSV (2+ internal)
-   - `original_note`: ASP IDs, product URLs, commission notes (never public)
-3. If `layout: product-comparison`, site may need `tools/articles_{slug}.py` + images under `images/textbooks/` — only on sites that already wire custom article modules.
+## 作成ゲート
 
-## Step 3 — Verify
+- **ASP / 商品 URL 未確定 → CSV 行を作らない**（`scaffold --append` も不可）
+- URL 確定後のみ `content_status=published` → ビルド → デプロイ
+- リンク無し行は `draft` のまま（HTML 非生成）
+
+## ページ構成（product-comparison）
+
+1. 要点 → 目次 → 信頼性 → **section1 選び方** → **比較 hub** → 詳細 → FAQ → 関連6件
+- **「この記事でわかること」section は書かない**（CSV に残っていてもビルドでスキップ）
+- hub は **section 1 直後**（`affiliate_hub_after_section=1`）
+
+## 要点ボックス
+
+- intro: `user_intent`
+- リスト: brief `products[].name` 上位3 + CSV `key_points`（`;` 区切り、最大2件推奨）→ **青リンク**（`affiliate_body_links.py`）
+- 右下: 1位商品表紙/サムネ + **下に名称ラベル**（ASP 1リンク・**黒下線・最大2行**）
+
+## 比較表・名称リンク
+
+- 比較表の **商品名 / 講座名列** → ASP **黒テキストリンク**（`.affiliate-compare-name-link`）
+- 要点リスト内の商品名リンク（青）とは別スタイル。混在しても CSS で分離する
+
+## 表記・リンク
+
+- 本文・リード・FAQ: 商品名・講座名はビルド時 **「」自動付与** → ASP リンク（`affiliate_body_links.py`）
+- CSV 本文は括弧なしで書いてよい
+- **【PR・広告】等は載せない** / `アフィリエイト` タグは公開表に出さない
+
+## brief / CSV
+
+| 種別 | `comparison_kind` | テンプレ |
+|------|-------------------|----------|
+| 書籍 | `books` | `affiliate-textbooks-recommend` |
+| 講座 | `courses` | `affiliate-online-course-compare` |
+
+- `layout: product-comparison` + brief → 比較表・カード・要点 UI
+- `related_links`: **非アフィリ3 + アフィリ3**（計6件）。ASP URL は関連ボックスに出さない
+- 書籍カード: 縦1列、meta は価格のみ
+
+## CSS 変更時
+
+`seo-editorial.css` を触ったら `tools/seo_editorial_chrome.py` の `SEO_EDITORIAL_CSS_VER` を更新。
+
+## 完了時
 
 ```bash
 python3 tools/validate_csv.py
-python3 tools/build_all.py
+python3 tools/build_article_pages.py
 ```
-
-Do not publish if validation fails. No broken internal links.
-
-## Product comparison UI (when applicable)
-
-- Self-host cover images; no SVG placeholders; no hotlinking
-- `href` vs `workbook_href` must not be swapped
-- External links: `rel="nofollow sponsored noopener noreferrer"`
-- Hero + comparison table + cards: see `affiliate-article-rules.md` §4–5
-
-## Forbidden on public pages
-
-`update_policy`, `original_note`, editor how-to sections, placeholder `【本文を記入】` in published `content_status: published` rows.

@@ -87,7 +87,7 @@ AFFILIATE_THEMES: dict[str, dict[str, Any]] = {
     "online-course-compare": {
         "slug_default": "affiliate-online-course-compare",
         "genre": "独学対策",
-        "layout": "csv",
+        "layout": "product-comparison",
         "asp": "a8",
         "title": "◯◯試験のオンライン講座比較【独学との併用】",
         "meta": "◯◯試験向けオンライン講座の比較ポイントと、独学との併用の考え方を整理します。",
@@ -112,7 +112,7 @@ AFFILIATE_THEMES: dict[str, dict[str, Any]] = {
     "correspondence-course": {
         "slug_default": "affiliate-correspondence-course",
         "genre": "独学対策",
-        "layout": "csv",
+        "layout": "product-comparison",
         "asp": "a8",
         "title": "◯◯試験の通信講座の選び方",
         "meta": "◯◯試験向け通信講座の選び方、教材セット、サポートの見方を整理します。",

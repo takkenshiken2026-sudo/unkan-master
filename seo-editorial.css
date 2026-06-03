@@ -210,7 +210,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 .seo-editorial.seo-article-card .seo-article-section a,
 .seo-editorial.seo-article-card .article-lead a,
 .seo-editorial.seo-article-card blockquote a,
-.seo-editorial.seo-article-card .seo-key-points-box a {
+.seo-editorial.seo-article-card .seo-key-points-box a:not(.seo-key-points-aside-link) {
   color: var(--seo-link-inline);
   font-size: inherit;
   font-weight: var(--seo-font-weight-heading);
@@ -223,7 +223,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 .seo-editorial.seo-article-card .seo-article-section a:hover,
 .seo-editorial.seo-article-card .article-lead a:hover,
 .seo-editorial.seo-article-card blockquote a:hover,
-.seo-editorial.seo-article-card .seo-key-points-box a:hover {
+.seo-editorial.seo-article-card .seo-key-points-box a:not(.seo-key-points-aside-link):hover {
   color: var(--seo-accent);
   text-decoration-color: var(--seo-accent);
   opacity: 1;
@@ -412,6 +412,145 @@ body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-
 .seo-editorial .seo-key-points-box p:last-child,
 .seo-editorial .seo-key-points-box ul:last-child {
   margin-bottom: 0;
+}
+
+/* アフィリエイト記事：要点ボックス右下に代表表紙1枚 */
+.seo-editorial .seo-key-points-box--affiliate .seo-key-points-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(5rem, 20%, 7rem);
+  align-items: end;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.seo-editorial .seo-key-points-main {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.seo-editorial .seo-key-points-box--affiliate .seo-key-points-main p {
+  margin-top: 0;
+}
+
+.seo-editorial .seo-key-points-box--affiliate .seo-key-points-list {
+  margin-top: 0.65rem;
+}
+
+.seo-editorial .seo-key-points-aside {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  width: 100%;
+  line-height: normal;
+}
+
+.seo-editorial .seo-key-points-aside-link,
+.seo-editorial .seo-key-points-aside-stack {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.seo-editorial .seo-key-points-aside-link {
+  color: var(--seo-text-title);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.seo-editorial .seo-key-points-aside-link:hover,
+.seo-editorial .seo-key-points-aside-link:focus {
+  color: var(--seo-text-title);
+  text-decoration: none;
+  opacity: 1;
+}
+
+.seo-editorial.seo-article-card .seo-key-points-box--affiliate .seo-key-points-aside-link,
+.seo-editorial.seo-article-card .seo-key-points-box--affiliate .seo-key-points-aside-link:hover,
+.seo-editorial.seo-article-card .seo-key-points-box--affiliate .seo-key-points-aside-link:focus {
+  color: var(--seo-text-title);
+  text-decoration: none;
+  text-decoration-color: var(--seo-text-title);
+}
+
+.seo-editorial .seo-key-points-aside-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 0.35rem;
+  font-size: 0.625rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--seo-text-title);
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.1em;
+  text-decoration-color: var(--seo-text-title);
+  overflow-wrap: anywhere;
+}
+
+.seo-editorial .seo-key-points-aside-link .seo-key-points-aside-label {
+  text-decoration-color: var(--seo-text-title);
+}
+
+.seo-editorial .seo-key-points-aside-link:hover .seo-key-points-aside-label,
+.seo-editorial .seo-key-points-aside-link:focus .seo-key-points-aside-label {
+  color: var(--seo-text-title);
+  text-decoration-color: var(--seo-text-title);
+}
+
+.seo-editorial .seo-key-points-aside-stack .seo-key-points-aside-label {
+  text-decoration: none;
+}
+
+.seo-editorial .seo-key-points-aside-cover {
+  display: block;
+  line-height: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 5px color-mix(in srgb, var(--seo-text-body) 14%, transparent);
+}
+
+.seo-editorial .seo-key-points-aside-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+}
+
+.seo-editorial .seo-key-points-aside-cover--course img,
+.seo-editorial .seo-key-points-aside-cover--course.seo-key-points-aside-cover--placeholder {
+  aspect-ratio: 16 / 9;
+}
+
+.seo-editorial .seo-key-points-aside-cover--placeholder {
+  aspect-ratio: 5 / 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.4rem;
+  background: color-mix(in srgb, var(--seo-callout-bg) 70%, #fff);
+  border: 1px solid var(--seo-callout-border);
+  font-size: 0.625rem;
+  line-height: 1.25;
+  color: var(--seo-text-muted);
+  text-align: center;
+}
+
+.seo-editorial .seo-key-points-aside-placeholder-brand {
+  font-weight: var(--seo-font-weight-heading);
+  color: var(--seo-callout-title);
+}
+
+@media (max-width: 520px) {
+  .seo-editorial .seo-key-points-aside {
+    width: 3.75rem;
+  }
 }
 
 .seo-editorial.seo-article-card .seo-action-box p,
@@ -861,4 +1000,428 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
 .seo-editorial.seo-article-card .term-memory-guide ul {
   margin: 0 0 1em;
   padding-left: 1.25em;
+}
+
+/* --- アフィリエイト商品比較（product-comparison brief） --- */
+.seo-editorial.seo-article-card .affiliate-product-hub {
+  margin-top: 2rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--seo-divider);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub > h2 {
+  margin-bottom: 0.65em;
+}
+
+.seo-editorial.seo-article-card .affiliate-price-disclaimer {
+  margin: 0 0 1.25rem;
+  font-size: var(--seo-fs-caption);
+  color: var(--seo-text-muted);
+  line-height: 1.65;
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table-wrap {
+  margin: 0 0 1.5rem;
+  overflow-x: auto;
+}
+
+@media (max-width: 760px) {
+  .seo-editorial.seo-article-card .affiliate-compare-table-wrap {
+    display: none;
+  }
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  border: 1px solid var(--seo-table-border);
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table th,
+.seo-editorial.seo-article-card .affiliate-compare-table td {
+  border: 1px solid var(--seo-table-border);
+  padding: 0.65rem 0.75rem;
+  vertical-align: top;
+  font-size: var(--seo-fs-table);
+  line-height: 1.55;
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table thead th {
+  background: var(--seo-table-head-bg);
+  color: var(--seo-table-head-text);
+  font-weight: 700;
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table tbody th[scope="row"] {
+  background: var(--seo-table-cell-alt-bg);
+  color: var(--seo-table-cell-text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table tbody td {
+  background: var(--seo-table-cell-bg);
+  color: var(--seo-table-cell-text);
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table a.affiliate-compare-name-link {
+  color: var(--seo-text-title);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.12em;
+  text-decoration-color: color-mix(in srgb, var(--seo-text-title) 45%, transparent);
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table a.affiliate-compare-name-link:hover,
+.seo-editorial.seo-article-card .affiliate-compare-table a.affiliate-compare-name-link:focus {
+  color: var(--seo-text-title);
+  text-decoration: underline;
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-table tr:last-child th,
+.seo-editorial.seo-article-card .affiliate-compare-table tr:last-child td {
+  border-bottom: 1px solid var(--seo-table-border);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .seo-editorial.seo-article-card .affiliate-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .seo-editorial.seo-article-card .affiliate-product-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 講座 hub：商品数に応じた列数（2件で3列空きを防ぐ） */
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="1"] {
+  grid-template-columns: minmax(0, 20rem);
+}
+
+@media (max-width: 760px) {
+  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="2"],
+  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="1"] {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 書籍カード：縦1列。カード内は表紙左・本文右 */
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-grid {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-card-hit {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-card-rank {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-cover {
+  width: clamp(7.5rem, 22%, 9.5rem);
+  max-width: none;
+  max-height: 10.5rem;
+  aspect-ratio: 3 / 4;
+  margin: 0;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-right: 1px solid var(--seo-card-border);
+  border-bottom: none;
+  padding: 0.45rem 0.55rem;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-cover--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-cta {
+  margin-top: auto;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-card-body h3 {
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-card-hit {
+    flex-direction: column;
+  }
+
+  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-cover {
+    width: 100%;
+    max-width: none;
+    aspect-ratio: 3 / 4;
+    max-height: 11rem;
+    padding: 0.55rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--seo-card-border);
+  }
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--seo-card-border);
+  background: var(--seo-card-bg);
+  box-shadow: var(--seo-card-shadow);
+  border-radius: var(--seo-card-radius);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card:has(.affiliate-product-card-hit[href]):hover {
+  border-color: color-mix(in srgb, var(--seo-accent) 35%, var(--seo-card-border));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07), 0 10px 28px rgba(37, 99, 168, 0.08);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-hit {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-hit:hover {
+  text-decoration: none;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-hit:focus-visible {
+  outline: 2px solid var(--seo-accent);
+  outline-offset: -2px;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-rank {
+  padding: 0.5rem 0.9rem;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--seo-accent);
+  background: var(--seo-accent-soft);
+  border-bottom: 1px solid var(--seo-card-border);
+}
+
+/* 商品カード全体リンク：本文 a の太い下線を無効化 */
+.seo-editorial.seo-article-card .affiliate-product-hub .affiliate-product-card-hit,
+.seo-editorial.seo-article-card .affiliate-product-hub .affiliate-product-card-hit:hover,
+.seo-editorial.seo-article-card .affiliate-product-hub .affiliate-product-card-hit:focus {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub .affiliate-product-card-hit * {
+  text-decoration: none;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  max-height: 168px;
+  margin: 0 auto;
+  background: var(--seo-panel-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover--placeholder {
+  flex-direction: column;
+  padding: 0.75rem;
+  text-align: center;
+  gap: 0.25rem;
+  background: linear-gradient(165deg, #f3f4f6 0%, #e8eaed 100%);
+  border-bottom: 1px solid var(--seo-card-border);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover-publisher {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--seo-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--seo-text-title);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover-edition {
+  font-size: 0.75rem;
+  color: var(--seo-text-caption);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0.75rem 0.85rem 0.85rem;
+  gap: 0.35rem;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card--course .affiliate-product-cta {
+  margin-top: auto;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-body h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--seo-text-title);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--seo-text-body);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-meta strong {
+  font-size: 1rem;
+  color: var(--seo-text-title);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-price-note {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--seo-text-muted);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-highlights {
+  margin: 0;
+  padding-left: 1.05em;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--seo-text-body);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-highlights li + li {
+  margin-top: 0.2em;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover--course {
+  aspect-ratio: 16 / 9;
+  max-height: 120px;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cover--course.affiliate-product-cover--photo img {
+  object-fit: cover;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-supplement {
+  margin: 0;
+  padding: 0.65rem 1rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--seo-text-muted);
+  border-top: 1px solid var(--seo-card-border);
+  background: var(--seo-panel-bg);
+  position: relative;
+  z-index: 2;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-supplement-link {
+  font-weight: 600;
+}
+
+.seo-editorial.seo-article-card a.affiliate-product-supplement-link {
+  color: var(--seo-link-inline);
+  position: relative;
+  z-index: 2;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.12em;
+  text-decoration-color: color-mix(in srgb, var(--seo-link-inline) 55%, transparent);
+}
+
+.seo-editorial.seo-article-card .affiliate-product-workbook {
+  margin: 0;
+  padding: 0.65rem 1rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--seo-text-muted);
+  border-top: 1px solid var(--seo-card-border);
+  background: var(--seo-panel-bg);
+  position: relative;
+  z-index: 2;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-workbook-link {
+  font-weight: 600;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-cta {
+  display: block;
+  margin-top: 0.45rem;
+  align-self: stretch;
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--seo-accent);
+  border-radius: 4px;
+  line-height: 1.35;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-card-hit:hover .affiliate-product-cta {
+  filter: brightness(0.94);
+}
+
+.seo-editorial.seo-article-card a.affiliate-product-workbook-link {
+  color: var(--seo-link-inline);
+  position: relative;
+  z-index: 2;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.12em;
+  text-decoration-color: color-mix(in srgb, var(--seo-link-inline) 55%, transparent);
 }
