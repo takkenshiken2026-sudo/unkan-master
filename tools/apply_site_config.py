@@ -33,6 +33,13 @@ from tools.site_config import (
 )
 from tools.html_footer import site_page_footer, site_page_header, site_shell_footer
 from tools.brand_assets import inject_brand_head
+from tools.index_seo_head import (
+    INDEX_SEO_MARKER_END,
+    INDEX_SEO_MARKER_START,
+    inject_index_seo_head,
+    migrate_legacy_takken_leaks,
+    update_index_spa_seo_js,
+)
 
 
 TEXT_TARGETS = [
@@ -50,6 +57,16 @@ STATIC_PAGE_CURRENTS = {
     ROOT / "related-sites.html": "related",
     ROOT / "articles" / "index.html": "articles",
 }
+
+
+_SPA_BREADCRUMB_TOP_RE = re.compile(
+    r'(<li class="breadcrumb-item"><a href="/" onclick="event\.preventDefault\(\);gotoPage\(\'quiz-start\'\)" title=")[^"]*(">)[^<]*(</a></li>)',
+)
+
+
+def fix_spa_breadcrumb_top(text: str) -> str:
+    """SPA 内パンくず1段目はサイト名ではなく「トップ」に統一する。"""
+    return _SPA_BREADCRUMB_TOP_RE.sub(r"\1トップ\2トップ\3", text)
 
 
 def replace_all(text: str) -> str:
@@ -374,11 +391,17 @@ def main() -> int:
         if not path.is_file():
             continue
         old = path.read_text(encoding="utf-8")
-        new = replace_static_chrome(replace_all(old), path)
+        new = replace_all(old)
+        if path == ROOT / "index.html":
+            new = migrate_legacy_takken_leaks(new)
+        new = replace_static_chrome(new, path)
         rel = path.relative_to(ROOT)
         if path.suffix == ".html":
             new = inject_brand_head(new, rel, site_root=ROOT)
         if path == ROOT / "index.html":
+            new = inject_index_seo_head(new)
+            new = update_index_spa_seo_js(new)
+            new = fix_spa_breadcrumb_top(new)
             new = ensure_index_theme(new)
             new = update_index_shell_footer(new)
             new = update_index_brand_mark(new)

@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.index_seo_head import INDEX_SEO_MARKER_END, INDEX_SEO_MARKER_START  # noqa: E402
 from tools.site_config import load_config  # noqa: E402
 
 
@@ -510,6 +511,21 @@ def _viewport_and_static_css(root: Path) -> list[Issue]:
             issues.append(
                 Issue("index.html: viewport meta がありません（SPA — responsive-layout.md §4）")
             )
+        if INDEX_SEO_MARKER_START not in text or INDEX_SEO_MARKER_END not in text:
+            issues.append(
+                Issue(
+                    "index.html: INDEX_SEO_HEAD マーカーがありません"
+                    "（tools/apply_site_config.py を実行してください）"
+                )
+            )
+        elif 'property="og:title"' not in text:
+            issues.append(Issue("index.html: og:title がありません（SNSカード用 SEO head 未適用）"))
+        elif "takken-master.jp" in text.split("</head>", 1)[0]:
+            origin = str(load_config().get("siteOrigin") or "")
+            if "takken-master.jp" not in origin:
+                issues.append(
+                    Issue("index.html: head 内に takken-master.jp が残っています（apply_site_config を再実行）")
+                )
     return issues
 
 
