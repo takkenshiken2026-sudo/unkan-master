@@ -4,9 +4,25 @@
 
 from __future__ import annotations
 
+import re
 from typing import Callable
 
 from tools.guide_topic_normalize import exam_topic_clause, topic_label
+
+_AFFILIATE_PR_SNIPPETS = (
+    "【PR・広告】本記事にはアフィリエイトリンクが含まれる場合があります。",
+    "※本記事には広告・PR（アフィリエイト）を含みます。",
+)
+
+
+def strip_affiliate_pr_disclaimer(text: str) -> str:
+    """アフィリエイト記事の PR 定型文を読者向け本文から除去する。"""
+    out = text or ""
+    for snippet in _AFFILIATE_PR_SNIPPETS:
+        out = out.replace(snippet, "")
+    out = re.sub(r"【PR・広告】\s*", "", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    return out.strip()
 
 
 def normalize_topic_from_title(
@@ -248,12 +264,19 @@ def application_precheck_prose(*, official: str, topic: str) -> str:
     return f"{intro}\n\n{_bullet_block(items)}\n\n{outro}"
 
 
-def exam_venue_access_prose(*, official: str, topic: str = "") -> str:
+def exam_venue_access_prose(
+    *,
+    official: str,
+    topic: str = "",
+    venue_page_md: str = "",
+) -> str:
     """試験会場・センターへのアクセス確認を具体項目まで書き切る。"""
     topic_ref = f"「{topic}」の" if topic else ""
+    venue_ref = f"{venue_page_md}および" if venue_page_md else f"{official}の"
     intro = (
-        f"試験前日までに、{official}の受験票および会場案内で"
+        f"試験前日までに、受験票と{venue_ref}会場案内で"
         f"{topic_ref}アクセス情報を確認し、以下をメモまたは印刷しておいてください。"
+        f"本人に割り当てられた試験会場の正式名称・住所は受験票の表記が正本です。"
     )
     items = [
         "会場の正式名称と住所（受験票の表記どおり）",
@@ -273,11 +296,59 @@ def exam_venue_access_prose(*, official: str, topic: str = "") -> str:
     return f"{intro}\n\n{_bullet_block(items)}\n\n{outro}"
 
 
-def exam_application_venue_prose(*, official: str, topic: str = "") -> str:
-    """申込・会場選びの手順を具体項目で書き切る。"""
+def exam_venue_basic_info_prose(
+    *,
+    topic: str,
+    slug: str,
+    official: str,
+    org: str,
+    venue_page_md: str = "",
+) -> str:
+    """センター記事「基本情報」節。"""
+    from tools.exam_venue_official_links import region_for_slug
+
+    region = region_for_slug(slug)
+    venue_link = venue_page_md or official
+    return (
+        f"{topic}は、{org}が地域試験運営の拠点として設置する会場の一つです。"
+        f"試験内容は全国共通ですが、申込時に選ぶ受験地によって割り当て会場が変わります。\n\n"
+        f"{region}在住の受験者は本センターを受験地として選ぶことが多いため、"
+        f"申込前に{venue_link}で会場名・所在地・アクセスマップの最新案内を確認してください。"
+        f"出張試験などで会場が異なる場合もあるため、受験票の表記を必ず照合してください。"
+    )
+
+
+def jissh_center_list_prose(*, official: str) -> str:
+    """全国センター一覧（shiken-kaijo 等）向け。"""
+    from tools.exam_venue_official_links import CENTER_PAGES, EXAM_PORTAL, JISSH_VENUE_HUB, md_link
+
+    hub_md = md_link(*JISSH_VENUE_HUB)
+    portal_md = md_link(*EXAM_PORTAL)
     intro = (
-        f"申込時に受験地・会場を確定するため、{official}の受験要項で以下を確認します。"
+        f"第二種衛生管理者試験など{official}が実施する学科試験は、全国の安全衛生技術センターで行われます。"
+        f"各センターの所在地・アクセスマップは公式サイトで確認し、本文には住所や交通ルートは載せません。"
+        f"本人に割り当てられた会場は受験票の表記が正本です。"
+    )
+    items = [md_link(label, url) for label, url in CENTER_PAGES.values()]
+    outro = (
+        f"センター一覧の概要は{hub_md}、試験日程・申込は{portal_md}で確認してください。"
+        f"試験地選択前に、最寄りセンターまでの所要時間と当日の交通手段を前日までに確定しておくと安心です。"
+    )
+    return f"{intro}\n\n{_bullet_block(items)}\n\n{outro}"
+
+
+def exam_application_venue_prose(
+    *,
+    official: str,
+    topic: str = "",
+    official_page_md: str = "",
+) -> str:
+    """申込・会場選びの手順を具体項目で書き切る。"""
+    link = official_page_md or official
+    intro = (
+        f"申込時に受験地・会場を確定するため、{link}の受験要項で以下を確認します。"
         f"{topic + 'で受験する場合も、' if topic else ''}申込後に変更できない項目がないか要項で確認してください。"
+        f"会場の正式名称・所在地・アクセスは{link}の最新案内で確認し、詳細ルートは受験票到着後に確定してください。"
     )
     items = [
         "受験地の選択肢（都市名と会場割当のルール）",

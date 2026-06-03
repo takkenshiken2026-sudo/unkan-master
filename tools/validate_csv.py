@@ -34,6 +34,10 @@ from tools.knowledge_hub_rules import (
     production_count_message,
 )
 from tools.correct_answer_format import is_valid_correct
+from tools.affiliate_links import (  # noqa: E402
+    affiliate_external_links_in_row,
+    is_affiliate_article,
+)
 from tools.related_links import parse_related_link_token
 from tools.site_config import category_to_field_map, extended_correct_answers, guide_genre_labels
 from tools.term_diagram import DIAGRAM_ID_RE, diagram_id_exists
@@ -50,7 +54,6 @@ AFFILIATE_TARGET_COUNT = 10
 AFFILIATE_GENRES = frozenset(
     {"独学対策", "学習計画", "過去問活用", "直前・当日", "試験概要", "受験・申込"}
 )
-AFFILIATE_PR_MARKERS = ("アフィリエイト", "広告", "PR", "プロモーション")
 
 # Must not appear in published section headings / body (guide_articles.csv).
 OPERATOR_CONTENT_FRAGMENTS: list[tuple[str, str]] = [
@@ -370,6 +373,7 @@ class Validator:
         slugs: set[str] = {self.norm(r.get("slug")) for r in rows if self.norm(r.get("slug"))}
         seen: set[str] = set()
         affiliate_count = 0
+        affiliate_ready_count = 0
         for idx, row in enumerate(rows, start=2):
             slug = self.require_text(path, row, idx, "slug")
             if slug:
@@ -451,20 +455,29 @@ class Validator:
                             f"related_links の slug が guide_articles.csv に存在しません: {target!r}",
                         )
             tags = split_semicolon(self.norm(row.get("tags")))
-            if AFFILIATE_TAG in tags:
+            if is_affiliate_article(row):
                 affiliate_count += 1
+                ext_links = affiliate_external_links_in_row(row)
+                if ext_links:
+                    affiliate_ready_count += 1
+                elif self.norm(row.get("content_status")) == "published":
+                    self.warn(
+                        path,
+                        idx,
+                        "アフィリエイトリンク未設定のまま published です。"
+                        " ASP URL を related_links 等に追加するか、リンク準備まで記事行を作らないでください（draft 推奨）。",
+                    )
+                else:
+                    self.warn(
+                        path,
+                        idx,
+                        "アフィリエイトタグ付きですが ASP リンク未設定です。URL 確定まで公開 HTML は生成されません。",
+                    )
                 if genre and genre not in AFFILIATE_GENRES:
                     self.warn(
                         path,
                         idx,
                         f"アフィリエイト記事の genre は通常 {sorted(AFFILIATE_GENRES)} のいずれかにしてください（現在: {genre!r}）",
-                    )
-                lead = self.norm(row.get("lead"))
-                if lead and not any(marker in lead for marker in AFFILIATE_PR_MARKERS):
-                    self.warn(
-                        path,
-                        idx,
-                        "アフィリエイト記事の lead に広告・PR（アフィリエイト）である旨を含めてください",
                     )
                 internal_related = 0
                 if related:
@@ -485,12 +498,13 @@ class Validator:
                 else:
                     self.warn(path, idx, f"[{issue.column}] {issue.message}")
 
-        if affiliate_count < AFFILIATE_TARGET_COUNT:
+        if affiliate_ready_count < AFFILIATE_TARGET_COUNT:
             self.warn(
                 path,
                 None,
-                f"アフィリエイト記事は本番テンプレート標準で{AFFILIATE_TARGET_COUNT}本を目安にしてください"
-                f"（tags に「{AFFILIATE_TAG}」を含む行: 現在 {affiliate_count} 本）。"
+                f"ASPリンク済みのアフィリエイト記事は本番目安 {AFFILIATE_TARGET_COUNT} 本"
+                f"（現在 {affiliate_ready_count} 本）。"
+                f" リンク未用意の slug は CSV 行・HTML を作らない（tags に「{AFFILIATE_TAG}」のみの placeholder は {affiliate_count - affiliate_ready_count} 本）。"
                 " docs/guide-article-catalog.md の「アフィリエイト記事（10本目安）」を参照してください。",
             )
         elif affiliate_count > 18:

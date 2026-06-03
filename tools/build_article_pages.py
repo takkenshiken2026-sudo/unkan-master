@@ -85,6 +85,14 @@ def split_semicolon(value: str) -> list[str]:
     return [x.strip() for x in (value or "").split(";") if x.strip()]
 
 
+# CSV / validate のみ。公開ページの表・一覧には出さない。
+INTERNAL_ARTICLE_TAGS = frozenset({"アフィリエイト"})
+
+
+def public_display_tags(tags: list[str]) -> list[str]:
+    return [tag for tag in tags if tag not in INTERNAL_ARTICLE_TAGS]
+
+
 GUIDE_INTERNAL_MARKER_RE = re.compile(r"（記事:[^）]+）")
 GUIDE_SECTION_META_TAIL_RE = re.compile(
     r"記事\s+\S+\s*「[^」]+」では「[^」]+」（第[\d。]+節[^）]*）の[^。]*整理します。?"
@@ -105,7 +113,10 @@ SALT_LIST_ONLY_RE = re.compile(
 
 def sanitize_guide_text(text: str, slug: str = "") -> str:
     """量産テンプレの内部マーカー（記事:slug 等）を読者向け本文から除去する。"""
-    out = GUIDE_INTERNAL_MARKER_RE.sub("", text or "")
+    from tools.guide_content_shared import strip_affiliate_pr_disclaimer
+
+    out = strip_affiliate_pr_disclaimer(text or "")
+    out = GUIDE_INTERNAL_MARKER_RE.sub("", out)
     out = GUIDE_SECTION_META_TAIL_RE.sub("", out)
     out = GUIDE_KEYWORD_BOILER_RE.sub("", out)
     if slug:
@@ -139,6 +150,7 @@ def sanitize_guide_text(text: str, slug: str = "") -> str:
     return "\n\n".join(kept)
 
 
+from tools.affiliate_links import affiliate_article_is_buildable  # noqa: E402
 from tools.seo_body_markup import seo_section_body_html  # noqa: E402
 
 
@@ -428,9 +440,10 @@ def quality_panel_html(article: dict[str, str]) -> str:
 
 
 def article_info_table(article: dict[str, str]) -> str:
+    display_tags = public_display_tags(split_semicolon(apply_vars(article.get("tags", ""))))
     rows = [
         ("ジャンル", apply_vars(article.get("genre", ""))),
-        ("タグ", " / ".join(split_semicolon(apply_vars(article.get("tags", ""))))),
+        ("タグ", " / ".join(display_tags)),
     ]
     rows = [(k, v) for k, v in rows if v]
     if not rows:
@@ -454,11 +467,13 @@ def build_article_html(
     slug = article["slug"]
     rel_path = Path("articles") / slug / "index.html"
     title = apply_vars(article["title"])
-    desc = meta_description(apply_vars(article.get("meta_description") or article.get("lead") or title))
+    lead_text = sanitize_guide_text(apply_vars(article.get("lead", "")), slug)
+    desc = meta_description(apply_vars(article.get("meta_description") or "") or lead_text or title)
     canonical = public_url(f"articles/{slug}/")
     updated = content_date_from_row(article)
     genre = apply_vars(article.get("genre", "試験ガイド"))
     tags = split_semicolon(apply_vars(article.get("tags", "")))
+    display_tags = public_display_tags(tags)
     linked_terms: set[str] = set()
     sections = sections_html(article, term_hrefs=term_hrefs, linked_terms=linked_terms)
     faqs = faq_items(article)
@@ -547,7 +562,7 @@ def build_article_html(
         "description": desc,
         "mainEntityOfPage": canonical,
         "inLanguage": "ja-JP",
-        "about": [genre, *tags],
+        "about": [genre, *display_tags],
         "isPartOf": public_url("articles/index.html"),
         **json_ld_date_modified(updated),
     }
@@ -616,7 +631,7 @@ def build_article_html(
       {meta_updated_html(updated)}
     </div>
     <h1 class="article-title">{html.escape(title)}</h1>
-    <p class="article-lead">{html.escape(apply_vars(article.get("lead", "")))}</p>
+    <p class="article-lead">{html.escape(lead_text)}</p>
     {key_points_box}
     {toc}
     {quality_panel}
@@ -671,7 +686,9 @@ def build_index_html(articles: list[dict[str, str]]) -> str:
         desc_text = meta_description(apply_vars(article.get("meta_description") or article.get("lead") or title_text), 130)
         genre = apply_vars(article.get("genre", "試験ガイド"))
         style = genre_styles.get(genre, "meta")
-        tags = " / ".join(split_semicolon(apply_vars(article.get("tags", ""))))
+        all_tags = split_semicolon(apply_vars(article.get("tags", "")))
+        display_tags = public_display_tags(all_tags)
+        tags = " / ".join(display_tags)
         search_text = " ".join([title_text, desc_text, genre, tags, apply_vars(article.get("lead", ""))])
         article_cards.append(
             '<article class="article-index-card" '
@@ -809,7 +826,9 @@ def clean_generated_dirs() -> None:
 
 def main() -> int:
     articles = load_articles()
-    by_slug = {norm(a.get("slug")): a for a in articles if norm(a.get("slug"))}
+    buildable = [article for article in articles if affiliate_article_is_buildable(article)]
+    skipped_affiliate = len(articles) - len(buildable)
+    by_slug = {norm(a.get("slug")): a for a in buildable if norm(a.get("slug"))}
     term_hrefs: dict[str, str] | None = None
     glossary_categories: list[str] = []
     try:
@@ -826,7 +845,7 @@ def main() -> int:
         print(f"Warning: glossary auto-link disabled: {exc}", file=sys.stderr)
     ARTICLES_DIR.mkdir(parents=True, exist_ok=True)
     clean_generated_dirs()
-    for article in articles:
+    for article in buildable:
         slug = norm(article.get("slug"))
         if not slug:
             continue
@@ -842,8 +861,11 @@ def main() -> int:
             ),
             encoding="utf-8",
         )
-    (ARTICLES_DIR / "index.html").write_text(build_index_html(articles), encoding="utf-8")
-    print(f"Wrote {len(articles)} guide articles under {ARTICLES_DIR}")
+    (ARTICLES_DIR / "index.html").write_text(build_index_html(buildable), encoding="utf-8")
+    msg = f"Wrote {len(buildable)} guide articles under {ARTICLES_DIR}"
+    if skipped_affiliate:
+        msg += f" (skipped {skipped_affiliate} affiliate without ASP links)"
+    print(msg)
     print(f"Wrote {ARTICLES_DIR / 'index.html'}")
     return 0
 

@@ -24,7 +24,7 @@ from tools.scaffold_guide_article import (  # noqa: E402
     load_fieldnames,
     print_row,
 )
-from tools.site_config import brand_name, exam_name  # noqa: E402
+from tools.affiliate_links import affiliate_brief_has_links  # noqa: E402
 
 ARTICLES_CSV = ROOT / "data" / "guide_articles.csv"
 BRIEFS_DIR = ROOT / "data" / "affiliate-briefs"
@@ -32,7 +32,6 @@ TEMPLATE_BRIEF = ROOT / "docs" / "affiliate" / "theme-brief.template.yaml"
 
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 AFFILIATE_TAG = "アフィリエイト"
-PR_LEAD = "※本記事には広告・PR（アフィリエイト）を含みます。"
 
 AFFILIATE_THEMES: dict[str, dict[str, Any]] = {
     "textbooks-recommend": {
@@ -452,7 +451,6 @@ def resolve_config(
 def affiliate_lead(search_intent: str) -> str:
     exam = exam_name()
     return (
-        f"{PR_LEAD} "
         f"{exam}を受験予定で、{search_intent}人向けに、比較のポイントと選び方をまとめました。"
         "価格・版・キャンペーンは購入前に各販売ページでご確認ください。"
     )
@@ -624,6 +622,12 @@ def main() -> int:
         return 0
 
     if args.append:
+        if not affiliate_brief_has_links(config):
+            parser.error(
+                "アフィリエイトリンク未設定のため guide_articles.csv に追記しません。"
+                " brief の products.*_url または related_links に ASP URL を入れてから --append してください。"
+                " （内部リンク中心の free-vs-paid-study のみ asp=internal で例外）"
+            )
         append_row(row)
         write_brief(config, force=True)
         print(f"Appended slug={config['slug']!r} theme={theme_key!r} to {ARTICLES_CSV}")
