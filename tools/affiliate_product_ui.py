@@ -130,20 +130,6 @@ def cta_link(url: str, label: str, *, css_class: str = "affiliate-product-cta") 
     )
 
 
-def product_name_link_html(product: dict[str, Any]) -> str:
-    """比較表・要点表紙ラベル用：ASP リンク付き商品名（黒テキスト）。"""
-    name = norm(str(product.get("name") or ""))
-    if not name:
-        return "—"
-    url = product_affiliate_url(product)
-    if is_affiliate_url(url):
-        return (
-            f'<a class="affiliate-compare-name-link" href="{html.escape(url)}" '
-            f'target="_blank" rel="{EXTERNAL_REL}">{html.escape(name)}</a>'
-        )
-    return html.escape(name)
-
-
 def meta_line(product: dict[str, Any], *, brief: dict[str, Any] | None = None) -> str:
     offer_type = product_offer_type(product, brief)
     parts: list[str] = []
@@ -257,17 +243,17 @@ def comparison_table_html(brief: dict[str, Any], products: list[dict[str, Any]])
     for product in products:
         offer_type = product_offer_type(product, brief)
         rank = norm(str(product.get("rank") or ""))
+        name = norm(str(product.get("name") or ""))
         price = price_display(product, offer_type) or "—"
         if kind == "courses":
             spec = norm(str(product.get("duration") or product.get("study_period") or "")) or "—"
         else:
             spec = norm(str(product.get("pages") or "")) or "—"
         for_who = norm(str(product.get("for_who") or "")) or "—"
-        name_cell = product_name_link_html(product)
         rows.append(
             "<tr>"
             f'<th scope="row">{html.escape(rank)}</th>'
-            f"<td>{name_cell}</td>"
+            f"<td>{html.escape(name)}</td>"
             f"<td>{html.escape(price)}</td>"
             f"<td>{html.escape(spec)}</td>"
             f"<td>{html.escape(for_who)}</td>"
@@ -377,16 +363,12 @@ def key_points_aside_cover_html(
         course_cls += " seo-key-points-aside-cover--placeholder"
     url = product_affiliate_url(product)
     cover = f'<span class="seo-key-points-aside-cover{course_cls}">{inner}</span>'
-    label_html = ""
-    if name:
-        label_html = f'<span class="seo-key-points-aside-label">{html.escape(name)}</span>'
-    stack = f'<span class="seo-key-points-aside-stack">{cover}{label_html}</span>'
     if is_affiliate_url(url):
         return (
             f'<a class="seo-key-points-aside-link" href="{html.escape(url)}" '
-            f'target="_blank" rel="{EXTERNAL_REL}">{stack}</a>'
+            f'target="_blank" rel="{EXTERNAL_REL}">{cover}</a>'
         )
-    return stack
+    return cover
 
 
 def affiliate_key_points_box_html(

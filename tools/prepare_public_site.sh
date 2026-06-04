@@ -69,12 +69,6 @@ fi
 if [[ -f "$ROOT/favicon.ico" ]]; then
   cp "$ROOT/favicon.ico" "$OUT/favicon.ico"
 fi
-if [[ -d "$ROOT/images" ]]; then
-  cp -R "$ROOT/images" "$OUT/"
-fi
-if [[ -d "$ROOT/images" ]]; then
-  cp -R "$ROOT/images" "$OUT/"
-fi
 n="$(find "$OUT" -type f | wc -l | tr -d ' ')"
 if grep -q 'site-spa.css' "$OUT/index.html" 2>/dev/null && [[ ! -f "$OUT/site-spa.css" ]]; then
   echo "prepare_public_site.sh: index.html が site-spa.css を参照していますが public_site にありません。" >&2

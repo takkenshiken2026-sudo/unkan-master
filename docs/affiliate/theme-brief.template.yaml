@@ -1,72 +1,42 @@
 # アフィリエイト記事テーマ入力（このファイルをコピーして data/affiliate-briefs/{slug}.yaml に保存）
-#
-# 紹介対象は「書籍（books）」と「講座・サービス（courses）」の2系統。
-# 完成テンプレ:
-#   - docs/affiliate/templates/affiliate-textbooks-recommend/  … 書籍
-#   - docs/affiliate/templates/affiliate-online-course-compare/ … 講座
 
 # 必須
-slug: affiliate-your-topic-slug
-theme_key: textbooks-recommend           # scaffold --list-themes のキー
+slug: affiliate-your-topic-slug          # 半角英小文字・ハイフン
+theme_key: textbooks-recommend           # scaffold --list-themes のキー。独自なら custom
 search_intent: 独学向けにおすすめのテキストを比較して選びたい
 
 # 任意（省略時は theme_key から自動補完）
 title: ◯◯試験のおすすめテキスト3選【独学・初心者向け】
-genre: 独学対策
-layout: product-comparison               # csv | product-comparison
+genre: 独学対策                          # 独学対策 / 学習計画 / 過去問活用 / 受験・申込
+layout: csv                              # csv | product-comparison
 asp_primary: amazon                      # amazon | a8 | afb | internal | mixed
-comparison_kind: books                     # books | courses
 
-comparison_title: おすすめテキスト3選（比較）
-price_disclaimer: 価格は執筆時点のAmazon参考。購入前に販売ページで確認してください。
-
-# --- 書籍（offer_type: book）の例 ---
+# 比較対象（Amazon・商品比較型で使用。空でも可）
 products:
   - rank: 1
-    offer_type: book
     name: 【商品名・年度版】
     publisher: 出版社名
-    edition: 2026年改訂
-    price_yen: 3080
-    price_note: Amazon税込・送料別
-    pages: 480
-    format: A5判
-    asin: B0XXXXXXXXXX
-    image_file: exam-slug-textbook-a-2026.webp
+    image_file: exam-slug-product-a-2026.webp
     amazon_url: https://amzn.to/xxxxxxxx
     workbook_name: 【問題集名】
-    workbook_image_file: exam-slug-textbook-a-workbook-2026.webp
+    workbook_image_file: exam-slug-product-a-workbook-2026.webp
     workbook_amazon_url: https://amzn.to/yyyyyyyy
     for_who: 初学者で基礎から入りたい人
-    highlights:
-      - 【訴求ポイント1】
-      - 【訴求ポイント2】
+  - rank: 2
+    name: 【商品名2】
+    publisher: 出版社名2
+    image_file: exam-slug-product-b-2026.webp
+    amazon_url: https://amzn.to/zzzzzzzz
+    for_who: 過去問演習を早めに始めたい人
 
-# --- 講座（offer_type: course）の例（books と混在可。comparison_kind: courses 推奨）---
-#  - rank: 1
-#    offer_type: course
-#    name: 【講座名】
-#    provider: 提供会社
-#    price_yen: 9800
-#    billing_type: monthly              # monthly | lump
-#    price_label: 月額 ¥9,800〜       # 複雑な料金表記はこちら
-#    duration: 受講期間6か月
-#    lecture_hours: 120
-#    support: 質問サポートあり
-#    image_file: exam-slug-course-a-2026.webp
-#    a8_url: https://px.a8.net/svt/ejp?a8mat=xxxx
-#    affiliate_url: https://...         # a8 以外の ASP
-#    trial_label: 無料体験あり
-#    trial_url: https://...
-#    for_who: 独学で動画補強したい人
-#    highlights:
-#      - 【訴求ポイント1】
-
+# 内部導線（slug:ラベル。存在する slug のみ）
 related_links:
   - self-study-roadmap:独学の進め方
   - study-plan:学習計画の立て方
   - ../../q/index.html:過去問を解く（無料）
 
+# 非公開メモ（CSV original_note にも反映）
 operator_note: |
-  ASP: Amazon / A8 / afb（対象に合わせて記載）
-  更新: 価格・キャンペーンは fact_checked_at と四半期ごとに照合
+  ASP: Amazonアソシエイト
+  プログラムID: （サイトのID）
+  更新: 年度版・価格は四半期ごと

@@ -118,6 +118,36 @@ python3 tools/build_all.py
 | **検証** | `validate_site_integration.py` … CSS 行数・レスポンシブ節・viewport |
 | **目視** | 375px / 768px … [responsive-layout.md §6.2](./responsive-layout.md) |
 
+### 1.9 SPA トップ（`index.html`）の SNS / SEO
+
+| 層 | 正 | 誤 |
+|----|----|-----|
+| **設定の正本** | `site-config.json`（`brandName`, `examName`, `siteOrigin`） | 宅建 fork の `index.html` をそのまま使う |
+| **HTML head** | `tools/index_seo_head.py` が `<!--INDEX_SEO_HEAD-->` 内を再生成（`apply_site_config` 経由） | `twitter:title` だけ残して `og:title` 欠落 |
+| **og:image** | `generate_brand_assets.py` + `inject_brand_head` | SEO ブロック内に別ドメインの `og:image` を二重定義 |
+| **SPA 内メタ** | `PAGE_SEO` は `SITE_CONFIG` から組み立て | サイト名を JS にハードコード |
+| **パンくず1段目** | 「トップ」 | ブランド名（例: 宅建マスター） |
+| **noscript / FIELDS** | `INDEX_NOSCRIPT`・`INDEX_FIELDS_FALLBACK` を `apply_site_config` が `site-config.fields` から再生成 | 宅建3分野のハードコード |
+| **site-config 読込順** | `site-config.js` を `var FIELDS` より前 | FIELDS がフォールバック固定 |
+| **部分同期** | `tools/sync_index_spa_from_template.py` + `index_spa_patch_regions.txt` | `index.html` 手マージのみ |
+| **再生成** | `build_all.py` 内の `generate_brand_assets` → **`apply_site_config.py`** | head を手編集だけ |
+
+`index.html` は **テンプレ同期対象外**。新規サイトはテンプレ正本の `index.html` を取り込み、初回:
+
+```bash
+python3 tools/generate_brand_assets.py
+python3 tools/apply_site_config.py
+python3 tools/validate_site_integration.py
+```
+
+SPA エンジンだけテンプレから反映（`index.html` 全体は上書きしない）:
+
+```bash
+python3 tools/sync_index_spa_from_template.py --target /path/to/site --apply-config
+```
+
+トップ URL の SNS カード: [X Card Validator](https://cards-dev.twitter.com/validator) で確認。
+
 非レスポンシブサイトの典型: **旧 `site-pages.css`（~1.6k 行）未同期** → `sync_from_template` + `build_all`。
 
 ### 1.9 知識ハブ3種（比較・数値・誤答）の拡充
@@ -155,10 +185,12 @@ python3 tools/build_all.py
 内部で実行される主な処理:
 
 1. `validate_csv.py`
-2. **`apply_site_config.py`** … `index.html` フッター・`site-theme.css` 等
-3. 各 `build_*.py` … `q/`, `terms/`, `articles/`
-4. **`validate_site_integration.py`** … 本チェックリストの契約
-5. `validate_internal_links.py` ほか
+2. `generate_brand_assets.py` … favicon / og-image
+3. **`apply_site_config.py`** … `index.html` の **INDEX_SEO_HEAD**（SNS/OGP）・フッター・`site-theme.css` 等
+4. 各 `build_*.py` … `q/`, `terms/`, `articles/`
+5. **`validate_site_integration.py`** … 本チェックリストの契約（SPA SEO マーカー含む）
+6. `validate_internal_links.py` ほか
+7. `prepare_public_site.sh` … `public_site/` 配置
 
 単体確認:
 
@@ -174,6 +206,7 @@ python3 tools/validate_site_integration.py
 | `/q/practice/index.html` | タブから過去問ハブへ遷移 |
 | `/terms/index.html` | 定義列が JS 適用後も非空 |
 | `/` | フッター「過去問一覧」→ `/q/index.html`（実践ではない） |
+| `/`（トップ） | ページソースに `og:title` / `twitter:title` が **自サイト名**（`INDEX_SEO_HEAD` あり） |
 | **375px 幅** | `/`, `articles/index.html`, `terms/index.html`, `q/index.html` … 横スクロールなし（[responsive-layout.md §6.2](./responsive-layout.md)） |
 
 ---
@@ -218,6 +251,7 @@ python3 tools/validate_internal_links.py
 | 実践・一問一答 件数が少ない | CSV がサンプルのみ・ORIG 未取り込み | §1.5 取り込み → `build_all` |
 | 一問一答が年度順 | `groupBy: year` のまま | `groupBy: category` + `categoryOrder` → `build_all` |
 | `validate_site_integration` 件数不一致 | CSV 変更後未ビルド | `build_all.py` |
+| X でトップ URL が別サイト名 | `index.html` head が宅建 fork のまま / `apply_site_config` 未実行 | §1.9 → **`build_all`**（`apply_site_config` 含む） |
 | 同期したのに過去問だけ旧式 | 本番 `build_past` が古いまま | 宅建はフェーズ2マージ。フル同期サイトは `--build` 忘れ |
 
 ---
@@ -230,7 +264,8 @@ python3 tools/validate_internal_links.py
 - [ ] `python3 tools/build_all.py` 成功
 - [ ] `validate_site_integration.py` が OK
 - [ ] `validate_internal_links.py` が broken 0
-- [ ] 目視 §2.3 の4 URL
+- [ ] `index.html` … `INDEX_SEO_HEAD` あり、head 内 `og:title` が自サイト名（§1.9）
+- [ ] 目視 §2.3 の URL（トップの SNS メタ含む）
 - [ ] 実践・一問一答: CSV 行数 ≒ 一覧件数（§1.5）。一問一答は**分野順**ブロック
 
 宅建の場合は上に加え:

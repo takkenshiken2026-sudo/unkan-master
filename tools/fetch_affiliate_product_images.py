@@ -27,6 +27,7 @@ OG_IMAGE_RE = re.compile(
     r'<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']',
     re.I,
 )
+AMAZON_PLACEHOLDER_IDS = ("01MKUOLsA5L",)
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -56,12 +57,60 @@ def product_source_url(product: dict) -> str:
     return ""
 
 
+def _amazon_image_ok(url: str) -> bool:
+    text = norm(url)
+    if not text or "media-amazon.com" not in text:
+        return False
+    if text.lower().endswith(".gif"):
+        return False
+    return not any(token in text for token in AMAZON_PLACEHOLDER_IDS)
+
+
+def _amazon_hi_res_url(url: str) -> str:
+    base = re.sub(r"\._[^.]+\.(jpg|jpeg|webp)$", "", url, flags=re.I)
+    if base.endswith((".jpg", ".jpeg", ".webp")):
+        return base
+    return f"{base}._SL1500_.jpg"
+
+
+def fetch_amazon_cover_url(product_url: str) -> str | None:
+    req = urllib.request.Request(
+        product_url,
+        headers={"User-Agent": USER_AGENT, "Accept-Language": "ja-JP,ja;q=0.9"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        html = resp.read().decode("utf-8", errors="replace")
+    for pattern in (
+        r'"landingImageUrl":"(https://[^"]+)"',
+        r'"hiRes":"(https://[^"]+)"',
+        r'"large":"(https://[^"]+)"',
+        r'id="landingImage"[^>]+src="(https://[^"]+)"',
+    ):
+        match = re.search(pattern, html)
+        if not match:
+            continue
+        url = norm(match.group(1).replace("\\u0026", "&"))
+        if _amazon_image_ok(url):
+            return _amazon_hi_res_url(url)
+    for url in re.findall(
+        r"https://m\.media-amazon\.com/images/I/[A-Za-z0-9+._-]+\.(?:jpg|jpeg|webp)",
+        html,
+        re.I,
+    ):
+        if _amazon_image_ok(url):
+            return _amazon_hi_res_url(url)
+    return None
+
+
 def fetch_og_image_url(product_url: str) -> str | None:
     req = urllib.request.Request(product_url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=30) as resp:
         html = resp.read().decode("utf-8", errors="replace")
     match = OG_IMAGE_RE.search(html)
-    return norm(match.group(1)) if match else None
+    url = norm(match.group(1)) if match else None
+    if url and _amazon_image_ok(url):
+        return url
+    return None
 
 
 def download_bytes(url: str) -> bytes:
@@ -113,12 +162,18 @@ def fetch_product_image(product: dict, *, root: Path, force: bool) -> bool:
             print(f"  skip: ASIN/URL なし ({product.get('name')})")
             return False
         try:
-            image_url = fetch_og_image_url(page_url) or ""
+            if "amazon.co.jp" in page_url or extract_asin(page_url):
+                image_url = fetch_amazon_cover_url(page_url) or ""
+            if not image_url:
+                image_url = fetch_og_image_url(page_url) or ""
         except (urllib.error.URLError, TimeoutError) as exc:
             print(f"  fetch failed ({product.get('name')}): {exc}", file=sys.stderr)
             return False
     if not image_url:
-        print(f"  skip: og:image 未取得 ({product.get('name')})")
+        print(f"  skip: 表紙 URL 未取得 ({product.get('name')})")
+        return False
+    if not _amazon_image_ok(image_url):
+        print(f"  skip: プレースホルダ画像 ({product.get('name')})")
         return False
     try:
         data = download_bytes(image_url)

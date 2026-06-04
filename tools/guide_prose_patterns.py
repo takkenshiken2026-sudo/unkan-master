@@ -46,6 +46,13 @@ META_CONFIRM_PAD_RE = re.compile(
     r"学習時は公式要項の最新版と照合してください|"
     r"の要点は[^。]+で確認してください。?$"
 )
+REWRITE_FALLBACK_RE = re.compile(
+    r"の論点の一つです|"
+    r"演習問題の解説と対応づけやすくなります|"
+    r"一人で診断|過度な情報開示|"
+    r"主体を取り違えていないか|"
+    r"FAQ3「本テーマ」"
+)
 
 
 @dataclass(frozen=True)
@@ -95,6 +102,7 @@ def scan_prose_text(
         ("broken_fallback", BROKEN_FALLBACK_RE),
         ("generic_action", GENERIC_ACTION_RE),
         ("meta_confirm_pad", META_CONFIRM_PAD_RE),
+        ("rewrite_fallback", REWRITE_FALLBACK_RE),
     ]
     dup = exam_dup_re(exam, exam_short)
     if dup:

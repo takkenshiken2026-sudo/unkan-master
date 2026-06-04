@@ -57,11 +57,28 @@
 
 ## 新規サイトを立ち上げるとき
 
-1. テンプレをコピーして新リポジトリを作る（または fork）
-2. `sites/_example/` を参考に `sites/<新サイトID>/SITE.md` を追加
+1. テンプレ（`exam-site-shell`）をコピーして新リポジトリを作る。**宅建 fork ではなくテンプレ正本の `index.html` を使う**
+2. `sites/_example/SITE.md` を参考に `sites/<新サイトID>/SITE.md` をテンプレ側に追加
 3. `site-config.json` と `data/*.csv` を差し替え
-4. `python3 tools/build_all.py`
-5. 以降の UI 修正はテンプレ → `sync_from_template.py` のループ
+4. 初回ブートストラップ（SNS/OGP 含む）:
+
+   ```bash
+   python3 tools/generate_brand_assets.py
+   python3 tools/apply_site_config.py   # INDEX_SEO_HEAD・フッター反映
+   python3 tools/build_all.py
+   python3 tools/validate_site_integration.py
+   ```
+
+5. CI: [docs/templates/deploy-pages.workflow.template.yml](../docs/templates/deploy-pages.workflow.template.yml) を `.github/workflows/deploy-pages.yml` にコピーし、`SITE_ID` を置換
+6. 以降の UI 修正はテンプレ → `sync_from_template.py` のループ
+
+`index.html` の SPA エンジンだけ反映するとき（フル上書きしない）:
+
+```bash
+python3 tools/sync_index_spa_from_template.py --target ~/Projects/<site> --apply-config
+```
+
+詳細チェックリスト: [integration-checklist.md §1.9](./integration-checklist.md)（SPA SNS/SEO）、§5（人間用）
 
 ## サイト固有の拡張
 
@@ -103,5 +120,6 @@ git push origin main   # → Deploy GitHub Pages workflow
 | CSS だけ古い | 同期漏れ or ブラウザキャッシュ（`site-pages.css?v=` を確認） |
 | 同期したのにレイアウトが違う | 本番に `template_site_only.paths` 外の独自 HTML/CSS が残っていないか `drift` で確認 |
 | フッター過去問が遷移しない / ハブにタブがない / 用語定義が空 | [integration-checklist.md](./integration-checklist.md) §2・§5 |
+| トップ URL を X に貼ると別サイト名になる | [integration-checklist.md §1.9](./integration-checklist.md) — `apply_site_config` / `INDEX_SEO_HEAD` |
 | push したが本番が古い | [DEPLOY.md](./DEPLOY.md) — Pages Source が Actions か、workflow 成功か確認 |
 | `main` は新しいが本番だけ古い（kangyou / kikenbutsu） | **レガシー `gh-pages` 配信の残存**。Pages Source を GitHub Actions に切替 |

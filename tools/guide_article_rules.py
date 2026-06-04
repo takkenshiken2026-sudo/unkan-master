@@ -22,6 +22,11 @@ from tools.editorial_quality import (
 from tools.related_links import parse_related_link_token
 from tools.site_config import is_template_site
 from tools.guide_coherence_rules import check_guide_row_coherence
+from tools.guide_rewrite_rules import (
+    rewrite_exempt,
+    rewrite_forbidden_hits,
+    slug_leaks_in_text,
+)
 
 GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
 GUIDE_MIN_FAQ_ANSWER = 100
@@ -101,6 +106,26 @@ def check_guide_row(
                         warn(col, "テンプレ用サンプルに量産禁止句が残っています（本番サイトでは ERROR）")
                 else:
                     issues.extend(boilerplate_issues(text, col))
+            if published and not rewrite_exempt(row):
+                forbidden = rewrite_forbidden_hits(text)
+                if forbidden:
+                    shown = forbidden[0][:32]
+                    if is_template_site():
+                        warn(
+                            col,
+                            f"量産テンプレ禁止句「{shown}…」（本番では要手書きリライト）",
+                        )
+                    else:
+                        err(
+                            col,
+                            f"量産テンプレ禁止句が残っています（{shown}…）。"
+                            f"記事固有の手書き本文に差し替えてください",
+                        )
+                for leak in slug_leaks_in_text(text, slug):
+                    if is_template_site():
+                        warn(col, f"本文に内部 slug が露出しています: {leak}")
+                    else:
+                        err(col, f"本文に内部 slug が露出しています: {leak}")
 
     sections = [(h, b, body) for h, b, body in section_pairs(row) if body]
     for _h, bcol, body in sections:

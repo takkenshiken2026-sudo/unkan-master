@@ -14,8 +14,7 @@ flowchart LR
   A[ASP URL 確定] --> B[各URLで価格確認]
   B --> C[brief YAML 記入]
   C --> D[scaffold --append]
-  D --> D2[apply テンプレ任意]
-  D2 --> E[オリジナル本文執筆]
+  D --> E[オリジナル本文執筆]
   E --> F[published + build]
   F --> G[デプロイ]
 ```
@@ -26,7 +25,6 @@ flowchart LR
 | 1. テーマ確定 | 人 | テーマキー or ブリーフ YAML |
 | 2. 価格確認 | 人 / AI | 各商品 URL を開き最新価格を brief に反映 |
 | 3. 雛形生成 | CLI | CSV 行（draft）+ ブリーフ（**本文は未完成の雛形**） |
-| 3b. テンプレ反映 | CLI（任意） | `apply_affiliate_article_template.py` — **CSV 行が既にあること**が前提 |
 | 4. 本文完成 | AI / 人 | **記事ごとのオリジナル** `section_*`（テンプレ置換のみ不可） |
 | 5. 公開 | 人 | `content_status=published` |
 | 6. 検証・デプロイ | CLI | `validate_csv.py` → `build_*` → push |
@@ -184,7 +182,7 @@ python3 tools/build_article_pages.py
 # 対象 slug の index.html が articles/ に生成されていることを確認
 ```
 
-[affiliate-article-rules.md](./affiliate-article-rules.md) §11 チェックリストをすべて確認する。
+[affiliate-article-rules.md](./affiliate-article-rules.md) §10 チェックリストをすべて確認する。
 
 ---
 

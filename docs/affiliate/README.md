@@ -1,15 +1,14 @@
 # アフィリエイト記事ドキュメント
 
 資格試験サイト向けアフィリエイト記事の **作成ルール** と **テーマ入力→自動生成** の手順。  
-**正本は exam-site-shell**（各本番サイトの `docs/affiliate/` は [PRODUCTION-SITE-STUB.md](./PRODUCTION-SITE-STUB.md) の短い案内のみ）。
+**正本は exam-site-shell**（各本番サイトの `docs/` はスタブ）。
 
 ## 読む順番
 
 1. **[affiliate-article-rules.md](./affiliate-article-rules.md)** — いつ作るか・書籍/講座・UI・チェックリスト
-2. **[multi-site-affiliate-workflow.md](./multi-site-affiliate-workflow.md)** — 全サイトへの同期・新規・リライト
-3. **[auto-create-workflow.md](./auto-create-workflow.md)** — CLI / AI フロー
-4. [seo-article-guidelines.md](../seo-article-guidelines.md) — 識別・法務・本数
-5. [guide-article-catalog.md](../guide-article-catalog.md) — 標準10 slug
+2. **[auto-create-workflow.md](./auto-create-workflow.md)** — CLI / AI フロー
+3. [seo-article-guidelines.md](../seo-article-guidelines.md) — 識別・法務・本数
+4. [guide-article-catalog.md](../guide-article-catalog.md) — 標準10 slug
 
 ## 記事テンプレ（完成形）
 
@@ -49,7 +48,7 @@ python3 tools/validate_csv.py
 python3 tools/build_article_pages.py
 ```
 
-## 覚えておく8点
+## 覚えておく7点
 
 1. **ASP URL 確定前は記事を作らない**（draft でも HTML 非生成）
 2. **価格は必ず ASP / 公式 URL から最新を調査**してから brief・本文に反映（[§3 A](./affiliate-article-rules.md#a-価格は必ず-url-から最新を調査する)）

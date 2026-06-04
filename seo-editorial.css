@@ -210,7 +210,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 .seo-editorial.seo-article-card .seo-article-section a,
 .seo-editorial.seo-article-card .article-lead a,
 .seo-editorial.seo-article-card blockquote a,
-.seo-editorial.seo-article-card .seo-key-points-box a:not(.seo-key-points-aside-link) {
+.seo-editorial.seo-article-card .seo-key-points-box a {
   color: var(--seo-link-inline);
   font-size: inherit;
   font-weight: var(--seo-font-weight-heading);
@@ -223,7 +223,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card {
 .seo-editorial.seo-article-card .seo-article-section a:hover,
 .seo-editorial.seo-article-card .article-lead a:hover,
 .seo-editorial.seo-article-card blockquote a:hover,
-.seo-editorial.seo-article-card .seo-key-points-box a:not(.seo-key-points-aside-link):hover {
+.seo-editorial.seo-article-card .seo-key-points-box a:hover {
   color: var(--seo-accent);
   text-decoration-color: var(--seo-accent);
   opacity: 1;
@@ -417,7 +417,7 @@ body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-
 /* アフィリエイト記事：要点ボックス右下に代表表紙1枚 */
 .seo-editorial .seo-key-points-box--affiliate .seo-key-points-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(5rem, 20%, 7rem);
+  grid-template-columns: minmax(0, 1fr) clamp(4.25rem, 16%, 5.5rem);
   align-items: end;
   gap: 0.85rem;
   margin-top: 0.35rem;
@@ -442,72 +442,17 @@ body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-
   grid-row: 1;
   align-self: end;
   width: 100%;
-  line-height: normal;
+  line-height: 0;
 }
 
-.seo-editorial .seo-key-points-aside-link,
-.seo-editorial .seo-key-points-aside-stack {
+.seo-editorial .seo-key-points-aside-link {
   display: block;
   text-decoration: none;
   color: inherit;
 }
 
-.seo-editorial .seo-key-points-aside-link {
-  color: var(--seo-text-title);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.seo-editorial .seo-key-points-aside-link:hover,
-.seo-editorial .seo-key-points-aside-link:focus {
-  color: var(--seo-text-title);
-  text-decoration: none;
-  opacity: 1;
-}
-
-.seo-editorial.seo-article-card .seo-key-points-box--affiliate .seo-key-points-aside-link,
-.seo-editorial.seo-article-card .seo-key-points-box--affiliate .seo-key-points-aside-link:hover,
-.seo-editorial.seo-article-card .seo-key-points-box--affiliate .seo-key-points-aside-link:focus {
-  color: var(--seo-text-title);
-  text-decoration: none;
-  text-decoration-color: var(--seo-text-title);
-}
-
-.seo-editorial .seo-key-points-aside-label {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  margin-top: 0.35rem;
-  font-size: 0.625rem;
-  line-height: 1.35;
-  font-weight: 600;
-  color: var(--seo-text-title);
-  text-align: center;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.1em;
-  text-decoration-color: var(--seo-text-title);
-  overflow-wrap: anywhere;
-}
-
-.seo-editorial .seo-key-points-aside-link .seo-key-points-aside-label {
-  text-decoration-color: var(--seo-text-title);
-}
-
-.seo-editorial .seo-key-points-aside-link:hover .seo-key-points-aside-label,
-.seo-editorial .seo-key-points-aside-link:focus .seo-key-points-aside-label {
-  color: var(--seo-text-title);
-  text-decoration-color: var(--seo-text-title);
-}
-
-.seo-editorial .seo-key-points-aside-stack .seo-key-points-aside-label {
-  text-decoration: none;
-}
-
 .seo-editorial .seo-key-points-aside-cover {
   display: block;
-  line-height: 0;
   border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 1px 5px color-mix(in srgb, var(--seo-text-body) 14%, transparent);
@@ -1063,21 +1008,6 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
 .seo-editorial.seo-article-card .affiliate-compare-table tbody td {
   background: var(--seo-table-cell-bg);
   color: var(--seo-table-cell-text);
-}
-
-.seo-editorial.seo-article-card .affiliate-compare-table a.affiliate-compare-name-link {
-  color: var(--seo-text-title);
-  font-weight: 600;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.12em;
-  text-decoration-color: color-mix(in srgb, var(--seo-text-title) 45%, transparent);
-}
-
-.seo-editorial.seo-article-card .affiliate-compare-table a.affiliate-compare-name-link:hover,
-.seo-editorial.seo-article-card .affiliate-compare-table a.affiliate-compare-name-link:focus {
-  color: var(--seo-text-title);
-  text-decoration: underline;
 }
 
 .seo-editorial.seo-article-card .affiliate-compare-table tr:last-child th,

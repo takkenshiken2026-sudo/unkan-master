@@ -13,28 +13,16 @@
 ## 使い方
 
 ```bash
-cd ~/Projects/YOUR-SITE
-
-# 1. brief 作成（ASP URL を実値に）
-cp ~/Projects/exam-site-shell/docs/affiliate/templates/affiliate-online-course-compare/brief.yaml \
-   data/affiliate-briefs/affiliate-online-course-compare.yaml
-
-# 2. CSV 行追加
-python3 tools/scaffold_affiliate_article.py \
-  --from-brief data/affiliate-briefs/affiliate-online-course-compare.yaml \
-  --append
-
-# 3. section 雛形を CSV に反映
 python3 tools/apply_affiliate_article_template.py \
   --template affiliate-online-course-compare
 
-# 4. オリジナル執筆 → 画像（任意）→ ビルド
-python3 tools/fetch_affiliate_product_images.py --slug affiliate-online-course-compare
-python3 tools/validate_csv.py
-python3 tools/build_article_pages.py
-```
+# brief の a8_url / affiliate_url を実値に → 画像取得（任意）
+python3 tools/fetch_affiliate_product_images.py \
+  --slug affiliate-online-course-compare
 
-**順序:** scaffold（行作成）→ apply（上書き）→ 手執筆。プレビュー: `build_affiliate_template_preview.py --slug affiliate-online-course-compare`
+python3 tools/build_affiliate_template_preview.py \
+  --slug affiliate-online-course-compare
+```
 
 ## ページ構成
 

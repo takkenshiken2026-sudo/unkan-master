@@ -173,6 +173,13 @@ _INDEX_SEO_BLOCK = re.compile(
     re.I,
 )
 
+_ORPHAN_DUP_SEO_AFTER_MARKER = re.compile(
+    rf"(?:<meta name=\"theme-color\"[^>]+>\s*)?"
+    r"(?:<meta name=\"description\"[^>]+>[\s\S]*?"
+    rf"(?:{re.escape(INDEX_SEO_MARKER_END)}\s*)?)+",
+    re.I,
+)
+
 
 def _strip_legacy_index_seo(text: str) -> str:
     text = _ORPHAN_TWITTER_AFTER_IMAGE.sub(r"\1\n", text, count=1)
@@ -183,25 +190,42 @@ def _strip_legacy_index_seo(text: str) -> str:
     return text
 
 
+def _strip_duplicate_seo_after_marker(text: str) -> str:
+    """INDEX_SEO マーカー直後に残った旧 SEO ブロック（他サイト fork 残骸）を除去。"""
+    end = text.find(INDEX_SEO_MARKER_END)
+    if end < 0:
+        return text
+    tail_start = end + len(INDEX_SEO_MARKER_END)
+    tail = text[tail_start:]
+    m = _ORPHAN_DUP_SEO_AFTER_MARKER.match(tail.lstrip())
+    if not m:
+        return text
+    consumed = len(tail) - len(tail.lstrip()) + m.end()
+    return text[:tail_start] + tail[consumed:]
+
+
 def inject_index_seo_head(text: str) -> str:
     """Replace or insert site-config driven SEO head for SPA index.html."""
     block_inner = index_seo_head_inner()
     block = f"{INDEX_SEO_MARKER_START}\n{block_inner}\n{INDEX_SEO_MARKER_END}"
     if INDEX_SEO_MARKER_START in text and INDEX_SEO_MARKER_END in text:
-        return _INDEX_SEO_BLOCK.sub(block, text, count=1)
-    text = _strip_legacy_index_seo(text)
-    if "<!--SITE_VERIFICATION_META_INJECT-->" in text:
-        return text.replace("<!--SITE_VERIFICATION_META_INJECT-->", block, 1)
-    if _ORPHAN_TWITTER_AFTER_IMAGE.search(text):
-        return _ORPHAN_TWITTER_AFTER_IMAGE.sub(r"\1\n" + block, text, count=1)
-    if "<!--BRAND_ASSET_HEAD-->" in text:
-        return re.sub(
-            r"(<!--BRAND_ASSET_HEAD-->[\s\S]*?<link rel=\"apple-touch-icon\"[^>]+>)",
-            r"\1\n" + block,
-            text,
-            count=1,
-        )
-    return re.sub(r'(<meta charset="UTF-8">)', r"\1\n" + block, text, count=1)
+        text = _INDEX_SEO_BLOCK.sub(block, text, count=1)
+    else:
+        text = _strip_legacy_index_seo(text)
+        if "<!--SITE_VERIFICATION_META_INJECT-->" in text:
+            text = text.replace("<!--SITE_VERIFICATION_META_INJECT-->", block, 1)
+        elif _ORPHAN_TWITTER_AFTER_IMAGE.search(text):
+            text = _ORPHAN_TWITTER_AFTER_IMAGE.sub(r"\1\n" + block, text, count=1)
+        elif "<!--BRAND_ASSET_HEAD-->" in text:
+            text = re.sub(
+                r"(<!--BRAND_ASSET_HEAD-->[\s\S]*?<link rel=\"apple-touch-icon\"[^>]+>)",
+                r"\1\n" + block,
+                text,
+                count=1,
+            )
+        else:
+            text = re.sub(r'(<meta charset="UTF-8">)', r"\1\n" + block, text, count=1)
+    return _strip_duplicate_seo_after_marker(text)
 
 
 def migrate_legacy_takken_leaks(text: str) -> str:
@@ -219,6 +243,24 @@ def migrate_legacy_takken_leaks(text: str) -> str:
     ]
     for src, dst in replacements:
         text = text.replace(src, dst)
+    # 他サイト fork からコピーされたドメインを siteOrigin へ
+    origin = clean_origin()
+    host = origin.replace("https://", "").replace("http://", "").strip("/")
+    if host:
+        for leak in (
+            "chintaikanrishi-master.jp",
+            "mankan-master.jp",
+            "kangyou-master.jp",
+            "eisei1shu-master.jp",
+            "eisei2shu-master.jp",
+            "mentalhealth-master.jp",
+            "kikenbutsu-master.jp",
+            "unkan-master.jp",
+            "boiler-master.jp",
+            "takken-master.jp",
+        ):
+            if leak != host:
+                text = text.replace(f"https://{leak}", origin)
     return text
 
 

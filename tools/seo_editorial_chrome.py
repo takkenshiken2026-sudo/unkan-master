@@ -12,7 +12,7 @@ import html
 from pathlib import Path
 
 # キャッシュバスター（seo-editorial.css を更新したら必ず上げる）
-SEO_EDITORIAL_CSS_VER = "20260603-affiliate-aside-label"
+SEO_EDITORIAL_CSS_VER = "20260603-affiliate-card-layout"
 
 SEO_ARTICLE_BODY_CLASSES = frozenset(
     {
