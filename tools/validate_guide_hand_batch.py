@@ -81,6 +81,12 @@ def validate_rewrites(rewrites: dict[str, dict[str, str]], *, root: Path) -> lis
         for key in REQUIRED_KEYS:
             if not norm(patch.get(key)):
                 errors.append(f"{prefix} missing {key}")
+        for key in SECTION_BODY_KEYS + FAQ_A_KEYS:
+            val = patch.get(key)
+            if isinstance(val, (tuple, list)):
+                errors.append(
+                    f"{prefix} {key} is tuple/list — use implicit string concat, not comma-separated ()"
+                )
 
         title = norm(patch.get("title"))
         if title and TITLE_DUP_EXAM_RE.search(title):

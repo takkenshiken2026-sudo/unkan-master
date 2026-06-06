@@ -397,6 +397,13 @@ class Validator:
             self.require_text(path, row, idx, "title")
             self.require_text(path, row, idx, "meta_description")
             self.require_text(path, row, idx, "lead")
+            lead = self.norm(row.get("lead"))
+            if lead.startswith(("('", '("')) and lead.endswith(")"):
+                self.error(
+                    path,
+                    idx,
+                    "lead が Python tuple の文字列表現です（batch の末尾カンマまたはカンマ区切り () を修正）",
+                )
             self.require_int(path, row, idx, "priority", min_value=1)
             self.require_text(path, row, idx, "section_1_heading")
             self.require_text(path, row, idx, "section_1_body")
@@ -406,6 +413,12 @@ class Validator:
                     value = self.norm(row.get(col))
                     if not value:
                         continue
+                    if value.startswith(("('", '("')) and value.endswith(")"):
+                        self.error(
+                            path,
+                            idx,
+                            f"{col} が Python tuple の文字列表現です（batch の末尾カンマまたはカンマ区切り () を修正）",
+                        )
                     for fragment, reason in OPERATOR_CONTENT_FRAGMENTS:
                         if fragment in value:
                             self.error(

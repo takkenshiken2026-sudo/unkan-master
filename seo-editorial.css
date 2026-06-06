@@ -72,7 +72,7 @@ body.seo-editorial-preview-page {
   --seo-divider: rgba(0, 0, 0, 0.1);
 
   /* --- 表 --- */
-  --seo-table-border: rgba(0, 0, 0, 0.16);
+  --seo-table-border: rgba(0, 0, 0, 0.28);
   --seo-table-head-bg: #dde1e6;
   --seo-table-head-text: #141414;
   --seo-table-cell-bg: #ffffff;
@@ -711,6 +711,52 @@ body.seo-editorial-preview-page .seo-editorial .seo-article-section h2 .section-
   border-bottom: none;
 }
 
+/* 試験ガイド本文セクション内のデータ表 — 枠線グリッド＋見出し行のみ薄灰 */
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table {
+  border-collapse: collapse;
+  border: 1px solid var(--seo-table-border);
+  box-shadow: none;
+}
+
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table td {
+  border: 1px solid var(--seo-table-border);
+  color: var(--seo-table-cell-text);
+}
+
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table td {
+  background: var(--seo-table-cell-bg);
+}
+
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table thead th {
+  font-weight: 700;
+  background: var(--seo-table-head-bg);
+  color: var(--seo-table-head-text);
+}
+
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table tr:nth-child(even) td {
+  background: var(--seo-table-cell-bg);
+}
+
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table tr:last-child th,
+.seo-editorial.seo-article-card .seo-article-section table.seo-info-table tr:last-child td {
+  border-bottom: 1px solid var(--seo-table-border);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td {
+  background: var(--seo-table-cell-bg);
+  color: var(--seo-table-cell-text);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table thead th {
+  background: var(--seo-table-head-bg);
+  color: var(--seo-table-head-text);
+}
+
+body.guide-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table tr:nth-child(even) td {
+  background: var(--seo-table-cell-bg);
+}
+
 .seo-editorial .seo-info-table th,
 .seo-editorial .seo-info-table td,
 .seo-editorial .term-compare-table th,
@@ -889,6 +935,21 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
     background: var(--seo-table-cell-bg);
     color: var(--seo-table-cell-text);
     font-size: var(--seo-fs-table);
+  }
+
+  body.guide-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+  body.term-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+  body.compare-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+  body.numbers-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+  body.mistakes-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table th,
+  body.guide-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td,
+  body.term-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td,
+  body.compare-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td,
+  body.numbers-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td,
+  body.mistakes-article-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td,
+  body.seo-editorial-preview-page .seo-editorial.seo-article-card .seo-article-section table.seo-info-table td {
+    border: 1px solid var(--seo-table-border);
   }
 
   body.guide-article-page .seo-editorial.seo-article-card .numbers-matrix-table tbody th[scope="row"],

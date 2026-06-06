@@ -22,6 +22,15 @@ TODAY = date.today().isoformat()
 DEFAULT_REVISION = f"{TODAY}: 手書きリライト"
 
 
+def normalize_batch_value(value: object) -> str:
+    """batch REWRITES の section 本文など。tuple/list は連結（カンマ付き () 誤り対策）。"""
+    if value is None:
+        return ""
+    if isinstance(value, (tuple, list)):
+        return "".join(str(part) for part in value)
+    return str(value)
+
+
 def load_rewrites_module(path: Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location("guide_rewrite_batch", path)
     if spec is None or spec.loader is None:
@@ -58,7 +67,7 @@ def apply_rewrites(
         if "手書きリライト" not in note:
             row["original_note"] = f"手書きリライト {TODAY}。" + (note if note else "")
         for key, value in patch.items():
-            row[key] = value
+            row[key] = normalize_batch_value(value)
         patched += 1
     fieldnames = _csv_fieldnames(fieldnames, rows)
     if patched and not dry_run:
