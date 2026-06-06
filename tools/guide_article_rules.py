@@ -27,6 +27,8 @@ from tools.guide_rewrite_rules import (
     rewrite_forbidden_hits,
     slug_leaks_in_text,
 )
+from tools.affiliate_links import is_affiliate_article
+from tools.affiliate_article_rules import check_affiliate_row
 
 GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
 GUIDE_MIN_FAQ_ANSWER = 100
@@ -81,7 +83,7 @@ def check_guide_row(
     def warn(col: str, msg: str) -> None:
         issues.append(EditorialIssue("WARN", col, msg))
 
-    # 雛形・禁止マーカー
+    # アフィリエイト記事: 手書きリライトキャンペーンルールは適用せず専用ルールのみ
     text_cols = [
         "title",
         "meta_description",
@@ -91,6 +93,26 @@ def check_guide_row(
         *(f"faq_{n}_answer" for n in range(1, 4)),
         *(f"faq_{n}_question" for n in range(1, 4)),
     ]
+    if is_affiliate_article(row):
+        for col in text_cols:
+            raw = norm(row.get(col))
+            if raw:
+                issues.extend(placeholder_issues(raw, col))
+        issues.extend(check_affiliate_row(row, slug_set=slug_set, line=line))
+        faq_questions: list[str] = []
+        for n in range(1, 4):
+            qcol = f"faq_{n}_question"
+            acol = f"faq_{n}_answer"
+            q, a = norm(row.get(qcol)), norm(row.get(acol))
+            if q:
+                if published and q in faq_questions:
+                    err(qcol, f"FAQ質問が重複しています: {q}")
+                faq_questions.append(q)
+            if q and not a:
+                err(acol, f"{qcol} に対する {acol} が空です")
+        return issues
+
+    # --- 通常試験ガイド ---
     for col in text_cols:
         raw = norm(row.get(col))
         if not raw:
@@ -121,11 +143,8 @@ def check_guide_row(
                             f"量産テンプレ禁止句が残っています（{shown}…）。"
                             f"記事固有の手書き本文に差し替えてください",
                         )
-                for leak in slug_leaks_in_text(text, slug):
-                    if is_template_site():
-                        warn(col, f"本文に内部 slug が露出しています: {leak}")
-                    else:
-                        err(col, f"本文に内部 slug が露出しています: {leak}")
+                for leak in slug_leaks_in_text(text, slug, slug_set=slug_set):
+                    warn(col, f"本文に内部 slug が露出しています: {leak}")
 
     sections = [(h, b, body) for h, b, body in section_pairs(row) if body]
     for _h, bcol, body in sections:
@@ -147,10 +166,15 @@ def check_guide_row(
                 issues.append(issue)
 
     faq_answers: list[str] = []
+    faq_questions: list[str] = []
     for n in range(1, 4):
         qcol = f"faq_{n}_question"
         acol = f"faq_{n}_answer"
         q, a = norm(row.get(qcol)), norm(row.get(acol))
+        if q:
+            if published and q in faq_questions:
+                err(qcol, f"FAQ質問が重複しています: {q}")
+            faq_questions.append(q)
         if q and not a:
             err(acol, f"{qcol} に対する {acol} が空です")
         visible_a = reader_facing_text(row, acol, a) if published and a else a

@@ -37,6 +37,7 @@ from tools.correct_answer_format import is_valid_correct
 from tools.affiliate_links import (  # noqa: E402
     affiliate_external_links_in_row,
     is_affiliate_article,
+    is_internal_affiliate_article,
 )
 from tools.related_links import parse_related_link_token
 from tools.site_config import category_to_field_map, extended_correct_answers, guide_genre_labels
@@ -83,9 +84,10 @@ class Issue:
 
 
 class Validator:
-    def __init__(self) -> None:
+    def __init__(self, *, only_slugs: frozenset[str] | None = None) -> None:
         self.issues: list[Issue] = []
         self.category_map = category_to_field_map()
+        self.only_slugs = only_slugs
 
     def error(self, path: Path, line: int | None, message: str) -> None:
         self.issues.append(Issue("ERROR", path, line, message))
@@ -376,6 +378,8 @@ class Validator:
         affiliate_ready_count = 0
         for idx, row in enumerate(rows, start=2):
             slug = self.require_text(path, row, idx, "slug")
+            if slug and self.only_slugs and slug not in self.only_slugs:
+                continue
             if slug:
                 if slug in seen:
                     self.error(path, idx, f"slug が重複しています: {slug}")
@@ -458,7 +462,7 @@ class Validator:
             if is_affiliate_article(row):
                 affiliate_count += 1
                 ext_links = affiliate_external_links_in_row(row)
-                if ext_links:
+                if ext_links or is_internal_affiliate_article(row):
                     affiliate_ready_count += 1
                 elif self.norm(row.get("content_status")) == "published":
                     self.warn(
@@ -560,7 +564,9 @@ class Validator:
                     else:
                         self.warn(path, idx, f"[{issue.column}] {issue.message}")
 
-    def run(self, *, scope: str = "all", summary: bool = False) -> int:
+    def run(self, *, scope: str = "all", summary: bool = False, only_slugs: frozenset[str] | None = None) -> int:
+        if only_slugs is not None:
+            self.only_slugs = only_slugs
         if scope in ("all", "questions"):
             self.validate_past_questions()
             self.validate_practice_questions()
@@ -601,8 +607,16 @@ def main() -> int:
         help="検証対象（hub=知識ハブ3種のみ、questions=過去問/演習/一問一答）",
     )
     parser.add_argument("--summary", action="store_true", help="ERROR をファイル別に集計表示")
+    parser.add_argument(
+        "--only-slugs",
+        metavar="SLUGS",
+        help="guide 検証を指定 slug のみに限定（5本 batch 用。カンマ区切り）",
+    )
     args = parser.parse_args()
-    return Validator().run(scope=args.scope, summary=args.summary)
+    only: frozenset[str] | None = None
+    if args.only_slugs:
+        only = frozenset(s.strip() for s in args.only_slugs.split(",") if s.strip())
+    return Validator(only_slugs=only).run(scope=args.scope, summary=args.summary, only_slugs=only)
 
 
 if __name__ == "__main__":

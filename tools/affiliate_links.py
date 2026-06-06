@@ -11,6 +11,9 @@ from tools.related_links import parse_related_link_token
 
 AFFILIATE_TAG = "アフィリエイト"
 
+# 収益リンクなし・内部導線のみ（docs/affiliate/affiliate-article-rules.md §1 例外）
+INTERNAL_AFFILIATE_SLUGS = frozenset({"affiliate-free-vs-paid-study"})
+
 # Placeholder / sample URLs — not counted as ready affiliate links.
 AFFILIATE_URL_PLACEHOLDER_HINTS = (
     "example.com",
@@ -77,9 +80,22 @@ def is_affiliate_article(row: dict[str, str]) -> bool:
     return AFFILIATE_TAG in tags
 
 
+def is_internal_affiliate_article(row: dict[str, str]) -> bool:
+    """asp=internal テーマ（外部 ASP URL 不要で HTML 生成可）。"""
+    slug = norm(row.get("slug"))
+    if slug in INTERNAL_AFFILIATE_SLUGS:
+        return True
+    notes = " ".join(
+        norm(row.get(key)) for key in ("original_note", "revision_note") if norm(row.get(key))
+    ).lower()
+    return "asp=internal" in notes or "内部リンク中心" in notes
+
+
 def affiliate_article_is_buildable(row: dict[str, str]) -> bool:
     """Affiliate rows without ASP URLs are not published as HTML."""
     if not is_affiliate_article(row):
+        return True
+    if is_internal_affiliate_article(row):
         return True
     return bool(affiliate_external_links_in_row(row))
 

@@ -15,23 +15,35 @@ if str(ROOT) not in sys.path:
 from tools.audit_guide_rewrite_inventory import audit_site  # noqa: E402
 
 
+from tools.guide_rewrite_rules import is_affiliate_row  # noqa: E402
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", type=Path, default=ROOT)
     ap.add_argument("--strict", action="store_true", help="needs_rewrite が1件でもあれば exit 1")
     args = ap.parse_args()
     rows = audit_site(args.root.resolve())
-    needs = [r for r in rows if r["status"] == "needs_rewrite"]
-    done = [r for r in rows if r["status"] == "done"]
+    guide_rows = [r for r in rows if not (r.get("affiliate") == "yes")]
+    needs = [
+        r
+        for r in guide_rows
+        if r["status"] in {"needs_rewrite", "auto_pending", "ok"}
+    ]
+    hand = [r for r in guide_rows if r["status"] == "hand_done"]
+    forbid = [r for r in guide_rows if r["status"] == "needs_rewrite"]
+    aff = [r for r in rows if r.get("affiliate") == "yes"]
     print(
-        f"guide rewrite: published={len(rows)} done={len(done)} needs_rewrite={len(needs)}"
+        f"guide rewrite: guide_published={len(guide_rows)} hand_done={len(hand)} "
+        f"pending={len(needs)} forbidden={len(forbid)} affiliate={len(aff)}"
     )
-    if needs:
-        for r in needs[:10]:
-            print(f"  NEED  [{r['priority']}] {r['slug']}: {r['forbidden_sample']}")
-        if len(needs) > 10:
-            print(f"  ... and {len(needs) - 10} more")
-    if args.strict and needs:
+    pending = [r for r in guide_rows if r["status"] != "hand_done"]
+    if pending:
+        for r in pending[:10]:
+            print(f"  PENDING [{r['priority']}] {r['slug']}: {r['status']}")
+        if len(pending) > 10:
+            print(f"  ... and {len(pending) - 10} more")
+    if args.strict and pending:
         return 1
     return 0
 

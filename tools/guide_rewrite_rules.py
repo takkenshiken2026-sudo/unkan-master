@@ -27,6 +27,11 @@ REWRITE_FORBIDDEN_PHRASES: tuple[str, ...] = (
     "受験資格・日程・合格基準の確認手順と、演習・用語解説を組み合わせた学習の始め方",
     "guide_expert_writer",
     "legacy batch",
+    "主体・期限・数値をメモしながら演習問題で定着を確認",
+    "合格までの学習を続けるには、出題範囲を分けて、演習と復習を定期的に回す計画が重要",
+    "の論点として、公式テキスト該当章",
+    "条文の主体・期限・数値を演習問題とセットで押さえる",
+    "マ管受験者が現場で迷いやすい論点",
 )
 
 # 本文に slug 名が露出（takken-foo 等）
@@ -67,12 +72,8 @@ def is_hand_rewritten(row: dict[str, str]) -> bool:
 
 
 def rewrite_exempt(row: dict[str, str]) -> bool:
-    """監査・ERROR 対象外（手書き済みアフィリエイト等）。"""
-    if is_hand_rewritten(row):
-        return True
-    if is_affiliate_row(row) and is_hand_rewritten(row):
-        return True
-    return False
+    """手書きリライトキャンペーン対象外（アフィリエイトは affiliate_article_rules）。"""
+    return is_affiliate_row(row)
 
 
 def rewrite_forbidden_hits(text: str) -> list[str]:
@@ -82,8 +83,8 @@ def rewrite_forbidden_hits(text: str) -> list[str]:
     return [p for p in REWRITE_FORBIDDEN_PHRASES if p in t]
 
 
-def slug_leaks_in_text(text: str, slug: str) -> list[str]:
-    """本文中の slug 名露出（内部記法）。"""
+def slug_leaks_in_text(text: str, slug: str, *, slug_set: set[str] | None = None) -> list[str]:
+    """本文中の slug 名露出（内部記法）。slug_set があるときは既知 slug のみ対象。"""
     t = norm(text)
     if not t or not slug:
         return []
@@ -95,8 +96,9 @@ def slug_leaks_in_text(text: str, slug: str) -> list[str]:
         if token in SLUG_IN_BODY_ALLOW:
             continue
         if "-" in token and len(token) >= 8 and token != slug:
-            # 他 slug 参照（related 混入）
             if re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)+", token):
+                if slug_set is not None and token not in slug_set:
+                    continue
                 hits.append(token)
     return hits
 

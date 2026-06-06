@@ -15,6 +15,27 @@ from types import ModuleType
 SHELL = Path(__file__).resolve().parents[1]
 
 
+def _template_root() -> Path:
+    import os
+
+    env = os.environ.get("EXAM_SITE_SHELL")
+    if env:
+        p = Path(env)
+        if (p / "tools" / "archive").is_dir():
+            return p
+    cand = Path.home() / "Projects" / "exam-site-shell"
+    if (cand / "tools" / "archive").is_dir():
+        return cand
+    return SHELL
+
+
+def _archive_path(module_stem: str) -> Path:
+    local = SHELL / "tools" / "archive" / f"{module_stem}.py"
+    if local.is_file():
+        return local
+    return _template_root() / "tools" / "archive" / f"{module_stem}.py"
+
+
 def _ensure_import_paths(root: Path) -> None:
     ordered = [str(SHELL), str(root.resolve())]
     for p in ordered:
@@ -28,7 +49,7 @@ def norm(value: object) -> str:
 
 
 def _import_archive(module_stem: str) -> ModuleType:
-    path = SHELL / "tools" / "archive" / f"{module_stem}.py"
+    path = _archive_path(module_stem)
     spec = importlib.util.spec_from_file_location(f"exam_site_shell.{module_stem}", path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load: {path}")

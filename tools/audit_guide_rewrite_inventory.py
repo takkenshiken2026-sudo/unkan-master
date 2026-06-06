@@ -16,11 +16,11 @@ if str(ROOT) not in sys.path:
 
 from tools.build_article_pages import resolve_guide_section_body, sanitize_guide_text  # noqa: E402
 from tools.editorial_quality import is_published_guide, norm  # noqa: E402
+from tools.affiliate_article_rules import affiliate_template_hits  # noqa: E402
+from tools.guide_rewrite_quality import prose_quality_status, revision_is_hand  # noqa: E402
 from tools.guide_rewrite_rules import (  # noqa: E402
     is_affiliate_row,
-    is_hand_rewritten,
     rewrite_forbidden_hits,
-    rewrite_status,
     slug_leaks_in_text,
     tier_priority,
 )
@@ -68,11 +68,12 @@ def audit_site(site_root: Path) -> list[dict[str, str]]:
         slug = norm(row.get("slug"))
         parts = [reader_text(row, c, slug) for c in PROSE_COLS]
         combined = "\n".join(p for p in parts if p)
-        forbidden = rewrite_forbidden_hits(combined)
-        leaks = slug_leaks_in_text(combined, slug)
-        status = rewrite_status(row, combined_text=combined)
-        if is_affiliate_row(row) and not is_hand_rewritten(row):
-            status = "affiliate_pending"
+        if is_affiliate_row(row):
+            forbidden = affiliate_template_hits(combined)
+        else:
+            forbidden = rewrite_forbidden_hits(combined)
+        leaks = [] if is_affiliate_row(row) else slug_leaks_in_text(combined, slug)
+        status = prose_quality_status(row, combined)
         rows.append(
             {
                 "site": site_name,
@@ -81,7 +82,7 @@ def audit_site(site_root: Path) -> list[dict[str, str]]:
                 "title": norm(row.get("title")),
                 "priority": tier_priority(row),
                 "status": status,
-                "hand_rewritten": "yes" if is_hand_rewritten(row) else "no",
+                "hand_rewritten": "yes" if revision_is_hand(row) else "no",
                 "affiliate": "yes" if is_affiliate_row(row) else "no",
                 "forbidden_count": str(len(forbidden)),
                 "forbidden_sample": forbidden[0][:40] if forbidden else "",
@@ -127,19 +128,37 @@ def main() -> int:
             w.writerows(all_rows)
         print(f"wrote {len(all_rows)} rows -> {args.output}")
 
-    needs = sum(1 for r in all_rows if r["status"] == "needs_rewrite")
-    done = sum(1 for r in all_rows if r["status"] == "done")
-    summary = {"total": len(all_rows), "needs_rewrite": needs, "done": done}
+    needs = sum(1 for r in all_rows if r["status"] == "needs_rewrite" and r.get("affiliate") != "yes")
+    hand = sum(1 for r in all_rows if r["status"] == "hand_done")
+    auto = sum(1 for r in all_rows if r["status"] == "auto_pending")
+    aff = sum(1 for r in all_rows if r.get("affiliate") == "yes")
+    summary = {
+        "total": len(all_rows),
+        "guide_total": len(all_rows) - aff,
+        "needs_rewrite": needs,
+        "hand_done": hand,
+        "auto_pending": auto,
+        "affiliate": aff,
+    }
     if args.json:
         print(json.dumps({"summary": summary, "rows": all_rows}, ensure_ascii=False, indent=2))
     else:
-        print(f"summary: total={summary['total']} needs_rewrite={needs} done={done}")
-        by_site: dict[str, int] = {}
+        print(
+            f"summary: total={summary['total']} guide={summary['guide_total']} "
+            f"hand_done={hand} auto_pending={auto} needs_rewrite={needs} affiliate={aff}"
+        )
+        by_site: dict[str, dict[str, int]] = {}
         for r in all_rows:
-            if r["status"] == "needs_rewrite":
-                by_site[r["site"]] = by_site.get(r["site"], 0) + 1
-        for site, n in sorted(by_site.items(), key=lambda x: -x[1]):
-            print(f"  {site}: {n}")
+            if r.get("affiliate") == "yes":
+                continue
+            by_site.setdefault(r["site"], {})
+            st = r["status"]
+            by_site[r["site"]][st] = by_site[r["site"]].get(st, 0) + 1
+        for site in sorted(by_site):
+            c = by_site[site]
+            total = sum(c.values())
+            hd = c.get("hand_done", 0)
+            print(f"  {site}: hand_done={hd}/{total}")
 
     return 0
 

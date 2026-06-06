@@ -30,7 +30,7 @@ from tools.guide_rewrite_rules import is_affiliate_row, is_hand_rewritten, rewri
 from tools.site_config import brand_name, exam_name, official_organization, primary_external_link  # noqa: E402
 
 TODAY = date.today().isoformat()
-REVISION = f"{TODAY}: 手書きリライト"
+REVISION = f"{TODAY}: 自動prose差し替え（要手書き）"
 
 
 def official_label() -> str:
@@ -97,9 +97,22 @@ def patch_row(row: dict[str, str], ctx, *, force: bool = False) -> bool:
         row["last_reviewed_at"] = TODAY
         row["source_checked_at"] = TODAY
         note = norm(row.get("original_note"))
-        if "手書きリライト" not in note:
-            row["original_note"] = f"手書きリライト {TODAY}。" + (note if note else "")
+        if "手書きリライト" not in note and "自動prose" not in note:
+            row["original_note"] = f"自動prose差し替え {TODAY}（要手書き）。" + (note if note else "")
     return changed
+
+
+def _csv_fieldnames(initial: list[str], rows: list[dict[str, str]]) -> list[str]:
+    names = list(initial)
+    for row in rows:
+        for key in row:
+            if key in names:
+                continue
+            if key == "faq_3_question" and "faq_3_answer" in names:
+                names.insert(names.index("faq_3_answer"), key)
+            else:
+                names.append(key)
+    return names
 
 
 def run(csv_path: Path, *, dry_run: bool, force: bool) -> tuple[int, int]:
@@ -112,6 +125,7 @@ def run(csv_path: Path, *, dry_run: bool, force: bool) -> tuple[int, int]:
     for row in rows:
         if patch_row(row, ctx, force=force):
             patched += 1
+    fieldnames = _csv_fieldnames(fieldnames, rows)
     if patched and not dry_run:
         with csv_path.open("w", encoding="utf-8-sig", newline="") as f:
             w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")

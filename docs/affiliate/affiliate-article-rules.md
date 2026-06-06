@@ -425,7 +425,7 @@ https://px.a8.net/...:SMART合格講座（公式）
 - [ ] `related_links` に内部 slug **2件以上**
 - [ ] 公開本文・表に `【PR・広告】` がない
 - [ ] ASP と公式 URL を混同していない
-- [ ] `python3 tools/validate_csv.py` がエラーなし
+- [ ] `python3 tools/validate_csv.py` がエラーなし（アフィリエイト行は `tools/affiliate_article_rules.py` の専用ルール。通常ガイドの手書きリライト180字ルールは適用しない）
 - [ ] `python3 tools/build_article_pages.py` 後、当該 slug の HTML が生成されている
 
 ### 商品比較 UI がある場合
@@ -452,7 +452,7 @@ https://px.a8.net/...:SMART合格講座（公式）
 | `affiliate_links.py` | ASP リンク有無の判定（ビルド・validate 共通） |
 | `draft_unlinked_affiliate_articles.py` | 未リンク行を `draft` に一括変更 |
 | `strip_affiliate_pr_disclaimer.py` | PR 定型文を CSV から除去 |
-| `validate_csv.py` | 本数・リンク・genre 検査 |
+| `validate_csv.py` | 本数・リンク・genre 検査（アフィリエイト行は `affiliate_article_rules.py`） |
 | `build_article_pages.py` | 記事 HTML 生成（要点・hub 挿入位置・skip section） |
 | `affiliate_body_links.py` | 商品名「」括り + 本文 ASP リンク自動化 |
 | `affiliate_product_ui.py` | 商品カード・比較表・要点右端表紙 |
