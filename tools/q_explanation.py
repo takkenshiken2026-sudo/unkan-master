@@ -353,6 +353,70 @@ def _substantive_explanation_lead(row: dict) -> str:
     return ""
 
 
+def _keyword_tokens(text: str) -> set[str]:
+    return set(
+        re.findall(r"[\u4e00-\u9fff]{2,}|[A-Za-z]{2,}", _normalize_for_compare(text))
+    )
+
+
+def _keyword_overlap_ratio(a: str, b: str) -> float:
+    ta, tb = _keyword_tokens(a), _keyword_tokens(b)
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / min(len(ta), len(tb))
+
+
+def _overlaps_correct_choice_text(text: str, page: dict) -> bool:
+    cor_idx = _correct_choice_index(page.get("correct"))
+    opts = page.get("opts") or []
+    if not cor_idx or not text or not (1 <= cor_idx <= len(opts)):
+        return False
+    opt = opts[cor_idx - 1]
+    if _keyword_overlap_ratio(text, opt) >= 0.5:
+        return True
+    nt, no = _normalize_for_compare(text), _normalize_for_compare(opt)
+    return len(nt) >= 24 and len(no) >= 24 and (nt in no or no in nt)
+
+
+def _compact_wrong_note_vs_choice(choice_text: str, note: str) -> str:
+    """他肢解説が選択肢全文と酷似する場合、対比だけに短縮する。"""
+    opt, n = norm(choice_text), norm(note)
+    if not opt or not n or _keyword_overlap_ratio(n, opt) < 0.5:
+        return note
+    flips = (
+        (r"小さい", r"大きい"),
+        (r"低い", r"高い"),
+        (r"少ない", r"多い"),
+    )
+    for wpat, rpat in flips:
+        wm = re.search(wpat, opt)
+        rm = re.search(rpat, n)
+        if wm and rm:
+            return f"「{wm.group(0)}」とあるが、正しくは「{rm.group(0)}」の関係です。"
+    if re.search(r"反映する|適している|最も適", opt) and re.search(r"反映しない", n):
+        return (
+            "RMRは動的筋作業向けの指標であり、"
+            "精神的・静的作業の負担は正確に反映されません。"
+        )
+    if re.search(r"全く無関係|常に一定", opt):
+        return "基礎代謝量は体格・性別・年齢等の影響を受けます（「全く一定」は誤り）。"
+    return note
+
+
+def _pick_explanation_lead(page: dict, row: dict, summary: str) -> str:
+    """正答肢と重複するリードは出さない。"""
+    candidates: list[str] = []
+    if summary and not _is_thin_enrich_summary(summary):
+        candidates.append(summary)
+    lead = _substantive_explanation_lead(row)
+    if lead:
+        candidates.append(lead)
+    for cand in candidates:
+        if cand and not _overlaps_correct_choice_text(cand, page):
+            return cand
+    return ""
+
+
 def _strip_choice_echo(note: str, choice_text: str, choice_num: int) -> str:
     """選択肢見出しと重複する引用・肢番号付きリードを除去。"""
     n = norm(note)
@@ -632,7 +696,9 @@ def resolve_wrong_choice_note(
     context = _wrong_note_context(page, row)
     inline = _inline_wrong_notes(row)
     if choice_num in inline and len(inline[choice_num]) >= 8:
-        return dedupe_prose(inline[choice_num])
+        return dedupe_prose(
+            _compact_wrong_note_vs_choice(choice_text, inline[choice_num])
+        )
     brief = _brief_wrong_note_from_choice(choice_text)
     note = norm(csv_note)
     if note and _is_generic_wrong_note(note):
@@ -645,25 +711,26 @@ def resolve_wrong_choice_note(
             context=context,
         )
         if cleaned and not _is_thin_choice_note(cleaned, mode):
-            return dedupe_prose(cleaned)
+            return dedupe_prose(_compact_wrong_note_vs_choice(choice_text, cleaned))
     if brief and (not note or _is_thin_choice_note(note, mode) or _is_generic_wrong_note(note)):
         return brief
     inferred = infer_wrong_choice_note(page, choice_num, choice_text, row)
+    compact = lambda t: dedupe_prose(_compact_wrong_note_vs_choice(choice_text, t))
     if not note:
-        return dedupe_prose(
+        return compact(
             _strip_wrong_note_boilerplate(
                 _strip_choice_echo(inferred, choice_text, choice_num),
                 context=context,
             )
         )
     if _is_thin_choice_note(note, mode) or _is_enrich_boilerplate_note(note):
-        return dedupe_prose(
+        return compact(
             _strip_wrong_note_boilerplate(
                 _strip_choice_echo(inferred, choice_text, choice_num),
                 context=context,
             )
         )
-    return dedupe_prose(
+    return compact(
         _strip_wrong_note_boilerplate(
             _strip_choice_echo(note, choice_text, choice_num),
             context=context,
@@ -1046,10 +1113,12 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
 
 
 def _wrong_note_dedupe_key(note: str) -> str:
-    """肢番号・選択肢引用を除いた比較用キー。"""
+    """肢番号・長い選択肢引用を除いた比較用キー。"""
     n = norm(note)
+    if re.search(r"正しくは「|の関係です", n) and len(n) < 80:
+        return _normalize_for_compare(n)
     n = re.sub(r"（\d+）", "", n)
-    n = re.sub(r"「[^」]{0,80}」", "", n)
+    n = re.sub(r"「[^」]{20,}」", "", n)
     return _normalize_for_compare(n)
 
 
@@ -1162,16 +1231,16 @@ def build_explanation_html(page: dict, row: dict) -> str:
         correct_body = correct_body or leg_body
 
     summary, correct_body = _ensure_correct_body(page, row, summary, correct_body)
-    if _is_thin_enrich_summary(summary):
-        lead = _substantive_explanation_lead(row)
-        if lead:
-            summary = lead
+    summary = _pick_explanation_lead(page, row, summary)
     if summary and correct_body and _normalize_for_compare(summary) == _normalize_for_compare(
         correct_body
     ):
         correct_body = ""
     elif correct_body and _is_thin_enrich_summary(correct_body):
-        correct_body = _substantive_explanation_lead(row) or correct_body
+        cb = _substantive_explanation_lead(row) or correct_body
+        correct_body = "" if _overlaps_correct_choice_text(cb, page) else cb
+    elif correct_body and _overlaps_correct_choice_text(correct_body, page):
+        correct_body = ""
     if summary and correct_body:
         sm = _normalize_for_compare(summary)
         kept: list[str] = []
