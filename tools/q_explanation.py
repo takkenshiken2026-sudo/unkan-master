@@ -18,22 +18,51 @@ def norm(value: object) -> str:
     return (value or "").strip() if value is not None else ""
 
 
-def _correct_choice_index(correct: object) -> int | None:
-    """page['correct'] が int または multi の '1,3' 等のとき、先頭肢番号を返す。"""
+_FW_DIGIT_TRANS = str.maketrans("０１２３４５６７８９", "0123456789")
+
+
+def _parse_choice_num(raw: str) -> int | None:
+    s = norm(raw).translate(_FW_DIGIT_TRANS)
+    return int(s) if s.isdigit() else None
+
+
+def correct_choice_indices(correct: object) -> set[int]:
+    """page['correct'] から正答肢番号の集合（multi は 1,4 → {1,4}）。"""
     if correct is None:
-        return None
+        return set()
     if isinstance(correct, int):
-        return correct
+        return {correct}
     raw = norm(correct)
     if not raw:
-        return None
+        return set()
     if raw.isdigit():
-        return int(raw)
-    if "," in raw:
-        head = raw.split(",", 1)[0].strip()
-        if head.isdigit():
-            return int(head)
-    return None
+        return {int(raw)}
+    if "," in raw and all(part.strip().isdigit() for part in raw.split(",") if part.strip()):
+        return {int(part.strip()) for part in raw.split(",") if part.strip()}
+    return set()
+
+
+def _correct_choice_index(correct: object) -> int | None:
+    """page['correct'] が int または multi の '1,3' 等のとき、先頭肢番号を返す。"""
+    indices = correct_choice_indices(correct)
+    return min(indices) if indices else None
+
+
+def parse_numbered_choice_notes(text: str) -> dict[int, str]:
+    """「１．…２．…」形式（運管過去問解説など）の肢別メモを抽出。"""
+    out: dict[int, str] = {}
+    if not text:
+        return out
+    for m in re.finditer(
+        r"([０-９]|\d+)[．.]\s*(.+?)(?=(?:[０-９]|\d+)[．.]|$)",
+        text,
+        flags=re.DOTALL,
+    ):
+        num = _parse_choice_num(m.group(1))
+        note = norm(m.group(2))
+        if num is not None and note:
+            out[num] = note
+    return out
 
 
 def text_to_html(text: str) -> str:
@@ -133,6 +162,20 @@ def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str)
     cor_idx = _correct_choice_index(correct)
     opts = page.get("opts") or []
     opt_text = opts[cor_idx - 1] if cor_idx and 1 <= cor_idx <= len(opts) else ""
+    correct_indices = correct_choice_indices(correct)
+    numbered = parse_numbered_choice_notes(
+        norm(row.get("explanation")) or correct_body
+    )
+    if len(correct_indices) > 1 and numbered:
+        correct_notes = [
+            numbered[i] for i in sorted(correct_indices) if i in numbered
+        ]
+        if correct_notes:
+            correct_body = dedupe_prose(" ".join(correct_notes))
+        if not summary:
+            summary = f"正答は（{correct}）です。"
+        return summary, correct_body
+
     if correct_body and not _parrots_stem(stem, correct_body):
         return summary, correct_body
     mode = question_ask_mode(stem)
@@ -571,24 +614,32 @@ def split_legacy_explanation(exp: str) -> tuple[str, str]:
 
 def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]:
     parsed = parse_explanation_choices(norm(row.get("explanation_choices")))
+    numbered = parse_numbered_choice_notes(norm(row.get("explanation")))
     correct = page.get("correct")
+    correct_indices = correct_choice_indices(correct)
     items: list[tuple[int, str, str]] = []
     for i, opt in enumerate(page["opts"], start=1):
         if page.get("is_invalidated") or correct is None:
             continue
-        if i == correct:
+        if i in correct_indices:
             continue
+        csv_note = parsed.get(i) or numbered.get(i) or ""
         note = resolve_wrong_choice_note(
-            page, i, opt, row, csv_note=parsed.get(i) or ""
+            page, i, opt, row, csv_note=csv_note
         )
         items.append((i, opt, note))
     notes = [note for _, _, note in items]
     if len(notes) >= 2 and len(set(notes)) == 1:
         items = []
         for i, opt in enumerate(page["opts"], start=1):
-            if page.get("is_invalidated") or correct is None or i == correct:
+            if page.get("is_invalidated") or correct is None or i in correct_indices:
                 continue
-            note = dedupe_prose(infer_wrong_choice_note(page, i, opt, row))
+            pref = numbered.get(i) or parsed.get(i) or ""
+            note = (
+                dedupe_prose(pref)
+                if pref
+                else dedupe_prose(infer_wrong_choice_note(page, i, opt, row))
+            )
             items.append((i, opt, note))
     return items
 
@@ -615,20 +666,39 @@ def build_explanation_html(page: dict, row: dict) -> str:
 
     correct = page.get("correct")
     if correct and not page.get("is_invalidated"):
-        cor_idx = _correct_choice_index(correct)
+        correct_indices = correct_choice_indices(correct)
         opts = page.get("opts") or []
-        opt_text = opts[cor_idx - 1] if cor_idx and 1 <= cor_idx <= len(opts) else ""
+        numbered = parse_numbered_choice_notes(norm(row.get("explanation")))
         parts.append(
             '<section class="q-exp-section" aria-labelledby="q-exp-correct-h">'
             '<h3 id="q-exp-correct-h" class="q-exp-h3">正解の理由</h3>'
         )
-        if correct_body:
-            parts.append(f"<p>{text_to_html(correct_body)}</p>")
-        if opt_text:
-            parts.append(
-                f'<p class="q-exp-correct-opt"><strong>（{correct}）</strong> '
-                f"{html.escape(opt_text)}</p>"
-            )
+        if len(correct_indices) > 1:
+            if correct_body and not numbered:
+                parts.append(f"<p>{text_to_html(correct_body)}</p>")
+            for idx in sorted(correct_indices):
+                opt_text = opts[idx - 1] if 1 <= idx <= len(opts) else ""
+                note = numbered.get(idx) or ""
+                if note:
+                    parts.append(
+                        f'<p class="q-exp-correct-opt"><strong>（{idx}）</strong> '
+                        f"{text_to_html(note)}</p>"
+                    )
+                if opt_text and not note:
+                    parts.append(
+                        f'<p class="q-exp-correct-opt"><strong>（{idx}）</strong> '
+                        f"{html.escape(opt_text)}</p>"
+                    )
+        else:
+            cor_idx = _correct_choice_index(correct)
+            opt_text = opts[cor_idx - 1] if cor_idx and 1 <= cor_idx <= len(opts) else ""
+            if correct_body:
+                parts.append(f"<p>{text_to_html(correct_body)}</p>")
+            if opt_text:
+                parts.append(
+                    f'<p class="q-exp-correct-opt"><strong>（{correct}）</strong> '
+                    f"{html.escape(opt_text)}</p>"
+                )
         parts.append("</section>")
 
         wrong_items = build_choice_commentary(page, row)
