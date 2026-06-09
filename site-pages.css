@@ -1062,7 +1062,8 @@ a.q-hub-tab-label:hover {
 }
 .q-opts {
   margin: 0;
-  padding-left: 1.1em;
+  padding-left: 0;
+  list-style: none;
 }
 .q-opt {
   margin-bottom: 8px;
