@@ -533,12 +533,27 @@ def infer_contrast_note(
                     "「発生しない」と断定していますが、解説では過失相殺等を踏まえ賠償がゼロとは限らない趣旨です。"
                 )
 
-    if re.search(r"心療内科", opt) and "精神科" in exp and "心身症" in exp:
+    if re.search(r"うつ病", opt) and re.search(r"身体疾患|内科を受診", opt):
+        reasons.append(
+            "うつ病は精神疾患であり、心身症の側面もあるため心療内科・精神科で診られることがあります。"
+            "身体疾患だけで内科受診に限定する整理は本問の趣旨と異なります。"
+        )
+    elif re.search(r"入院治療のみ|外来診療は心療内科", opt):
+        reasons.append(
+            "精神科も外来診療を行い、入院のみを担当するわけではありません。"
+        )
+    elif re.search(r"まったく異なる|治療が受けられない", opt):
+        reasons.append(
+            "両科の対象は重なりがあり完全に別ではありません。解説どおり境界は曖昧です。"
+        )
+    elif re.search(r"心療内科", opt) and "精神科" in exp and "心身症" in exp:
         reasons.append(
             "心療内科と精神科の診療範囲の区別が解説と異なります。精神科は精神疾患全般、"
             "心療内科は心身症が中心という整理が本問のポイントです。"
         )
-    if re.search(r"精神科", opt) and "心療内科" in exp and "心身症" in exp and "すべて" in opt:
+    elif re.search(r"精神科", opt) and "心療内科" in exp and "心身症" in exp and re.search(
+        r"すべて|のみ|だけ", opt
+    ):
         reasons.append("診療科の対象範囲の言い過ぎ・取り違えがある可能性があります。")
 
     for sent in split_sentences(exp):
@@ -724,6 +739,13 @@ def build_row_fields(row: dict) -> tuple[str, str, str]:
                 else:
                     wrong_map[n] = infer_contrast_note(
                         n, texts[n], correct, correct_opt, exp, stem
+                    )
+            notes = [wrong_map[n] for n in wrong_nums]
+            if len(set(notes)) == 1:
+                for n in wrong_nums:
+                    opt_short = texts[n][:72] + ("…" if len(texts[n]) > 72 else "")
+                    wrong_map[n] = (
+                        f"{wrong_map[n]} 選択肢（{n}）「{opt_short}」の記述内容を確認してください。"
                     )
 
     correct_body = norm(row.get("explanation_correct"))

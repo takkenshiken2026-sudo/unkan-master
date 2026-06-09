@@ -61,8 +61,8 @@ def _protect(text: str) -> tuple[str, list[tuple[str, str]]]:
         slots.append((key, match.group(0)))
         return key
 
-    out = _URL_RE.sub(stash, text)
-    out = _MD_LINK_RE.sub(stash, out)
+    out = _MD_LINK_RE.sub(stash, text)
+    out = _URL_RE.sub(stash, out)
     return out, slots
 
 
