@@ -141,6 +141,9 @@ def _ichimon_judgment_clause(statement: str) -> str:
     return norm(statement)
 
 
+_MIN_CHOICE_NOTE_LEN = 72
+
+
 def _strip_summary_overlap(summary: str, body: str) -> str:
     sm = dedupe_prose(summary)
     bd = dedupe_prose(body)
@@ -148,9 +151,62 @@ def _strip_summary_overlap(summary: str, body: str) -> str:
         return bd
     if sm == bd:
         return ""
-    if bd.startswith(sm.rstrip("。")):
-        return bd[len(sm.rstrip("。")) :].lstrip("。、 \n")
+    sm_core = sm.rstrip("。")
+    if bd.startswith(sm_core):
+        rest = bd[len(sm_core) :].lstrip("。、 \n")
+        if len(re.sub(r"\s+", "", rest)) < 48:
+            return ""
+        return rest
+    if sm.startswith(bd.rstrip("。")):
+        return ""
+    sm_first = re.split(r"(?<=[。！？!?])\s*", sm)[0].strip()
+    if sm_first and len(sm_first) >= 16 and sm_first in bd:
+        rest = bd.replace(sm_first, "", 1).lstrip("。、 \n")
+        if len(re.sub(r"\s+", "", rest)) < 48:
+            return ""
+        return rest
     return bd
+
+
+_WRONG_NOTE_BOILER_RE = re.compile(
+    r"解説の要点：.+|との違いを確認し直してください[。]?|"
+    r"解説では「[^」]{8,}」とある一方、（\d+）の記述はそれと矛盾します[。]?"
+)
+
+
+def _strip_wrong_note_boilerplate(note: str, *, context: str = "") -> str:
+    """enrich テンプレや正解解説の丸写しを他肢解説から除去する。"""
+    n = norm(note)
+    if not n:
+        return n
+    n = _WRONG_NOTE_BOILER_RE.sub("", n)
+    n = re.sub(r"\s*正解の要点:\s*", "", n)
+    if context:
+        ctx_keys = {
+            re.sub(r"\s+", "", s)
+            for s in re.split(r"(?<=[。！？!?])\s*", dedupe_prose(context))
+            if len(re.sub(r"\s+", "", s)) >= 16
+        }
+        kept: list[str] = []
+        for sent in re.split(r"(?<=[。！？!?])\s*", n):
+            s = sent.strip()
+            if not s:
+                continue
+            if re.sub(r"\s+", "", s) in ctx_keys:
+                continue
+            kept.append(s if s.endswith("。") else s + "。")
+        n = "".join(kept)
+    return dedupe_prose(n.strip(" 。、"))
+
+
+def _is_enrich_boilerplate_note(note: str) -> bool:
+    n = norm(note)
+    if not n:
+        return False
+    if not re.search(r"解説の要点：|との違いを確認し直してください", n):
+        return False
+    cleaned = _strip_wrong_note_boilerplate(n)
+    return len(cleaned) < _MIN_CHOICE_NOTE_LEN
 
 
 def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str) -> tuple[str, str]:
@@ -158,6 +214,8 @@ def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str)
     stem = norm(page.get("stem_plain") or page.get("stem") or "")
     summary = dedupe_prose(summary)
     correct_body = _strip_summary_overlap(summary, dedupe_prose(correct_body))
+    if summary and correct_body and dedupe_prose(summary) == dedupe_prose(correct_body):
+        correct_body = ""
     correct = page.get("correct")
     cor_idx = _correct_choice_index(correct)
     opts = page.get("opts") or []
@@ -202,9 +260,6 @@ def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str)
     return summary, rebuilt or correct_body
 
 
-_MIN_CHOICE_NOTE_LEN = 72
-
-
 def _is_substantive_choice_note(note: str) -> bool:
     """短くても試験解説として有用（⇒対比・条文・誤り理由など）。"""
     n = norm(note)
@@ -212,8 +267,10 @@ def _is_substantive_choice_note(note: str) -> bool:
         return False
     if len(n) >= _MIN_CHOICE_NOTE_LEN:
         return True
+    if _is_enrich_boilerplate_note(n):
+        return False
     if re.search(
-        r"⇒|→|第\d+条|誤り|誤っ|正しく|届出|認可|不適|適\.|「.+」|解説では|解説の要点|効力なし|効力あり|組合せ",
+        r"⇒|→|第\d+条|誤り|誤っ|正しく|届出|認可|不適|適\.|「.+」|解説では|効力なし|効力あり|組合せ",
         n,
     ):
         return True
@@ -452,11 +509,10 @@ def infer_wrong_choice_note(
         )
 
     if correct_body and len(parts) < 3:
-        hint = _snippet(correct_body, 80)
-        if hint and hint not in "".join(parts):
+        hint = _snippet(correct_body, 56)
+        if hint and hint not in "".join(parts) and len(hint) >= 20:
             parts.append(
-                f"正解の要点: {hint} "
-                "この観点と両立しない部分がこの肢にないか、用語解説で定義を確認しながら見直してください。"
+                f"正答の論点（{hint}）と両立しない限定語・主体・手順がないか確認してください。"
             )
 
     if len(parts) < 2:
@@ -465,6 +521,15 @@ def infer_wrong_choice_note(
         )
 
     return dedupe_prose("\n\n".join(parts))
+
+
+def _wrong_note_context(page: dict, row: dict) -> str:
+    parts = [
+        norm(row.get("explanation_summary")),
+        norm(row.get("explanation_correct")),
+        norm(row.get("explanation")),
+    ]
+    return dedupe_prose(" ".join(p for p in parts if p))
 
 
 def resolve_wrong_choice_note(
@@ -478,15 +543,36 @@ def resolve_wrong_choice_note(
     """CSV 優先。薄い解説は推論で置き換え、未記入は推論で補完。"""
     stem = norm(page.get("stem_plain") or page.get("stem") or "")
     mode = question_ask_mode(stem)
+    context = _wrong_note_context(page, row)
     note = norm(csv_note)
     if note and _is_substantive_choice_note(note):
-        return dedupe_prose(_strip_choice_echo(note, choice_text, choice_num))
+        cleaned = _strip_wrong_note_boilerplate(
+            _strip_choice_echo(note, choice_text, choice_num),
+            context=context,
+        )
+        if cleaned and not _is_thin_choice_note(cleaned, mode):
+            return dedupe_prose(cleaned)
     inferred = infer_wrong_choice_note(page, choice_num, choice_text, row)
     if not note:
-        return dedupe_prose(_strip_choice_echo(inferred, choice_text, choice_num))
-    if _is_thin_choice_note(note, mode):
-        return dedupe_prose(_strip_choice_echo(inferred, choice_text, choice_num))
-    return dedupe_prose(_strip_choice_echo(note, choice_text, choice_num))
+        return dedupe_prose(
+            _strip_wrong_note_boilerplate(
+                _strip_choice_echo(inferred, choice_text, choice_num),
+                context=context,
+            )
+        )
+    if _is_thin_choice_note(note, mode) or _is_enrich_boilerplate_note(note):
+        return dedupe_prose(
+            _strip_wrong_note_boilerplate(
+                _strip_choice_echo(inferred, choice_text, choice_num),
+                context=context,
+            )
+        )
+    return dedupe_prose(
+        _strip_wrong_note_boilerplate(
+            _strip_choice_echo(note, choice_text, choice_num),
+            context=context,
+        )
+    )
 
 
 CATEGORY_STUDY_HINTS: dict[str, str] = {
@@ -870,11 +956,8 @@ def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]
         for i, opt in enumerate(page["opts"], start=1):
             if page.get("is_invalidated") or correct is None or i in correct_indices:
                 continue
-            pref = numbered.get(i) or parsed.get(i) or ""
-            note = (
-                dedupe_prose(pref)
-                if pref
-                else dedupe_prose(infer_wrong_choice_note(page, i, opt, row))
+            note = resolve_wrong_choice_note(
+                page, i, opt, row, csv_note=""
             )
             items.append((i, opt, note))
     return items

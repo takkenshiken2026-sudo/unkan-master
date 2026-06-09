@@ -567,7 +567,9 @@ def infer_contrast_note(
             for tok in ("ない", "しない", "のみ", "誤", "対象外", "不要", "含まれない")
         ) and any(tok in sent for tok in ("及ぶ", "ある", "必要", "実施", "有効", "適切")):
             if len(sent) <= 100:
-                reasons.append(f"解説では「{sent}」とある一方、（{n}）の記述はそれと矛盾します。")
+                reasons.append(
+                    "正答の解説と、主体・手続・効果のいずれかが一致していません。"
+                )
                 break
 
     if not reasons:
@@ -576,9 +578,32 @@ def infer_contrast_note(
         )
 
     lead = " ".join(reasons[:2])
-    return (
-        f"{lead} 解説の要点：{exp[:140]}{'…' if len(exp) > 140 else ''} "
-        f"正答（{correct}）との違いを確認し直してください。"
+    return lead.strip()
+
+
+def make_explanation_summary(correct_body: str, exp: str, correct: int) -> str:
+    """リード文は1文・短く。正解理由全文のコピーを避ける。"""
+    base = norm(correct_body) or norm(exp)
+    if not base:
+        return f"正答（{correct}）を確認してください。"
+    sents = [s for s in split_sentences(base) if len(s) >= 10]
+    core = sents[0] if sents else base[:90]
+    core = re.sub(r"^正解は\d+です[。、]?\s*", "", core)
+    if len(core) > 96:
+        core = core[:93] + "…"
+    return core or f"正答（{correct}）を確認してください。"
+
+
+def explanation_choices_is_boilerplate(value: str) -> bool:
+    v = norm(value)
+    if not v:
+        return False
+    return bool(
+        re.search(
+            r"解説の要点：|との違いを確認し直してください|"
+            r"解説では「[^」]{8,}」とある一方、（\d+）の記述はそれと矛盾",
+            v,
+        )
     )
 
 
@@ -598,7 +623,7 @@ def synthesize_wrong_note(
     lead = correct_sents[0] if correct_sents else extract_correct_body(exp, correct)
     if lead:
         return polish_note(
-            f"本問の正答は（{correct}）です。{lead} したがって（{n}）の記述は正答ではありません。",
+            f"（{n}）の記述は正答ではありません。{lead[:80]}{'…' if len(lead) > 80 else ''}",
             n,
             opt,
             correct,
@@ -766,9 +791,14 @@ def build_row_fields(row: dict) -> tuple[str, str, str]:
     correct_body = re.sub(r"\s{2,}", " ", correct_body).strip()
 
     summary = norm(row.get("explanation_summary"))
-    if not summary or summary == exp[:200]:
-        lead = extract_correct_body(exp, correct) or exp[:180]
-        summary = lead[:220]
+    new_summary = make_explanation_summary(correct_body, exp, correct)
+    if (
+        not summary
+        or summary == exp[:200]
+        or summary == correct_body
+        or len(summary) > 120
+    ):
+        summary = new_summary
 
     choices_field = ";".join(f"{n}:{wrong_map[n]}" for n in sorted(wrong_map))
     point = norm(row.get("explanation_point")) or CATEGORY_STUDY_HINTS.get(category, "")
@@ -783,6 +813,11 @@ def main() -> int:
         "--only-empty",
         action="store_true",
         help="explanation_choices が既に入っている行は上書きしない",
+    )
+    ap.add_argument(
+        "--refresh-boilerplate",
+        action="store_true",
+        help="解説テンプレ（解説の要点 等）が入った explanation_choices を再生成する",
     )
     args = ap.parse_args()
     path = args.csv.resolve()
@@ -808,9 +843,14 @@ def main() -> int:
     short = 0
     skipped = 0
     for row in rows:
-        if args.only_empty and norm(row.get("explanation_choices")):
-            skipped += 1
-            continue
+        existing = norm(row.get("explanation_choices"))
+        if args.only_empty and existing:
+            if not (
+                args.refresh_boilerplate
+                and explanation_choices_is_boilerplate(existing)
+            ):
+                skipped += 1
+                continue
         choices_field, correct_body, summary, point = build_row_fields(row)
         if choices_field:
             note_lens = [
