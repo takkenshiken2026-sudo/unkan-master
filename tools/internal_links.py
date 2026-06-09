@@ -13,6 +13,41 @@ MIN_AUTO_LINK_TERM_LEN = 2
 MAX_AUTO_LINKS_PER_SECTION = 3
 MAX_AUTO_LINKS_PER_ARTICLE = 12
 
+# テンプレ slug → サイト別の実 slug 候補（先頭から存在するものを採用）
+GUIDE_SLUG_ALTERNATES: dict[str, tuple[str, ...]] = {
+    "study-plan": (
+        "study-plan",
+        "study-plan-3months",
+        "study-plan-6months",
+        "study-plan-1year",
+        "study-plan-working",
+        "study-plan-beginner",
+        "self-study-roadmap",
+        "self-study-schedule",
+        "first-30-days-plan",
+    ),
+    "past-question-strategy": (
+        "past-question-strategy",
+        "past-questions-how-to-use",
+        "past-questions-by-field",
+        "past-questions-by-year",
+        "past-questions-review-cycle",
+        "past-questions-score-analysis",
+        "mock-exam-how-to",
+    ),
+    "exam-overview": (
+        "exam-overview",
+        "overview",
+        "exam-format-overview",
+        "exam-purpose-and-career",
+    ),
+    "glossary-how-to": (
+        "glossary-how-to",
+        "glossary-study-method",
+        "related-terms-navigation",
+    ),
+}
+
 GUIDE_HUB_LINKS: tuple[tuple[str, str], ...] = (
     ("../../terms/index.html", "用語解説一覧"),
     ("../../index.html#past", "過去問演習"),
@@ -36,6 +71,28 @@ def term_next_hub_links(rel_path: Path) -> tuple[tuple[str, str], ...]:
 
 def split_semicolon(value: str) -> list[str]:
     return [x.strip() for x in (value or "").split(";") if x.strip()]
+
+
+def resolve_published_guide_slug(slug: str, published: set[str] | dict[str, object]) -> str | None:
+    """テンプレ既定 slug を、公開済みガイドの実 slug に解決する。"""
+    pool = published if isinstance(published, set) else set(published)
+    slug = (slug or "").strip()
+    if not slug:
+        return None
+    if slug in pool:
+        return slug
+    for alt in GUIDE_SLUG_ALTERNATES.get(slug, ()):
+        if alt in pool:
+            return alt
+    if slug == "study-plan":
+        for candidate in sorted(pool):
+            if candidate.startswith("study-plan"):
+                return candidate
+    if slug == "past-question-strategy":
+        for candidate in sorted(pool):
+            if candidate.startswith("past-question"):
+                return candidate
+    return None
 
 
 def lookup_key(s: str) -> str:

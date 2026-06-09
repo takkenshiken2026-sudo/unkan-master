@@ -68,12 +68,32 @@ def keyword_fallback_default(
     )
 
 
+VENUE_SECTION_HEADINGS: frozenset[str] = frozenset(
+    {
+        "基本情報",
+        "アクセス方法",
+        "試験日程の確認方法",
+        "申込の注意点",
+        "試験当日の持ち物",
+        "まとめ",
+        "センターへのアクセス注意点",
+    }
+)
+
+
 def section_body_min_filler(heading: str, topic: str, official: str) -> str:
     """180字未満の節を補う具体文（メタ確認だけの1文は使わない）。"""
     label = (topic or heading).strip() or heading
+    h = (heading or "").strip()
+    if h in VENUE_SECTION_HEADINGS:
+        return (
+            f"「{h}」では、{label}の公式案内と受験票の表記を照合し、"
+            f"試験日の1週間前までに会場名・アクセス・持ち物をチェックリストに書き出してください。"
+            f"最新の日程・申込期間・会場情報は{official}で確認してください。"
+        )
     return (
         f"「{heading}」では、{label}について公式テキストの該当章を開き、"
-        f"主体・期限・数値をメモしながら演習問題で定着を確認します。"
+        f"条文の主体・期限・数値を演習問題とセットで押さえて定着を確認します。"
         f"数値・日程は{official}の最新要項で必ず照合してください。"
     )
 

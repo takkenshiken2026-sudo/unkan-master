@@ -21,7 +21,7 @@ from tools.guide_prose_patterns import PROSE_COLUMNS  # noqa: E402
 GENERIC_SECTION_PAD_RE = re.compile(
     r"(?:\s|\n)*"
     r"「[^」]+」では、[^。]*?"
-    r"公式テキストの該当章を開き、主体・期限・数値をメモしながら演習問題で定着を確認します。"
+    r"公式テキストの該当章を開き、(?:主体・期限・数値をメモしながら演習問題で定着を確認|条文の主体・期限・数値を演習問題とセットで押さえて定着を確認)します。"
     r"数値・日程は[^。]+(?:の)?最新要項で必ず照合してください。"
     r"[。]?",
     re.MULTILINE,
@@ -31,7 +31,7 @@ GENERIC_SECTION_PAD_RE = re.compile(
 BROKEN_TITLE_PAD_RE = re.compile(
     r"(?:\s|\n)*"
     r"「[^」]+」では、[^。]{0,80}について公式テキストの該当章を開き、"
-    r"主体・期限・数値をメモしながら演習問題で定着を確認します。"
+    r"(?:主体・期限・数値をメモしながら演習問題で定着を確認|条文の主体・期限・数値を演習問題とセットで押さえて定着を確認)します。"
     r"数値・日程は[^。]+(?:の)?最新要項で必ず照合してください。"
     r"[。]?",
     re.MULTILINE,
@@ -82,6 +82,29 @@ FAQ_GENERIC_PAD_RE = re.compile(
     r")",
 )
 
+# keyword_fallback_default / duplicate-body パッチが付与する節本文
+REWRITE_FALLBACK_PAD_RE = re.compile(
+    r"(?:\s|\n)*"
+    r"「[^」]+」は[^。]+の論点の一つです。"
+    r"[^。]*演習問題の解説と対応づけやすくなります。"
+    r"[。]?",
+    re.MULTILINE,
+)
+
+REWRITE_FALLBACK_ANY_RE = re.compile(
+    r"[^。！？\n]*の論点の一つです[^。！？\n]*[。]",
+)
+
+ORPHAN_REWRITE_RE = re.compile(
+    r"[^。！？\n]*演習問題の解説と対応づけやすくなります[^。！？\n]*[。]",
+)
+
+BROKEN_RENKEI_RE = re.compile(r"連携】+")
+
+REWRITE_FAQ_BOILER_RE = re.compile(
+    r"[^。！？\n]*(?:主体を取り違えていないか|一人で診断|過度な情報開示)[^。！？\n]*[。]",
+)
+
 BROKEN_TOPIC_DE_RE = re.compile(r"では、を")
 BROKEN_TOPIC_FIX = "では、"
 
@@ -99,6 +122,11 @@ def strip_padding_from_text(text: str) -> str:
         out = ENRICH_FAQ_PAD_RE.sub("", out)
         out = AUTO_LEAD_PAD_RE.sub("", out)
         out = FAQ_GENERIC_PAD_RE.sub("", out)
+        out = REWRITE_FALLBACK_PAD_RE.sub("", out)
+        out = REWRITE_FALLBACK_ANY_RE.sub("", out)
+        out = ORPHAN_REWRITE_RE.sub("", out)
+        out = REWRITE_FAQ_BOILER_RE.sub("", out)
+        out = BROKEN_RENKEI_RE.sub("連携", out)
         out = INCOMPLETE_HEADING_TAIL_RE.sub("", out)
     out = BROKEN_TOPIC_DE_RE.sub(BROKEN_TOPIC_FIX, out)
     out = re.sub(r"\n{3,}", "\n\n", out)

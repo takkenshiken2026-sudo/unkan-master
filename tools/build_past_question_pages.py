@@ -375,6 +375,8 @@ def load_guide_articles() -> list[dict[str, str]]:
 
 def guide_links_for_page(category: str, guides: list[dict[str, str]], *, limit: int = 2) -> list[tuple[str, str]]:
     """(href_rel_from_site_root, label) — rel_href で結合する。"""
+    from tools.internal_links import resolve_published_guide_slug
+
     if not guides:
         return []
     picked: list[tuple[str, str]] = []
@@ -393,10 +395,14 @@ def guide_links_for_page(category: str, guides: list[dict[str, str]], *, limit: 
     for slug in GUIDE_LINK_FALLBACK_SLUGS:
         if len(picked) >= limit:
             break
-        g = by_slug.get(slug)
-        if g and slug not in seen:
-            seen.add(slug)
-            picked.append((f"articles/{slug}/index.html", g["title"]))
+        resolved = resolve_published_guide_slug(slug, by_slug)
+        if not resolved or resolved in seen:
+            continue
+        g = by_slug.get(resolved)
+        if not g:
+            continue
+        seen.add(resolved)
+        picked.append((f"articles/{resolved}/index.html", g["title"]))
     return picked
 
 

@@ -505,6 +505,8 @@ def guide_related_link_items(
     limit: int = 3,
     articles_prefix: str = "../articles/",
 ) -> list[str]:
+    from tools.internal_links import resolve_published_guide_slug
+
     if not guides:
         return []
     by_slug = {g["slug"]: g for g in guides}
@@ -526,12 +528,15 @@ def guide_related_link_items(
     for slug in GUIDE_LINK_FALLBACK_SLUGS:
         if len(picked) >= limit:
             break
-        g = by_slug.get(slug)
-        if not g or slug in seen:
+        resolved = resolve_published_guide_slug(slug, by_slug)
+        if not resolved or resolved in seen:
             continue
-        seen.add(slug)
+        g = by_slug.get(resolved)
+        if not g:
+            continue
+        seen.add(resolved)
         picked.append(
-            f'<a class="related-link" href="{articles_prefix}{html.escape(slug)}/">'
+            f'<a class="related-link" href="{articles_prefix}{html.escape(resolved)}/">'
             f"{html.escape(g['title'])}</a>"
         )
     return picked

@@ -70,6 +70,24 @@ FAQ_GENERIC_PAD_RE = re.compile(
     r"合格までの学習を続けるには、出題範囲を分けて、演習と復習を定期的に回す計画が重要"
 )
 BROKEN_NIHA_SPLIT_RE = re.compile(r"防ぐに[。、]|進めるに[。、]|確認するに[。、]")
+FIELD_WILDCARD_RE = re.compile(r"field-\*")
+FIELD_PREFIX_RE = re.compile(
+    r"\bfield-(?:law|rights|limit|law-harm|eisei-harm|law-other|eisei-other|physio)"
+    r"(?:用語|ハブ|記事)\b|"
+    r"\bfield-(?:law|rights|limit|law-harm|eisei-harm|law-other|eisei-other|physio)"
+    r"(?![a-z0-9-])"
+)
+WEEK_TEMPLATE_RE = re.compile(
+    r"(?:6|7|8|9|10|11|12)月第?\d+週|"
+    r"(?:6|7|8|9|10)月\d+日(?:開始|時点)?[^。]{0,40}残り\d+週|"
+    r"試験日\d+月\d+日[^。;；]{0,40}残り\d+週|"
+    r"残り\d+週を計算"
+)
+TITLE_SEIBON_SUFFIX_RE = re.compile(r"｜[^｜]*正本")
+CONCAT_SECTION_HEADING_RE = re.compile(
+    r"との連携$|"
+    r"(?:メンタルヘルス|マンション|賃貸|衛生|管理).*·.*(?:メンタルヘルス|マンション|賃貸|衛生|管理)"
+)
 
 
 @dataclass(frozen=True)
@@ -126,7 +144,14 @@ def scan_prose_text(
         ("auto_lead_template", AUTO_LEAD_TEMPLATE_RE),
         ("faq_generic_pad", FAQ_GENERIC_PAD_RE),
         ("broken_niha_split", BROKEN_NIHA_SPLIT_RE),
+        ("field_wildcard", FIELD_WILDCARD_RE),
+        ("field_prefix", FIELD_PREFIX_RE),
+        ("week_template", WEEK_TEMPLATE_RE),
     ]
+    if column.startswith("section_") and column.endswith("_heading"):
+        checks.append(("concat_section_heading", CONCAT_SECTION_HEADING_RE))
+    if column in {"title", "meta_description"}:
+        checks.append(("title_seibon_suffix", TITLE_SEIBON_SUFFIX_RE))
     dup = exam_dup_re(exam, exam_short)
     if dup:
         checks.append(("exam_dup", dup))
@@ -140,10 +165,12 @@ def scan_prose_text(
 
 
 PROSE_COLUMNS = (
+    "title",
     "lead",
     "user_intent",
     "meta_description",
     "action_items",
+    *(f"section_{n}_heading" for n in range(1, 8)),
     *(f"section_{n}_body" for n in range(1, 8)),
     *(f"faq_{n}_answer" for n in range(1, 5)),
 )
