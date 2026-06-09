@@ -176,13 +176,21 @@ def faq_coherence_issues(row: dict[str, str]) -> list[EditorialIssue]:
     return issues
 
 
-def prose_pattern_issues(text: str, column: str, *, slug: str = "") -> list[EditorialIssue]:
+def prose_pattern_issues(
+    text: str,
+    column: str,
+    *,
+    slug: str = "",
+    skip_patterns: frozenset[str] = frozenset(),
+) -> list[EditorialIssue]:
     from tools.build_article_pages import sanitize_guide_text
     from tools.guide_prose_patterns import scan_prose_text
 
     cleaned = sanitize_guide_text(text, slug)
     issues: list[EditorialIssue] = []
     for hit in scan_prose_text(cleaned, column=column):
+        if hit.pattern in skip_patterns:
+            continue
         issues.append(
             EditorialIssue(
                 "ERROR",
@@ -199,9 +207,12 @@ def check_guide_row_coherence(row: dict[str, str], *, published: bool) -> list[E
     slug = norm(row.get("slug"))
     if not slug:
         return []
+    from tools.guide_rewrite_rules import rewrite_exempt
+
     tier_a = is_tier_a_slug(slug)
     issues: list[EditorialIssue] = []
     title = norm(row.get("title"))
+    skip_prose = frozenset({"week_template"}) if rewrite_exempt(row) else frozenset()
 
     text_cols = [
         "meta_description",
@@ -217,7 +228,7 @@ def check_guide_row_coherence(row: dict[str, str], *, published: bool) -> list[E
         if not text:
             continue
         issues.extend(internal_marker_issues(text, col))
-        issues.extend(prose_pattern_issues(text, col, slug=slug))
+        issues.extend(prose_pattern_issues(text, col, slug=slug, skip_patterns=skip_prose))
         if tier_a:
             issues.extend(long_seo_title_issues(title, text, col))
 
