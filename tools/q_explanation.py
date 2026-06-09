@@ -6,6 +6,13 @@ from __future__ import annotations
 import html
 import re
 
+from tools.q_content_quality import (
+    clean_ichimon_correct_body,
+    dedupe_prose,
+    ichimon_body_already_states_truth,
+    strip_four_choice_leak,
+)
+
 
 def norm(value: object) -> str:
     return (value or "").strip() if value is not None else ""
@@ -81,6 +88,79 @@ def _snippet(text: str, max_len: int = 36) -> str:
     return t[: max_len - 1] + "…"
 
 
+def _normalize_for_compare(text: str) -> str:
+    return re.sub(r"\s+", "", norm(text))
+
+
+def _parrots_stem(stem: str, body: str) -> bool:
+    """正解理由が設問文の言い換え・丸写しに近いか。"""
+    s = _normalize_for_compare(stem)
+    b = _normalize_for_compare(body)
+    if not s or not b:
+        return False
+    if len(s) >= 24 and s in b:
+        return True
+    if len(s) >= 16 and b in s and len(b) >= int(len(s) * 0.85):
+        return True
+    return False
+
+
+def _ichimon_judgment_clause(statement: str) -> str:
+    m = re.search(r"「([^」]+)」", norm(statement))
+    if m:
+        return m.group(1)
+    return norm(statement)
+
+
+def _strip_summary_overlap(summary: str, body: str) -> str:
+    sm = dedupe_prose(summary)
+    bd = dedupe_prose(body)
+    if not sm or not bd:
+        return bd
+    if sm == bd:
+        return ""
+    if bd.startswith(sm.rstrip("。")):
+        return bd[len(sm.rstrip("。")) :].lstrip("。、 \n")
+    return bd
+
+
+def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str) -> tuple[str, str]:
+    """要約との重複除去・設問丸写し時は正答肢ベースで理由を組み立てる。"""
+    stem = norm(page.get("stem_plain") or page.get("stem") or "")
+    summary = dedupe_prose(summary)
+    correct_body = _strip_summary_overlap(summary, dedupe_prose(correct_body))
+    correct = page.get("correct")
+    cor_idx = _correct_choice_index(correct)
+    opts = page.get("opts") or []
+    opt_text = opts[cor_idx - 1] if cor_idx and 1 <= cor_idx <= len(opts) else ""
+    if correct_body and not _parrots_stem(stem, correct_body):
+        return summary, correct_body
+    mode = question_ask_mode(stem)
+    parts: list[str] = []
+    if opt_text and correct is not None:
+        if mode == "least_appropriate":
+            parts.append(
+                f"正答（{correct}）「{_snippet(opt_text, 56)}」は、"
+                "設問が問う「最も適切でないもの」に該当します。"
+            )
+        else:
+            parts.append(
+                f"正答（{correct}）「{_snippet(opt_text, 56)}」が、"
+                "設問の条件を最もよく満たします。"
+            )
+    for src in (
+        norm(row.get("explanation_correct")),
+        norm(row.get("explanation")),
+    ):
+        if src and not _parrots_stem(stem, src):
+            sent = re.split(r"(?<=[。！？!?])\s*", src)[0].strip()
+            if sent and len(sent) >= 16:
+                parts.append(sent if sent.endswith("。") else sent + "。")
+                break
+    rebuilt = dedupe_prose("\n\n".join(parts))
+    return summary, rebuilt or correct_body
+
+
 _MIN_CHOICE_NOTE_LEN = 72
 
 
@@ -102,7 +182,43 @@ def _is_thin_choice_note(note: str, mode: str) -> bool:
             return True
     if mode == "most_correct" and re.search(r"本肢を選ぶ場合は、設問が", n):
         return True
+    if re.search(r"本問で選ぶべき正答は[（(]?\d", n):
+        return True
+    if re.search(r"単独の記述としては法令上妥当", n):
+        return True
     return False
+
+
+def _choice_specific_lead(
+    choice_num: int,
+    opt: str,
+    *,
+    mode: str,
+    correct: object,
+    correct_text: str,
+    category: str,
+) -> str:
+    """肢ごとに異なる冒頭文（同一テンプレ連発を防ぐ）。"""
+    snip = _snippet(opt, 36)
+    if mode == "least_appropriate" and _choice_sounds_positive(opt):
+        return (
+            f"（{choice_num}）「{snip}」は単体では妥当な学習法・対応に当たります。"
+            "「最も適切でないもの」として選ぶ正答にはなりません。"
+        )
+    if mode == "least_appropriate":
+        return (
+            f"（{choice_num}）「{snip}」は一見もっともらしいですが、"
+            f"正答（{correct}）「{_snippet(correct_text, 40)}」ほど"
+            "学習・制度・実務の観点で問題がある記述ではありません。"
+        )
+    if mode == "most_correct":
+        return (
+            f"（{choice_num}）「{snip}」は、"
+            f"{category or '本分野'}の基準と照らすと正答になりません。"
+        )
+    return (
+        f"（{choice_num}）「{snip}」は、設問の求め方と照らすと正答になりません。"
+    )
 
 
 def infer_wrong_choice_note(
@@ -124,7 +240,14 @@ def infer_wrong_choice_note(
     correct_body = norm(row.get("explanation_correct")) or norm(row.get("explanation")) or ""
     category = norm(page.get("category") or "")
 
-    parts: list[str] = []
+    parts: list[str] = [_choice_specific_lead(
+        choice_num,
+        opt,
+        mode=mode,
+        correct=correct,
+        correct_text=correct_text,
+        category=category,
+    )]
 
     if mode == "least_appropriate" and _choice_sounds_positive(opt):
         parts.append(
@@ -144,20 +267,11 @@ def infer_wrong_choice_note(
         )
     elif mode == "least_appropriate":
         parts.append(
-            f"「{opt}」は、一見もっともらしく見える場合がありますが、"
-            f"正答（{correct}）「{_snippet(correct_text, 56)}」と比べると、"
-            "学習・制度・実務の観点で「最も問題がある」記述ではありません。"
-        )
-        parts.append(
             "「最も適切でない」形式では、正しそうな肢が複数あることがあります。"
             "各肢の主語・客体・数字・期限・手続の順序が設問条件と合うかを確認し、"
             "最も不適切な一つだけを選びます。"
         )
     elif mode == "most_correct":
-        parts.append(
-            f"この肢は「{opt}」と述べていますが、"
-            f"{category or '本分野'}の基準では正しい記述ではありません。"
-        )
         if correct and correct_text:
             parts.append(
                 f"正答（{correct}）「{_snippet(correct_text, 56)}」は、"
@@ -165,8 +279,8 @@ def infer_wrong_choice_note(
             )
     else:
         parts.append(
-            f"この肢「{_snippet(opt, 48)}」は、設問の求め方（正しいもの／誤っているもの／"
-            "最も適切でないもの）と照らすと正答になりません。"
+            "設問文の「正しいもの／誤っているもの／最も適切でないもの」を"
+            "先に確認してから、各肢を読み直してください。"
         )
 
     rules: list[tuple[str, str]] = [
@@ -222,26 +336,26 @@ def infer_wrong_choice_note(
                 parts.append(msg)
             break
 
-    if mode == "most_correct" and correct_text and len(parts) < 3:
+    if mode == "most_correct" and correct_text and len(parts) < 4:
         parts.append(
-            f"正答の論点と照らすと、この肢は"
-            f"「{_snippet(opt, 40)}」という断定のどこかが設問の前提と矛盾します。"
-            "主語・客体・数字・期限・「毎年／常に／不要」などの限定語をチェックしてください。"
+            f"特に「{_snippet(opt, 32)}」の部分は、"
+            f"正答「{_snippet(correct_text, 32)}」と両立しない限定語・主体・手順がないか確認してください。"
         )
 
-    if correct_body and len(parts) < 2:
-        hint = _snippet(correct_body, 100)
-        parts.append(
-            f"正解の要点: {hint} "
-            "この観点と両立しない部分がこの肢にないか、用語解説で定義を確認しながら見直してください。"
-        )
+    if correct_body and len(parts) < 3:
+        hint = _snippet(correct_body, 80)
+        if hint and hint not in "".join(parts):
+            parts.append(
+                f"正解の要点: {hint} "
+                "この観点と両立しない部分がこの肢にないか、用語解説で定義を確認しながら見直してください。"
+            )
 
     if len(parts) < 2:
         parts.append(
             f"正答（{correct}）との差分を一行メモに残し、同分野の過去問・実践演習で解き直すと定着しやすくなります。"
         )
 
-    return "\n\n".join(parts)
+    return dedupe_prose("\n\n".join(parts))
 
 
 def resolve_wrong_choice_note(
@@ -258,10 +372,10 @@ def resolve_wrong_choice_note(
     note = norm(csv_note)
     inferred = infer_wrong_choice_note(page, choice_num, choice_text, row)
     if not note:
-        return inferred
+        return dedupe_prose(inferred)
     if _is_thin_choice_note(note, mode):
-        return inferred
-    return note
+        return dedupe_prose(inferred)
+    return dedupe_prose(note)
 
 
 CATEGORY_STUDY_HINTS: dict[str, str] = {
@@ -381,16 +495,69 @@ DEFAULT_STUDY_HINT = (
 )
 
 
+def _is_template_study_hint(text: str) -> bool:
+    t = dedupe_prose(text)
+    if not t:
+        return True
+    if t == DEFAULT_STUDY_HINT:
+        return True
+    return t in CATEGORY_STUDY_HINTS.values()
+
+
 def build_study_hint(page: dict, row: dict) -> str:
     point = norm(row.get("explanation_point"))
-    if point:
-        return point
+    if point and not _is_template_study_hint(point):
+        return dedupe_prose(point)
+
+    stem = norm(
+        page.get("stem_plain")
+        or page.get("stem")
+        or page.get("statement")
+        or row.get("question")
+        or ""
+    )
     category = norm(page.get("category") or "")
-    hint = CATEGORY_STUDY_HINTS.get(category) or DEFAULT_STUDY_HINT
-    tags = page.get("tags") or []
-    if tags and "復習" in tags and "復習" not in hint:
-        hint += " 復習機能・学習日記と連携し、週次で振り返ると弱点の再発を防げます。"
-    return hint
+    parts: list[str] = []
+    if category:
+        parts.append(f"分野「{category}」の問題です。")
+
+    mode = question_ask_mode(stem)
+    if mode == "least_appropriate":
+        parts.append(
+            "「最も適切でないもの」を問う設問では、四肢を比較して最も問題のある一つを選びます。"
+        )
+    elif mode == "most_correct":
+        parts.append("正しいものを問う設問では、限定語・主体・手続の条件を順に確認します。")
+
+    if page.get("statement") is not None or row.get("question"):
+        clause = _ichimon_judgment_clause(stem)
+        ans = "○" if page.get("correct_answer") else "×"
+        parts.append(f"判断対象は「{_snippet(clause, 40)}」。正答は {ans} です。")
+    elif page.get("correct") is not None:
+        parts.append(
+            f"正答は（{page['correct']}）です。"
+            "誤った肢は、どの条件・主体・数字がずれているかを一行メモしてください。"
+        )
+
+    for src in (norm(row.get("explanation_correct")), norm(row.get("explanation"))):
+        if not src:
+            continue
+        for sent in re.split(r"(?<=[。！？!?])\s*", src):
+            s = sent.strip()
+            if len(s) >= 18 and not _parrots_stem(stem, s):
+                parts.append(s if s.endswith("。") else s + "。")
+                break
+        if len(parts) >= 3:
+            break
+
+    if len(parts) >= 2:
+        return dedupe_prose("".join(parts))
+
+    cat_hint = CATEGORY_STUDY_HINTS.get(category)
+    if cat_hint:
+        return dedupe_prose(_snippet(cat_hint, 180))
+
+    return dedupe_prose("".join(parts)) if parts else DEFAULT_STUDY_HINT
 
 
 def split_legacy_explanation(exp: str) -> tuple[str, str]:
@@ -415,6 +582,14 @@ def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]
             page, i, opt, row, csv_note=parsed.get(i) or ""
         )
         items.append((i, opt, note))
+    notes = [note for _, _, note in items]
+    if len(notes) >= 2 and len(set(notes)) == 1:
+        items = []
+        for i, opt in enumerate(page["opts"], start=1):
+            if page.get("is_invalidated") or correct is None or i == correct:
+                continue
+            note = dedupe_prose(infer_wrong_choice_note(page, i, opt, row))
+            items.append((i, opt, note))
     return items
 
 
@@ -431,6 +606,8 @@ def build_explanation_html(page: dict, row: dict) -> str:
         leg_summary, leg_body = split_legacy_explanation(base)
         summary = summary or leg_summary
         correct_body = correct_body or leg_body
+
+    summary, correct_body = _ensure_correct_body(page, row, summary, correct_body)
 
     parts: list[str] = ['<div class="q-exp">']
     if summary:
@@ -502,17 +679,17 @@ def split_legacy_ichimon_explanation(
             "× が正答になります。"
         )
     if len(body) <= 120:
-        return summary, body
+        return summary, dedupe_prose(body)
     first = re.split(r"[。.]\s*", body, maxsplit=1)[0]
     if first and len(first) >= 20:
         summary = first + ("。" if not first.endswith("。") else "")
-    lead = f"設問文「{_snippet(statement, 48)}」について、"
-    return summary, lead + body
+    return summary, dedupe_prose(body)
 
 
 def infer_ichimon_opposite_note(page: dict, row: dict) -> str:
     """○/× のもう一方を選びそうになる理由（CSV 未記入時）。"""
     statement = norm(page.get("statement") or row.get("question"))
+    clause = _ichimon_judgment_clause(statement)
     is_true = _ichimon_answer_is_true(page)
     category = norm(page.get("category") or "")
     wrong = "×" if is_true else "○"
@@ -520,44 +697,50 @@ def infer_ichimon_opposite_note(page: dict, row: dict) -> str:
 
     if is_true:
         parts.append(
-            f"設問文は正しい記述ですが、{wrong} を選ぶ場合は"
-            "「受験情報は一度調べれば足りる」「一般論として正しそうだから○/×はどちらでもよい」"
-            "と読み替えている可能性があります。"
-            "一問一答では、**必要・不要・毎年・常に・しなくてもよい** などの限定語が"
-            "試験制度・学習法の正誤を決めるキーワードになります。"
+            f"「{_snippet(clause, 44)}」は正しい記述です。"
+            f"それでも {wrong} を選ぶ場合は、"
+            "一般論と設問の限定語（必要・毎年・常に・しなくてもよい等）を取り違えている可能性があります。"
         )
     else:
         parts.append(
-            f"設問文は誤った記述ですが、{wrong} を選ぶ場合は"
-            "「学習の一般論として正しそう」「自分の経験では合っている」"
-            "と、設問の一文だけを見ずに判断している可能性があります。"
-            "「最も適切でない」「誤っている」系の過去問と同様、"
-            "一見もっともらしい記述こそ × の対象になりやすい点に注意してください。"
+            f"「{_snippet(clause, 44)}」は誤った記述です。"
+            f"それでも {wrong} を選ぶ場合は、"
+            "一見もっともらしい表現に引っ張られ、判断対象の一文だけを精査していない可能性があります。"
         )
 
-    if "復習" in statement or "見直" in statement or "定着" in statement:
+    exp = norm(row.get("explanation_correct") or row.get("explanation"))
+    if exp:
+        for sent in re.split(r"(?<=[。！？!?])\s*", exp):
+            s = sent.strip()
+            if len(s) >= 16 and (clause[: min(8, len(clause))] in s or (not is_true and "誤" in s)):
+                parts.append(s if s.endswith("。") else s + "。")
+                break
+            if len(s) >= 20 and not _parrots_stem(statement, s):
+                parts.append(s if s.endswith("。") else s + "。")
+                break
+
+    if re.search(r"第\d+類|危険物|石油類|引火|消火|漏えい", statement + category):
         parts.append(
-            "誤答の記録・復習リスト・間隔を空けた解き直しは、弱点を可視化する基本です。"
-            "「しなくても定着する」「二度と見ない」は学習科学の観点でも不適切です。"
+            "危険物の類別・性質は、政令別表と用語定義の組み合わせで判断します。"
+            "類似名称（動植物油類・石油類・特殊引火物など）の違いを用語解説で確認してください。"
         )
-    elif re.search(r"公式|受験案内|出題範囲|毎年", statement):
+    elif re.search(r"復習|見直|定着", statement):
         parts.append(
-            "制度・日程・範囲の正誤は実施団体の公式発表が基準です。"
-            "SNS や前年の記憶だけで ×/○ を決めないよう、公式ページを開く習慣をつけてください。"
+            "誤答記録と間隔を空けた解き直しは学習の基本です。"
+            "「見直さない」「記録しない」系の記述は × になりやすい点に注意してください。"
         )
-    elif re.search(r"数字|期限|表|整理", statement):
+    elif re.search(r"公式|受験案内|出題範囲|毎年|制度", statement):
         parts.append(
-            "数値・期限は暗記だけでは混同しやすいです。"
-            "比較表で整理したうえで一問一答するほうが、本番の選択肢問題でも役立ちます。"
+            "制度・数値・期限の正誤は公式情報が基準です。"
+            "記憶や一般論だけで ○/× を決めないようにしてください。"
+        )
+    elif category:
+        parts.append(
+            f"分野「{category}」では、用語定義と制度の前提を確認し、"
+            "同分野の過去問・実践演習で判断基準を固めてください。"
         )
 
-    if category:
-        parts.append(
-            f"分野「{category}」では、用語の定義と制度の前提を用語解説で確認し、"
-            "同分野の過去問・実践演習へつなげて解き直すと定着しやすくなります。"
-        )
-
-    return "\n\n".join(parts)
+    return dedupe_prose("\n\n".join(parts))
 
 
 def build_ichimon_explanation_html(page: dict, row: dict) -> str:
@@ -568,10 +751,10 @@ def build_ichimon_explanation_html(page: dict, row: dict) -> str:
     wrong = "×" if is_true else "○"
 
     summary = norm(row.get("explanation_summary"))
-    correct_body = norm(row.get("explanation_correct"))
+    correct_body = strip_four_choice_leak(norm(row.get("explanation_correct")))
     opposite = norm(row.get("explanation_opposite"))
     point = norm(row.get("explanation_point"))
-    base = norm(row.get("explanation")) or "（解説は未入力です。）"
+    base = strip_four_choice_leak(norm(row.get("explanation")) or "（解説は未入力です。）")
 
     if not summary and not correct_body and not point:
         leg_summary, leg_body = split_legacy_ichimon_explanation(
@@ -580,6 +763,13 @@ def build_ichimon_explanation_html(page: dict, row: dict) -> str:
         summary = summary or leg_summary
         correct_body = correct_body or leg_body
 
+    summary = dedupe_prose(summary)
+    correct_body = clean_ichimon_correct_body(
+        correct_body,
+        summary=summary,
+        is_true=is_true,
+    )
+    opposite = dedupe_prose(opposite)
     if not opposite:
         opposite = infer_ichimon_opposite_note(page, row)
 
@@ -593,13 +783,16 @@ def build_ichimon_explanation_html(page: dict, row: dict) -> str:
     )
     if correct_body:
         parts.append(f"<p>{text_to_html(correct_body)}</p>")
-    truth = "正しい" if is_true else "誤っている"
-    parts.append(
-        f'<p class="q-exp-correct-opt">'
-        f"設問文は<strong>{truth}</strong>記述のため、答えは "
-        f'<strong class="q-marubatsu">{html.escape(ans)}</strong> です。'
-        f"</p>"
-    )
+    if not ichimon_body_already_states_truth(
+        f"{summary}\n{correct_body}", is_true=is_true
+    ):
+        truth = "正しい" if is_true else "誤っている"
+        parts.append(
+            f'<p class="q-exp-correct-opt">'
+            f"設問文は<strong>{truth}</strong>記述のため、答えは "
+            f'<strong class="q-marubatsu">{html.escape(ans)}</strong> です。'
+            f"</p>"
+        )
     if statement:
         parts.append(
             f'<blockquote class="q-exp-quote">{text_to_html(statement)}</blockquote>'

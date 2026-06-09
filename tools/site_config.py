@@ -96,6 +96,14 @@ def is_template_site() -> bool:
     return "プレースホルダ" in exam or exam.startswith("◯◯")
 
 
+def excluded_past_exam_years() -> set[str]:
+    """静的過去問から除外する exam_year（site-config.json の excludePastExamYears）。"""
+    raw = CONFIG.get("excludePastExamYears") or CONFIG.get("excludedPastExamYears") or []
+    if isinstance(raw, str):
+        return {raw.strip()} if raw.strip() else set()
+    return {str(x).strip() for x in raw if str(x).strip()}
+
+
 def contact_url() -> str:
     return str(CONFIG.get("contactUrl") or "#")
 

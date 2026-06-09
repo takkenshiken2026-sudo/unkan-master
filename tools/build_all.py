@@ -29,6 +29,7 @@ def main() -> int:
     ensure_python_deps()
     py = sys.executable
     run([py, "tools/validate_csv.py"])
+    run([py, "tools/validate_question_explanations.py"])
     run([py, "tools/generate_brand_assets.py"])
     run([py, "tools/apply_site_config.py"])
     run([py, "tools/csv_to_exam_site_past_js.py"])

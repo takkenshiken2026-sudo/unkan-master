@@ -28,6 +28,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.q_explanation import build_explanation_html, build_ichimon_explanation_html  # noqa: E402
+from tools.q_content_quality import (  # noqa: E402
+    build_ichimon_primary_ids,
+    ichimon_robots_meta,
+    is_demo_practice_question_row,
+    set_ichimon_primary_ids,
+)
 from tools.q_similar_questions import build_similar_questions_html, load_question_catalog  # noqa: E402
 from tools.build_past_question_pages import (  # noqa: E402
     HEAD_FONTS,
@@ -360,6 +366,7 @@ def build_practice_question_html(
         headline=question_meta_headline("practice", qno=page["qno"]),
         category=page["category"],
         body=stem,
+        answer_tail=str(page["correct"]) if page.get("correct") is not None else "",
     )
     study_modes_note = study_modes_note_html()
     canonical = public_url(base_url, page["rel_path"])
@@ -492,6 +499,7 @@ def build_ichimon_question_html(
     question_catalog: list[dict],
 ) -> str:
     from tools.q_page_seo import (
+        ichimon_meta_snippet,
         question_h1,
         question_meta_headline,
         question_page_title,
@@ -504,20 +512,16 @@ def build_ichimon_question_html(
         "ichimon", question_id=page["id"], category=page["category"]
     )
     stmt = page.get("statement") or ""
+    ans = marubatsu_label(page["correct_answer"])
     desc = question_meta_description(
         "ichimon",
         headline=question_meta_headline("ichimon", question_id=page["id"]),
         category=page["category"],
-        body=stmt,
+        body=ichimon_meta_snippet(stmt),
+        answer_tail=ans,
     )
     study_modes_note = study_modes_note_html()
     canonical = public_url(base_url, page["rel_path"])
-    ans = marubatsu_label(page["correct_answer"])
-    ans_note = (
-        "この記述は<strong>正しい</strong>ので、答えは ○ です。"
-        if page["correct_answer"]
-        else "この記述は<strong>誤り</strong>なので、答えは × です。"
-    )
     source_line = (
         f'<p class="q-meta-line">{html.escape(page["source"])}</p>'
         if page.get("source")
@@ -566,6 +570,7 @@ def build_ichimon_question_html(
     )
     site_footer = site_page_footer(rel_path, current="ichimon")
     exp_html = build_ichimon_explanation_html(page, row)
+    robots_meta = ichimon_robots_meta(page["id"])
 
     return f"""<!DOCTYPE html>
 <html lang="ja">
@@ -575,7 +580,7 @@ def build_ichimon_question_html(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
-{ROBOTS_INDEX_FOLLOW}
+{robots_meta}
 <link rel="canonical" href="{html.escape(canonical)}">
 <meta property="og:type" content="article">
 <meta property="og:title" content="{html.escape(title)}">
@@ -606,7 +611,6 @@ def build_ichimon_question_html(
   <section class="q-block q-answer" aria-labelledby="q-ans-h">
     <h2 id="q-ans-h" class="q-h2">正答</h2>
     <p class="q-ichimon-answer">答えは <strong class="q-marubatsu">{html.escape(ans)}</strong> です。</p>
-    <p>{ans_note}</p>
   </section>
   <section class="q-block" aria-labelledby="q-exp-h">
     <h2 id="q-exp-h" class="q-h2">解説</h2>
@@ -999,6 +1003,8 @@ def main() -> int:
     for i, row in enumerate(practice_rows, start=2):
         if norm(row.get("is_invalidated", "")).upper() == "TRUE":
             continue
+        if is_demo_practice_question_row(row):
+            continue
         practice_pages.append(practice_page_dict(row, i))
         practice_rows_valid.append(row)
     _patch_index_rows_for_practice(practice_pages)
@@ -1035,6 +1041,7 @@ def main() -> int:
         )
 
     ichimon_rows = load_ichimon_rows()
+    set_ichimon_primary_ids(build_ichimon_primary_ids(ichimon_rows))
     ichimon_pairs: list[tuple[dict, dict]] = []
     for i, row in enumerate(ichimon_rows, start=2):
         ichimon_pairs.append((ichimon_page_dict(row, i), row))

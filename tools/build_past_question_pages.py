@@ -35,6 +35,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.q_explanation import build_explanation_html
+from tools.q_content_quality import is_demo_past_question_row
 from tools.q_similar_questions import build_similar_questions_html, load_question_catalog
 from tools.html_footer import (
     ROBOTS_INDEX_FOLLOW,
@@ -53,7 +54,7 @@ from tools.html_footer import (
     static_site_header,
 )
 from tools.seo_editorial_chrome import seo_brand_asset_tags
-from tools.site_config import brand_name, clean_origin, exam_name
+from tools.site_config import brand_name, clean_origin, exam_name, excluded_past_exam_years
 
 DATA_CSV = ROOT / "data" / "past_questions.csv"
 Q_ROOT = ROOT / "q"
@@ -163,6 +164,7 @@ def page_meta_description(page: dict) -> str:
         ),
         category=page["category"],
         body=norm(page.get("stem_plain")),
+        answer_tail=str(page["correct"]) if page.get("correct") is not None else "",
     )
 
 
@@ -963,7 +965,16 @@ def main() -> int:
     base = args.base_url.rstrip("/")
 
     rows = load_rows()
-    pages = [page_dict(r, i) for i, r in enumerate(rows, start=2)]
+    skip_years = excluded_past_exam_years()
+    valid_rows: list[tuple[int, dict]] = []
+    for i, row in enumerate(rows, start=2):
+        if norm(row.get("is_invalidated", "")).upper() == "TRUE":
+            continue
+        if is_demo_past_question_row(row, excluded_exam_years=skip_years):
+            continue
+        valid_rows.append((i, row))
+    pages = [page_dict(r, i) for i, r in valid_rows]
+    rows = [r for _, r in valid_rows]
     glossary_lookup = load_glossary_lookup()
     guides = load_guide_articles()
     question_catalog = load_question_catalog(ROOT)
