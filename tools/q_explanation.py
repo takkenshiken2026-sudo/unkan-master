@@ -213,7 +213,7 @@ def _is_substantive_choice_note(note: str) -> bool:
     if len(n) >= _MIN_CHOICE_NOTE_LEN:
         return True
     if re.search(
-        r"⇒|→|第\d+条|誤り|誤っ|正しく|届出|認可|不適|適\.|「.+」",
+        r"⇒|→|第\d+条|誤り|誤っ|正しく|届出|認可|不適|適\.|「.+」|解説では|解説の要点|効力なし|効力あり|組合せ",
         n,
     ):
         return True
@@ -277,8 +277,10 @@ def _is_thin_choice_note(note: str, mode: str) -> bool:
     if mode == "most_correct" and re.search(r"本肢を選ぶ場合は、設問が", n):
         return True
     if re.search(r"本問で選ぶべき正答は[（(]?\d", n):
-        return True
+        return len(n) < _MIN_CHOICE_NOTE_LEN
     if re.search(r"単独の記述としては法令上妥当", n):
+        return len(n) < _MIN_CHOICE_NOTE_LEN
+    if re.search(r"基準と照らすと正答になりません", n):
         return True
     return False
 

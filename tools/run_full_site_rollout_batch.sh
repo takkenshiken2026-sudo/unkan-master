@@ -49,6 +49,10 @@ for site in "${SITES[@]}"; do
     if [[ -f data/practice_questions.csv ]] || [[ -f data/ichimon_questions.csv ]]; then
       build_if build_practice_ichimon_pages.py
     fi
+    if [[ -f tools/build_practice_question_pages.py ]]; then
+      build_if build_practice_question_pages.py
+    fi
+    build_if patch_q_brand_heads.py
     if [[ -f tools/prepare_public_site.sh ]]; then
       bash tools/prepare_public_site.sh >/dev/null
     fi

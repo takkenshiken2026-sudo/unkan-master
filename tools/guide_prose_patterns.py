@@ -37,7 +37,7 @@ VAGUE_USER_INTENT_RE = re.compile(
     r"確認すべき点と、演習・用語解説を使った復習の進め方"
 )
 SUBJECT_BOILER_RE = re.compile(r"条文や指針の主体（事業者・[^）]+）をセットで")
-FAQ_ARROW_RE = re.compile(r"FAQ\d+「」|「[^」]+」→")
+FAQ_ARROW_RE = re.compile(r"FAQ\d+「」|「」→")
 BROKEN_FALLBACK_RE = re.compile(r"の要点を。|要点を。\s")
 GENERIC_ACTION_RE = re.compile(
     r"混同語を1周|分野タグ付き問題を10問|分野タグ付き(?:の)?演習|似た論点を1周"
@@ -53,6 +53,23 @@ REWRITE_FALLBACK_RE = re.compile(
     r"主体を取り違えていないか|"
     r"FAQ3「本テーマ」"
 )
+GENERIC_SECTION_PAD_RE = re.compile(
+    r"主体・期限・数値をメモしながら演習問題で定着を確認"
+)
+ENRICH_SECTION_PAD_RE = re.compile(
+    r"の論点として、公式テキスト該当章|"
+    r"演習→用語解説→1週間後の解き直しで定着を確認"
+)
+ENRICH_FAQ_PAD_RE = re.compile(
+    r"条文の主体・期限・数値を演習問題とセットで押さえると解答精度が上がります"
+)
+AUTO_LEAD_TEMPLATE_RE = re.compile(
+    r"マ管受験者が現場で迷いやすい論点|3分野の全体像"
+)
+FAQ_GENERIC_PAD_RE = re.compile(
+    r"合格までの学習を続けるには、出題範囲を分けて、演習と復習を定期的に回す計画が重要"
+)
+BROKEN_NIHA_SPLIT_RE = re.compile(r"防ぐに[。、]|進めるに[。、]|確認するに[。、]")
 
 
 @dataclass(frozen=True)
@@ -103,6 +120,12 @@ def scan_prose_text(
         ("generic_action", GENERIC_ACTION_RE),
         ("meta_confirm_pad", META_CONFIRM_PAD_RE),
         ("rewrite_fallback", REWRITE_FALLBACK_RE),
+        ("generic_section_pad", GENERIC_SECTION_PAD_RE),
+        ("enrich_section_pad", ENRICH_SECTION_PAD_RE),
+        ("enrich_faq_pad", ENRICH_FAQ_PAD_RE),
+        ("auto_lead_template", AUTO_LEAD_TEMPLATE_RE),
+        ("faq_generic_pad", FAQ_GENERIC_PAD_RE),
+        ("broken_niha_split", BROKEN_NIHA_SPLIT_RE),
     ]
     dup = exam_dup_re(exam, exam_short)
     if dup:

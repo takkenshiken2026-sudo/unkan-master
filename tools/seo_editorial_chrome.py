@@ -12,7 +12,7 @@ import html
 from pathlib import Path
 
 # キャッシュバスター（seo-editorial.css を更新したら必ず上げる）
-SEO_EDITORIAL_CSS_VER = "20260606-table-border-fix"
+SEO_EDITORIAL_CSS_VER = "20260604-guide-section-table-grid"
 
 SEO_ARTICLE_BODY_CLASSES = frozenset(
     {

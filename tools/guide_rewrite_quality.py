@@ -55,16 +55,16 @@ def revision_is_hand(row: dict[str, str]) -> bool:
 
 
 def prose_quality_status(row: dict[str, str], combined_text: str) -> str:
-    """hand_done | auto_pending | affiliate_* | needs_rewrite | ok"""
-    from tools.affiliate_article_rules import affiliate_quality_status
+    """hand_done | auto_pending | affiliate_pending | needs_rewrite | ok"""
     from tools.guide_rewrite_rules import (
         is_affiliate_row,
         is_hand_rewritten,
         rewrite_forbidden_hits,
     )
 
-    if is_affiliate_row(row):
-        return affiliate_quality_status(row, combined_text)
+    tags = norm(row.get("tags"))
+    if "アフィリエイト" in tags and not revision_is_hand(row):
+        return "affiliate_pending"
     if rewrite_forbidden_hits(combined_text):
         return "needs_rewrite"
     if revision_is_hand(row) and not is_auto_prose_text(combined_text):

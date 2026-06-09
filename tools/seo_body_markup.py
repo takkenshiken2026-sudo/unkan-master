@@ -175,7 +175,7 @@ def inject_enumeration_lists(text: str) -> str:
     return inject_comma_sentence_list(merged)
 
 
-_MD_LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")
+_MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
 
 
 def _split_pipe_row(line: str) -> list[str]:
@@ -226,7 +226,7 @@ def _render_pipe_table(block: str) -> str | None:
 def _render_paragraph(text: str, *, term_hrefs: dict[str, str] | None = None, linked_terms: set[str] | None = None) -> str:
     from tools.inline_markup import render_inline_markup
 
-    if _MD_LINK.search(text):
+    if "[" in text and _MD_LINK.search(text):
         return f"<p>{render_inline_markup(text)}</p>"
     if term_hrefs and linked_terms is not None:
         from tools.internal_links import link_terms_in_plaintext

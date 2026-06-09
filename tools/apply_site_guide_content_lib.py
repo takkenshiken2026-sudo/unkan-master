@@ -20,7 +20,7 @@ from tools.fix_guide_duplicate_bodies import (  # noqa: E402
     patch_row_sections,
     repair_coherence_faqs,
 )
-from tools.rewrite_guide_boilerplate import _csv_fieldnames  # noqa: E402
+from tools.guide_rewrite_quality import revision_is_hand  # noqa: E402
 
 TODAY = date.today().isoformat()
 
@@ -73,6 +73,8 @@ def main() -> int:
     touched = 0
     for row in rows:
         if not is_published_guide(row):
+            continue
+        if revision_is_hand(row):
             continue
         before = {k: row.get(k) for k in row}
         if not args.skip_meta:

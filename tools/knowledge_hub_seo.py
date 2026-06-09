@@ -91,7 +91,14 @@ def seo_key_points_box_html(
     intro_text = intro.strip()
     if not cleaned and not intro_text:
         return ""
-    intro_html = f"<p>{html.escape(intro_text)}</p>" if intro_text else ""
+    intro_html = ""
+    if intro_text:
+        if "[" in intro_text:
+            from tools.inline_markup import render_inline_markup
+
+            intro_html = f"<p>{render_inline_markup(intro_text)}</p>"
+        else:
+            intro_html = f"<p>{html.escape(intro_text)}</p>"
     list_html = ""
     if cleaned:
         lis = "".join(f"<li>{html.escape(item)}</li>" for item in cleaned[:5])

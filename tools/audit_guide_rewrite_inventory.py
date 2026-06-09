@@ -16,14 +16,8 @@ if str(ROOT) not in sys.path:
 
 from tools.build_article_pages import resolve_guide_section_body, sanitize_guide_text  # noqa: E402
 from tools.editorial_quality import is_published_guide, norm  # noqa: E402
-from tools.affiliate_article_rules import affiliate_template_hits  # noqa: E402
 from tools.guide_rewrite_quality import prose_quality_status, revision_is_hand  # noqa: E402
-from tools.guide_rewrite_rules import (  # noqa: E402
-    is_affiliate_row,
-    rewrite_forbidden_hits,
-    slug_leaks_in_text,
-    tier_priority,
-)
+from tools.guide_rewrite_rules import rewrite_forbidden_hits, slug_leaks_in_text, tier_priority  # noqa: E402
 
 PROSE_COLS = (
     "lead",
@@ -68,11 +62,8 @@ def audit_site(site_root: Path) -> list[dict[str, str]]:
         slug = norm(row.get("slug"))
         parts = [reader_text(row, c, slug) for c in PROSE_COLS]
         combined = "\n".join(p for p in parts if p)
-        if is_affiliate_row(row):
-            forbidden = affiliate_template_hits(combined)
-        else:
-            forbidden = rewrite_forbidden_hits(combined)
-        leaks = [] if is_affiliate_row(row) else slug_leaks_in_text(combined, slug)
+        forbidden = rewrite_forbidden_hits(combined)
+        leaks = slug_leaks_in_text(combined, slug)
         status = prose_quality_status(row, combined)
         rows.append(
             {
@@ -128,29 +119,19 @@ def main() -> int:
             w.writerows(all_rows)
         print(f"wrote {len(all_rows)} rows -> {args.output}")
 
-    needs = sum(1 for r in all_rows if r["status"] == "needs_rewrite" and r.get("affiliate") != "yes")
+    needs = sum(1 for r in all_rows if r["status"] == "needs_rewrite")
     hand = sum(1 for r in all_rows if r["status"] == "hand_done")
     auto = sum(1 for r in all_rows if r["status"] == "auto_pending")
-    aff = sum(1 for r in all_rows if r.get("affiliate") == "yes")
-    summary = {
-        "total": len(all_rows),
-        "guide_total": len(all_rows) - aff,
-        "needs_rewrite": needs,
-        "hand_done": hand,
-        "auto_pending": auto,
-        "affiliate": aff,
-    }
+    summary = {"total": len(all_rows), "needs_rewrite": needs, "hand_done": hand, "auto_pending": auto}
     if args.json:
         print(json.dumps({"summary": summary, "rows": all_rows}, ensure_ascii=False, indent=2))
     else:
         print(
-            f"summary: total={summary['total']} guide={summary['guide_total']} "
-            f"hand_done={hand} auto_pending={auto} needs_rewrite={needs} affiliate={aff}"
+            f"summary: total={summary['total']} hand_done={hand} "
+            f"auto_pending={auto} needs_rewrite={needs}"
         )
         by_site: dict[str, dict[str, int]] = {}
         for r in all_rows:
-            if r.get("affiliate") == "yes":
-                continue
             by_site.setdefault(r["site"], {})
             st = r["status"]
             by_site[r["site"]][st] = by_site[r["site"]].get(st, 0) + 1

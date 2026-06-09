@@ -151,7 +151,29 @@ def sanitize_guide_text(text: str, slug: str = "") -> str:
 
 
 from tools.affiliate_links import affiliate_article_is_buildable  # noqa: E402
+from tools.guide_slug_prose import resolve_slug_references  # noqa: E402
 from tools.seo_body_markup import seo_section_body_html  # noqa: E402
+
+
+def slug_title_map(by_slug: dict[str, dict[str, str]]) -> dict[str, str]:
+    return {s: apply_vars(row.get("title", "")) for s, row in by_slug.items() if s}
+
+
+def resolve_reader_prose(
+    text: str,
+    *,
+    slug_titles: dict[str, str],
+    current_slug: str,
+    link_internal: bool = False,
+) -> str:
+    if not text or not slug_titles:
+        return text
+    return resolve_slug_references(
+        text,
+        slug_titles,
+        current_slug,
+        link_internal=link_internal,
+    )
 
 
 def paragraphs(text: str) -> str:
@@ -163,9 +185,19 @@ def list_or_paragraph(
     *,
     term_hrefs: dict[str, str] | None = None,
     linked_terms: set[str] | None = None,
+    slug_titles: dict[str, str] | None = None,
+    current_slug: str = "",
 ) -> str:
+    body = text
+    if slug_titles and current_slug:
+        body = resolve_reader_prose(
+            body,
+            slug_titles=slug_titles,
+            current_slug=current_slug,
+            link_internal=True,
+        )
     return seo_section_body_html(
-        text,
+        body,
         transform=apply_vars,
         term_hrefs=term_hrefs,
         linked_terms=linked_terms,
@@ -202,8 +234,18 @@ def section_html(
     *,
     term_hrefs: dict[str, str] | None = None,
     linked_terms: set[str] | None = None,
+    slug_titles: dict[str, str] | None = None,
 ) -> str:
-    heading = apply_vars(article.get(f"section_{idx}_heading", ""))
+    slug = norm(article.get("slug"))
+    heading_raw = apply_vars(article.get(f"section_{idx}_heading", ""))
+    heading = heading_raw
+    if slug_titles and heading_raw:
+        heading = resolve_reader_prose(
+            heading_raw,
+            slug_titles=slug_titles,
+            current_slug=slug,
+            link_internal=False,
+        )
     body = resolve_guide_section_body(article, article.get(f"section_{idx}_body", ""))
     if not heading or not norm(body):
         return ""
@@ -211,7 +253,7 @@ def section_html(
     return (
         f'<section class="seo-article-section" aria-labelledby="{sid}">'
         f'<h2 id="{sid}"><span class="section-heading-num">{display_num}</span>{html.escape(heading)}</h2>'
-        f"{list_or_paragraph(body, term_hrefs=term_hrefs, linked_terms=linked_terms)}</section>"
+        f"{list_or_paragraph(body, term_hrefs=term_hrefs, linked_terms=linked_terms, slug_titles=slug_titles, current_slug=slug)}</section>"
     )
 
 
@@ -220,6 +262,7 @@ def sections_html(
     *,
     term_hrefs: dict[str, str] | None = None,
     linked_terms: set[str] | None = None,
+    slug_titles: dict[str, str] | None = None,
 ) -> str:
     sections: list[str] = []
     display_num = 1
@@ -230,6 +273,7 @@ def sections_html(
             display_num,
             term_hrefs=term_hrefs,
             linked_terms=linked_terms,
+            slug_titles=slug_titles,
         )
         if html_text:
             sections.append(html_text)
@@ -253,23 +297,45 @@ def key_points_items(article: dict[str, str]) -> list[str]:
     return from_headings[:3]
 
 
-def key_points_box_html(article: dict[str, str]) -> str:
+def key_points_box_html(article: dict[str, str], *, slug_titles: dict[str, str] | None = None) -> str:
     from tools.knowledge_hub_seo import seo_key_points_box_html
 
+    slug = norm(article.get("slug"))
     items = key_points_items(article)
     intro = apply_vars(article.get("user_intent", ""))
+    if slug_titles and intro:
+        intro = resolve_reader_prose(
+            intro,
+            slug_titles=slug_titles,
+            current_slug=slug,
+            link_internal=False,
+        )
     return seo_key_points_box_html(items, intro=intro)
 
 
-def toc_html(article: dict[str, str], has_faq: bool) -> str:
+def toc_html(
+    article: dict[str, str],
+    has_faq: bool,
+    *,
+    slug_titles: dict[str, str] | None = None,
+) -> str:
+    slug = norm(article.get("slug"))
     items: list[tuple[str, str]] = []
     if key_points_items(article) or norm(apply_vars(article.get("user_intent", ""))):
         items.append(("key-points-title", "この記事の要点"))
     items.append(("quality-panel-title", "この記事の信頼性について"))
     for idx in range(1, 9):
-        heading = apply_vars(article.get(f"section_{idx}_heading", ""))
+        heading_raw = apply_vars(article.get(f"section_{idx}_heading", ""))
         body = norm(article.get(f"section_{idx}_body", ""))
-        if heading and body:
+        if heading_raw and body:
+            heading = heading_raw
+            if slug_titles:
+                heading = resolve_reader_prose(
+                    heading_raw,
+                    slug_titles=slug_titles,
+                    current_slug=slug,
+                    link_internal=False,
+                )
             items.append((f"article-sec-{idx}", heading))
     if has_faq:
         items.append(("article-sec-faq", "よくある質問"))
@@ -285,12 +351,15 @@ def toc_html(article: dict[str, str], has_faq: bool) -> str:
     )
 
 
-def faq_items(article: dict[str, str]) -> list[dict[str, str]]:
+def faq_items(article: dict[str, str], *, slug_titles: dict[str, str] | None = None) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
     slug = norm(article.get("slug"))
     for idx in range(1, 4):
         q = apply_vars(article.get(f"faq_{idx}_question", ""))
         a = sanitize_guide_text(apply_vars(article.get(f"faq_{idx}_answer", "")), slug)
+        if slug_titles:
+            q = resolve_reader_prose(q, slug_titles=slug_titles, current_slug=slug, link_internal=False)
+            a = resolve_reader_prose(a, slug_titles=slug_titles, current_slug=slug, link_internal=True)
         if q and a:
             items.append({"question": q, "answer": a})
     return items
@@ -466,20 +535,45 @@ def build_article_html(
 ) -> str:
     slug = article["slug"]
     rel_path = Path("articles") / slug / "index.html"
+    slug_titles = slug_title_map(by_slug)
     title = apply_vars(article["title"])
     lead_text = sanitize_guide_text(apply_vars(article.get("lead", "")), slug)
-    desc = meta_description(apply_vars(article.get("meta_description") or "") or lead_text or title)
+    lead_text = resolve_reader_prose(
+        lead_text,
+        slug_titles=slug_titles,
+        current_slug=slug,
+        link_internal=True,
+    )
+    if lead_text and "[" in lead_text:
+        from tools.inline_markup import render_inline_markup  # noqa: E402
+
+        lead_html = render_inline_markup(lead_text)
+    else:
+        lead_html = html.escape(lead_text)
+    meta_raw = apply_vars(article.get("meta_description") or "") or lead_text or title
+    meta_raw = resolve_reader_prose(
+        meta_raw,
+        slug_titles=slug_titles,
+        current_slug=slug,
+        link_internal=False,
+    )
+    desc = meta_description(meta_raw)
     canonical = public_url(f"articles/{slug}/")
     updated = content_date_from_row(article)
     genre = apply_vars(article.get("genre", "試験ガイド"))
     tags = split_semicolon(apply_vars(article.get("tags", "")))
     display_tags = public_display_tags(tags)
     linked_terms: set[str] = set()
-    sections = sections_html(article, term_hrefs=term_hrefs, linked_terms=linked_terms)
-    faqs = faq_items(article)
+    sections = sections_html(
+        article,
+        term_hrefs=term_hrefs,
+        linked_terms=linked_terms,
+        slug_titles=slug_titles,
+    )
+    faqs = faq_items(article, slug_titles=slug_titles)
     faq_section = faq_html(faqs, section_num=article_body_section_count(article) + 1) if faqs else ""
-    toc = toc_html(article, bool(faqs))
-    key_points_box = key_points_box_html(article)
+    toc = toc_html(article, bool(faqs), slug_titles=slug_titles)
+    key_points_box = key_points_box_html(article, slug_titles=slug_titles)
     from tools.build_glossary_pages import field_hub_slug  # noqa: E402
     from tools.internal_links import (  # noqa: E402
         guide_knowledge_hub_link_items,
@@ -589,12 +683,21 @@ def build_article_html(
         ],
     }
     if faqs:
+        from tools.guide_slug_prose import plain_text_from_reader_prose  # noqa: E402
+
         json_ld["@graph"].append(
             {
                 "@type": "FAQPage",
                 "@id": canonical + "#faq",
                 "mainEntity": [
-                    {"@type": "Question", "name": item["question"], "acceptedAnswer": {"@type": "Answer", "text": item["answer"]}}
+                    {
+                        "@type": "Question",
+                        "name": plain_text_from_reader_prose(item["question"]),
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": plain_text_from_reader_prose(item["answer"]),
+                        },
+                    }
                     for item in faqs
                 ],
             }
@@ -631,7 +734,7 @@ def build_article_html(
       {meta_updated_html(updated)}
     </div>
     <h1 class="article-title">{html.escape(title)}</h1>
-    <p class="article-lead">{html.escape(lead_text)}</p>
+    <p class="article-lead">{lead_html}</p>
     {key_points_box}
     {toc}
     {quality_panel}

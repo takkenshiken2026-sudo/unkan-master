@@ -7,11 +7,22 @@ from __future__ import annotations
 import html
 import re
 
-_MD_LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")
+_MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
+
+
+def _link_html(label: str, url: str) -> str:
+    if url.startswith("../") or url.startswith("/articles/"):
+        return (
+            f'<a class="related-link" href="{html.escape(url)}">{html.escape(label)}</a>'
+        )
+    return (
+        f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">'
+        f"{html.escape(label)}</a>"
+    )
 
 
 def render_inline_markup(text: str) -> str:
-    """`[ラベル](https://...)` を外部リンク `<a>` に変換する。"""
+    """`[ラベル](URL)` を `<a>` に変換する（https:// と ../slug/ 形式）。"""
     if not text or "[" not in text:
         return html.escape(text).replace("\n", "<br>")
 
@@ -20,11 +31,7 @@ def render_inline_markup(text: str) -> str:
     for match in _MD_LINK.finditer(text):
         if match.start() > last:
             parts.append(html.escape(text[last : match.start()]))
-        label = match.group(1)
-        url = match.group(2)
-        parts.append(
-            f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">{html.escape(label)}</a>'
-        )
+        parts.append(_link_html(match.group(1), match.group(2)))
         last = match.end()
     parts.append(html.escape(text[last:]))
     return "".join(parts).replace("\n", "<br>")

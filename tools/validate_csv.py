@@ -37,7 +37,6 @@ from tools.correct_answer_format import is_valid_correct
 from tools.affiliate_links import (  # noqa: E402
     affiliate_external_links_in_row,
     is_affiliate_article,
-    is_internal_affiliate_article,
 )
 from tools.related_links import parse_related_link_token
 from tools.site_config import category_to_field_map, extended_correct_answers, guide_genre_labels
@@ -373,6 +372,11 @@ class Validator:
                 " docs/guide-article-catalog.md の記事カタログを参照してください。",
             )
         slugs: set[str] = {self.norm(r.get("slug")) for r in rows if self.norm(r.get("slug"))}
+        slug_titles: dict[str, str] = {
+            self.norm(r.get("slug")): self.norm(r.get("title"))
+            for r in rows
+            if self.norm(r.get("slug"))
+        }
         seen: set[str] = set()
         affiliate_count = 0
         affiliate_ready_count = 0
@@ -397,13 +401,6 @@ class Validator:
             self.require_text(path, row, idx, "title")
             self.require_text(path, row, idx, "meta_description")
             self.require_text(path, row, idx, "lead")
-            lead = self.norm(row.get("lead"))
-            if lead.startswith(("('", '("')) and lead.endswith(")"):
-                self.error(
-                    path,
-                    idx,
-                    "lead が Python tuple の文字列表現です（batch の末尾カンマまたはカンマ区切り () を修正）",
-                )
             self.require_int(path, row, idx, "priority", min_value=1)
             self.require_text(path, row, idx, "section_1_heading")
             self.require_text(path, row, idx, "section_1_body")
@@ -413,12 +410,6 @@ class Validator:
                     value = self.norm(row.get(col))
                     if not value:
                         continue
-                    if value.startswith(("('", '("')) and value.endswith(")"):
-                        self.error(
-                            path,
-                            idx,
-                            f"{col} が Python tuple の文字列表現です（batch の末尾カンマまたはカンマ区切り () を修正）",
-                        )
                     for fragment, reason in OPERATOR_CONTENT_FRAGMENTS:
                         if fragment in value:
                             self.error(
@@ -475,7 +466,7 @@ class Validator:
             if is_affiliate_article(row):
                 affiliate_count += 1
                 ext_links = affiliate_external_links_in_row(row)
-                if ext_links or is_internal_affiliate_article(row):
+                if ext_links:
                     affiliate_ready_count += 1
                 elif self.norm(row.get("content_status")) == "published":
                     self.warn(
@@ -509,7 +500,7 @@ class Validator:
                         "アフィリエイト記事の related_links には、試験ガイド・無料コンテンツへ向ける内部 slug を2件以上推奨します",
                     )
 
-            for issue in check_guide_row(row, slug_set=slugs, line=idx):
+            for issue in check_guide_row(row, slug_set=slugs, slug_titles=slug_titles, line=idx):
                 if issue.level == "ERROR":
                     self.error(path, idx, f"[{issue.column}] {issue.message}")
                 else:

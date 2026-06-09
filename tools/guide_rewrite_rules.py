@@ -72,8 +72,18 @@ def is_hand_rewritten(row: dict[str, str]) -> bool:
 
 
 def rewrite_exempt(row: dict[str, str]) -> bool:
-    """手書きリライトキャンペーン対象外（アフィリエイトは affiliate_article_rules）。"""
-    return is_affiliate_row(row)
+    """量産テンプレ自動差し替え（rewrite_guide_boilerplate）の対象外。"""
+    if is_hand_rewritten(row):
+        return True
+    if is_affiliate_row(row) and is_hand_rewritten(row):
+        return True
+    return False
+
+
+def forbidden_phrase_exempt(row: dict[str, str]) -> bool:
+    """禁止句・enrich パターンの監査対象外（原則 False）。"""
+    _ = row
+    return False
 
 
 def rewrite_forbidden_hits(text: str) -> list[str]:
@@ -84,12 +94,16 @@ def rewrite_forbidden_hits(text: str) -> list[str]:
 
 
 def slug_leaks_in_text(text: str, slug: str, *, slug_set: set[str] | None = None) -> list[str]:
-    """本文中の slug 名露出（内部記法）。slug_set があるときは既知 slug のみ対象。"""
+    """本文中の slug 名露出（内部記法）。slug_set があれば既知 slug のみ検出。"""
     t = norm(text)
-    if not t or not slug:
+    if not t:
         return []
+    if slug_set:
+        from tools.guide_slug_prose import slug_leaks_against_pool
+
+        return slug_leaks_against_pool(t, slug, slug_set)
     hits: list[str] = []
-    if slug in t:
+    if slug and slug in t:
         hits.append(slug)
     for m in SLUG_IN_BODY_RE.finditer(t):
         token = m.group(0)
@@ -97,8 +111,6 @@ def slug_leaks_in_text(text: str, slug: str, *, slug_set: set[str] | None = None
             continue
         if "-" in token and len(token) >= 8 and token != slug:
             if re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)+", token):
-                if slug_set is not None and token not in slug_set:
-                    continue
                 hits.append(token)
     return hits
 

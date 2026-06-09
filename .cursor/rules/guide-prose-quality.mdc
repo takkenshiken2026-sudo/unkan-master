@@ -11,9 +11,6 @@ globs:
 
 **正本:** `tools/guide_prose_patterns.py`（検出） / `tools/guide_content_shared.py`（生成）
 
-**アフィリエイト記事**（`tags` に `アフィリエイト`）は **本ルールの手書きリライト要件（180字・具体例・禁止句一覧）を適用しない**。  
-専用ルール: `docs/affiliate/affiliate-article-rules.md` / `tools/affiliate_article_rules.py`
-
 ## 禁止パターン（読者向け本文）
 
 | 種別 | 悪い例 | 対応 |
