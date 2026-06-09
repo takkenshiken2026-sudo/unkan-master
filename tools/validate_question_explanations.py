@@ -94,6 +94,12 @@ def audit_practice() -> tuple[int, int]:
     return errs, warns
 
 
+def _ichimon_judges_statement_wrong(question: str) -> bool:
+    """一問一答で「この記述は誤っている」形式（○＝誤りあり、と判定する設問）。"""
+    q = norm(question)
+    return bool(re.search(r"誤っている|誤りの記述|誤った記述|誤りのある", q))
+
+
 def audit_ichimon() -> tuple[int, int]:
     path = DATA / "ichimon_questions.csv"
     if not path.is_file():
@@ -117,8 +123,9 @@ def audit_ichimon() -> tuple[int, int]:
         is_false = ans in {"×", "x", "X", "false", "FALSE", "0"}
         combined = f"{summary} {correct} {exp}"
         if is_true and re.search(r"誤りです|誤った記述|×\s*が正答", combined):
-            errs += 1
-            _error(f"{path.name}:{idx} 正答○なのに解説が誤り扱い")
+            if not _ichimon_judges_statement_wrong(norm(row.get("question"))):
+                errs += 1
+                _error(f"{path.name}:{idx} 正答○なのに解説が誤り扱い")
         if is_false and re.search(r"正しい内容です|正当である|○\s*が正答", combined) and "誤" not in summary[:20]:
             errs += 1
             _error(f"{path.name}:{idx} 正答×なのに解説が正しい扱い")
