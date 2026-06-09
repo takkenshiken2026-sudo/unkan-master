@@ -172,8 +172,6 @@ def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str)
         ]
         if correct_notes:
             correct_body = dedupe_prose(" ".join(correct_notes))
-        if not summary:
-            summary = f"正答は（{correct}）です。"
         return summary, correct_body
 
     if correct_body and not _parrots_stem(stem, correct_body):
@@ -207,11 +205,64 @@ def _ensure_correct_body(page: dict, row: dict, summary: str, correct_body: str)
 _MIN_CHOICE_NOTE_LEN = 72
 
 
+def _is_substantive_choice_note(note: str) -> bool:
+    """短くても試験解説として有用（⇒対比・条文・誤り理由など）。"""
+    n = norm(note)
+    if not n:
+        return False
+    if len(n) >= _MIN_CHOICE_NOTE_LEN:
+        return True
+    if re.search(
+        r"⇒|→|第\d+条|誤り|誤っ|正しく|届出|認可|不適|適\.|「.+」",
+        n,
+    ):
+        return True
+    return False
+
+
+def _is_redundant_answer_lead(summary: str, correct: object) -> bool:
+    """ページ上部の正答欄と同文のリードを省く。"""
+    s = norm(summary)
+    if not s or correct is None:
+        return False
+    cor = norm(str(correct))
+    return bool(
+        re.fullmatch(rf"正答は[（(]{re.escape(cor)}[）)]です[。]?", s)
+        or re.fullmatch(rf"正答は\s*[（(]{re.escape(cor)}[）)]\s*です[。]?", s)
+    )
+
+
+def _strip_choice_echo(note: str, choice_text: str, choice_num: int) -> str:
+    """選択肢見出しと重複する引用・肢番号付きリードを除去。"""
+    n = norm(note)
+    if not n:
+        return n
+    snip = _snippet(choice_text, 48)
+    patterns = [
+        rf"^（{choice_num}）「{re.escape(snip)}[^」]*」は、?",
+        rf"^（{choice_num}）「[^」]+」は、?",
+        rf"^（{choice_num}）",
+    ]
+    for pat in patterns:
+        n2 = re.sub(pat, "", n).strip()
+        if n2 != n:
+            n = n2
+            break
+    if snip and snip in n and len(n) < len(note) * 0.85:
+        # 見出しと同じ長文引用が本文に残る場合は、対比以降だけ残す
+        m = re.search(r"(⇒|→).+", n)
+        if m:
+            n = m.group(0).strip()
+    return n.strip(" 。、")
+
+
 def _is_thin_choice_note(note: str, mode: str) -> bool:
     """CSV の選択肢別解説が形式的・短すぎるか（読み手向けの価値が低い）。"""
     n = norm(note)
     if not n:
         return True
+    if _is_substantive_choice_note(n):
+        return False
     if len(n) < _MIN_CHOICE_NOTE_LEN:
         return True
     if mode == "least_appropriate":
@@ -275,6 +326,19 @@ def infer_wrong_choice_note(
     mode = question_ask_mode(stem)
     opt = norm(choice_text)
     correct = page.get("correct")
+    numbered = parse_numbered_choice_notes(norm(row.get("explanation")))
+    if choice_num in numbered and _is_substantive_choice_note(numbered[choice_num]):
+        return dedupe_prose(numbered[choice_num])
+
+    multi_pick = len(correct_choice_indices(correct)) > 1
+    if multi_pick and mode == "most_correct":
+        if numbered.get(choice_num):
+            return dedupe_prose(numbered[choice_num])
+        return dedupe_prose(
+            f"（{choice_num}）は正答（{correct}）に含まれないため、この設問の正解の組合せにはなりません。"
+            "届出・認可・期限・主体など、正答肢と異なる要件がないか確認してください。"
+        )
+
     correct_text = ""
     cor_idx = _correct_choice_index(correct)
     opts = page.get("opts") or []
@@ -315,7 +379,7 @@ def infer_wrong_choice_note(
             "最も不適切な一つだけを選びます。"
         )
     elif mode == "most_correct":
-        if correct and correct_text:
+        if not multi_pick and correct and correct_text:
             parts.append(
                 f"正答（{correct}）「{_snippet(correct_text, 56)}」は、"
                 "制度・手続・学習法のいずれかの観点で適切な内容です。"
@@ -379,7 +443,7 @@ def infer_wrong_choice_note(
                 parts.append(msg)
             break
 
-    if mode == "most_correct" and correct_text and len(parts) < 4:
+    if mode == "most_correct" and correct_text and len(parts) < 4 and not multi_pick:
         parts.append(
             f"特に「{_snippet(opt, 32)}」の部分は、"
             f"正答「{_snippet(correct_text, 32)}」と両立しない限定語・主体・手順がないか確認してください。"
@@ -413,12 +477,14 @@ def resolve_wrong_choice_note(
     stem = norm(page.get("stem_plain") or page.get("stem") or "")
     mode = question_ask_mode(stem)
     note = norm(csv_note)
+    if note and _is_substantive_choice_note(note):
+        return dedupe_prose(_strip_choice_echo(note, choice_text, choice_num))
     inferred = infer_wrong_choice_note(page, choice_num, choice_text, row)
     if not note:
-        return dedupe_prose(inferred)
+        return dedupe_prose(_strip_choice_echo(inferred, choice_text, choice_num))
     if _is_thin_choice_note(note, mode):
-        return dedupe_prose(inferred)
-    return dedupe_prose(note)
+        return dedupe_prose(_strip_choice_echo(inferred, choice_text, choice_num))
+    return dedupe_prose(_strip_choice_echo(note, choice_text, choice_num))
 
 
 CATEGORY_STUDY_HINTS: dict[str, str] = {
@@ -578,7 +644,6 @@ def build_study_hint(page: dict, row: dict) -> str:
         parts.append(f"判断対象は「{_snippet(clause, 40)}」。正答は {ans} です。")
     elif page.get("correct") is not None:
         parts.append(
-            f"正答は（{page['correct']}）です。"
             "誤った肢は、どの条件・主体・数字がずれているかを一行メモしてください。"
         )
 
@@ -836,10 +901,10 @@ def build_explanation_html(page: dict, row: dict) -> str:
     summary, correct_body = _ensure_correct_body(page, row, summary, correct_body)
 
     parts: list[str] = ['<div class="q-exp">']
-    if summary:
+    correct = page.get("correct")
+    if summary and not _is_redundant_answer_lead(summary, correct):
         parts.append(f'<p class="q-exp-lead">{text_to_html(summary)}</p>')
 
-    correct = page.get("correct")
     if correct and not page.get("is_invalidated"):
         correct_indices = correct_choice_indices(correct)
         opts = page.get("opts") or []
