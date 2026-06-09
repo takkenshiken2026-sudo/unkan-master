@@ -926,9 +926,11 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
         '<h3 id="q-exp-stmts-h" class="q-exp-h3">各記述の解説</h3>'
         '<ul class="q-exp-choice-list">'
     )
-    for i, opt in enumerate(opts, start=1):
+    for i, _opt in enumerate(opts, start=1):
         verdict = idx_to_label.get(i, "")
         note = numbered.get(i) or ""
+        if not note and verdict == "適":
+            continue
         badge = (
             f'<span class="q-marubatsu q-tf-verdict">{html.escape(verdict)}</span> '
             if verdict
@@ -937,8 +939,7 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
         parts.append(
             f'<li class="q-exp-choice-item">'
             f'<p class="q-exp-choice-head">'
-            f'<span class="q-exp-choice-num">（{i}）</span> {badge}'
-            f'<span class="q-exp-choice-text">{html.escape(opt)}</span></p>'
+            f'<span class="q-exp-choice-num">（{i}）</span> {badge}</p>'
         )
         if note:
             parts.append(f'<p class="q-exp-choice-note">{text_to_html(note)}</p>')
@@ -1027,28 +1028,15 @@ def build_explanation_html(page: dict, row: dict) -> str:
             if correct_body and not numbered:
                 parts.append(f"<p>{text_to_html(correct_body)}</p>")
             for idx in sorted(correct_indices):
-                opt_text = opts[idx - 1] if 1 <= idx <= len(opts) else ""
                 note = numbered.get(idx) or ""
                 if note:
                     parts.append(
                         f'<p class="q-exp-correct-opt"><strong>（{idx}）</strong> '
                         f"{text_to_html(note)}</p>"
                     )
-                if opt_text and not note:
-                    parts.append(
-                        f'<p class="q-exp-correct-opt"><strong>（{idx}）</strong> '
-                        f"{html.escape(opt_text)}</p>"
-                    )
         else:
-            cor_idx = _correct_choice_index(correct)
-            opt_text = opts[cor_idx - 1] if cor_idx and 1 <= cor_idx <= len(opts) else ""
             if correct_body:
                 parts.append(f"<p>{text_to_html(correct_body)}</p>")
-            if opt_text:
-                parts.append(
-                    f'<p class="q-exp-correct-opt"><strong>（{correct}）</strong> '
-                    f"{html.escape(opt_text)}</p>"
-                )
         parts.append("</section>")
 
         wrong_items = build_choice_commentary(page, row)
@@ -1056,10 +1044,9 @@ def build_explanation_html(page: dict, row: dict) -> str:
             lis = "".join(
                 f'<li class="q-exp-choice-item">'
                 f'<p class="q-exp-choice-head">'
-                f'<span class="q-exp-choice-num">（{n}）</span> '
-                f'<span class="q-exp-choice-text">{html.escape(opt)}</span></p>'
+                f'<span class="q-exp-choice-num">（{n}）</span></p>'
                 f'<p class="q-exp-choice-note">{text_to_html(note)}</p></li>'
-                for n, opt, note in wrong_items
+                for n, _opt, note in wrong_items
             )
             parts.append(
                 '<section class="q-exp-section" aria-labelledby="q-exp-wrong-h">'
