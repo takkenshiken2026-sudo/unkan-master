@@ -370,7 +370,7 @@ def build_practice_question_html(
     )
     study_modes_note = study_modes_note_html()
     canonical = public_url(base_url, page["rel_path"])
-    lead_html = f'<p class="q-page-lead">{html.escape(stem)}</p>' if stem else ""
+    lead_html = ""
     opts_html = "".join(
         f'<li class="q-opt"><span class="q-opt-num">（{i}）</span> {html.escape(o)}</li>'
         for i, o in enumerate(page["opts"], start=1)

@@ -87,8 +87,10 @@ def parse_explanation_choices(raw: str) -> dict[int, str]:
 
 
 def question_ask_mode(stem: str) -> str:
-    """設問の求め方: most_correct / least_appropriate / unknown。"""
+    """設問の求め方: most_correct / least_appropriate / truefalse_mark / unknown。"""
     s = norm(stem)
+    if re.search(r"「適」を.*「不適」|適切なものには.*不適|不適」を記入", s):
+        return "truefalse_mark"
     if re.search(r"適切でない|誤っている|誤りである|正しくない|不適切なもの", s):
         return "least_appropriate"
     if re.search(r"正しい|妥当|適切である|適切なもの", s):
@@ -707,6 +709,17 @@ def _is_template_study_hint(text: str) -> bool:
     return t in CATEGORY_STUDY_HINTS.values()
 
 
+def _hint_should_skip_explanation_tail(page: dict, row: dict) -> bool:
+    """各肢解説・組合せ解説に explanation が既出なら、ヒントへ同文を足さない。"""
+    mode = _extended_question_mode(page, row)
+    if mode in {"truefalse_group", "combination", "multi"}:
+        return True
+    exp = norm(row.get("explanation"))
+    if exp and parse_numbered_choice_notes(exp):
+        return True
+    return False
+
+
 def build_study_hint(page: dict, row: dict) -> str:
     point = norm(row.get("explanation_point"))
     if point and not _is_template_study_hint(point):
@@ -729,6 +742,10 @@ def build_study_hint(page: dict, row: dict) -> str:
         parts.append(
             "「最も適切でないもの」を問う設問では、四肢を比較して最も問題のある一つを選びます。"
         )
+    elif mode == "truefalse_mark":
+        parts.append(
+            "各記述を「適」「否」で判定します。⇒ の対比表現や限定語の取り違えに注意してください。"
+        )
     elif mode == "most_correct":
         parts.append("正しいものを問う設問では、限定語・主体・手続の条件を順に確認します。")
 
@@ -742,6 +759,8 @@ def build_study_hint(page: dict, row: dict) -> str:
         )
 
     for src in (norm(row.get("explanation_correct")), norm(row.get("explanation"))):
+        if _hint_should_skip_explanation_tail(page, row):
+            break
         if not src:
             continue
         for sent in re.split(r"(?<=[。！？!?])\s*", src):

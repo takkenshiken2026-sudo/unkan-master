@@ -628,9 +628,8 @@ def build_question_html(
     desc = page_meta_description(page)
     context_line = page_context_line(page)
     lead = norm(page.get("stem_plain"))
-    lead_html = (
-        f'<p class="q-page-lead">{html.escape(lead)}</p>' if lead else ""
-    )
+    # 問題セクション（q-stem）と同一のため q-page-lead は出さない
+    lead_html = ""
     canonical = public_url(base_url, page["rel_path"])
     root_idx = rel_to_root(rel_path)
     css_href = rel_css(rel_path)
