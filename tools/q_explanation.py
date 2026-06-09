@@ -169,7 +169,9 @@ def _strip_summary_overlap(summary: str, body: str) -> str:
 
 
 _WRONG_NOTE_BOILER_RE = re.compile(
-    r"解説の要点：.+|との違いを確認し直してください[。]?|"
+    r"解説の要点[：「][^。]*[。]?|解説の要点は「[^」]*」[^。]*[。]?|"
+    r"との違いを、?解説の要点[^。]*[。]?|との違いを確認し直してください[。]?|"
+    r"[^。]*が示す論点と一致しません[。]?|"
     r"解説では「[^」]{8,}」とある一方、（\d+）の記述はそれと矛盾します[。]?"
 )
 
@@ -203,7 +205,11 @@ def _is_enrich_boilerplate_note(note: str) -> bool:
     n = norm(note)
     if not n:
         return False
-    if not re.search(r"解説の要点：|との違いを確認し直してください", n):
+    if not re.search(
+        r"解説の要点[：「]|解説の要点は「|が示す論点と一致しません|"
+        r"との違いを、?解説の要点|との違いを確認し直してください",
+        n,
+    ):
         return False
     cleaned = _strip_wrong_note_boilerplate(n)
     return len(cleaned) < _MIN_CHOICE_NOTE_LEN
