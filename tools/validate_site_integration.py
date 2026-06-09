@@ -26,7 +26,7 @@ from tools.index_spa_patch import (  # noqa: E402
     INDEX_NOSCRIPT_MARKER_END,
     INDEX_NOSCRIPT_MARKER_START,
 )
-from tools.site_config import clean_origin, exam_name, load_config  # noqa: E402
+from tools.site_config import clean_origin, exam_name, ga4_measurement_id, load_config  # noqa: E402
 
 
 @dataclass
@@ -616,6 +616,71 @@ def _viewport_and_static_css(root: Path) -> list[Issue]:
     return issues
 
 
+_GA4_INLINE_RE = re.compile(r'window\.__GA4_MEASUREMENT_ID__="([^"]*)"')
+_GA4_DEFAULT_MID_RE = re.compile(r'var DEFAULT_MID = "([^"]*)";')
+_GA4_SKIP_PREFIXES = (
+    "terms/compare/",
+    "terms/numbers/",
+    "terms/mistakes/",
+    "terms/priority/",
+    "terms/samples/",
+    "public_site/",
+)
+
+
+def _ga4_page_issues(root: Path, rel: str, *, require_page_view: bool = False) -> list[Issue]:
+    """公開 HTML の GA4 スニペット整合性（リダイレクト専用 URL は除外）。"""
+    if any(rel.startswith(p) for p in _GA4_SKIP_PREFIXES):
+        return []
+    path = root / rel
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8")
+    issues: list[Issue] = []
+    expected = ga4_measurement_id()
+    if "site-analytics.js" not in text:
+        issues.append(Issue(f"{rel}: site-analytics.js がありません（GA4 未設置）"))
+        return issues
+    m = _GA4_INLINE_RE.search(text)
+    if expected:
+        if not m or m.group(1) != expected:
+            got = m.group(1) if m else "(なし)"
+            issues.append(Issue(f"{rel}: GA4 測定ID不一致（期待 {expected!r}、実際 {got!r}）"))
+    if require_page_view and "ga4PageView" not in text:
+        issues.append(Issue(f"{rel}: ga4PageView 呼び出しがありません（SPA 計測漏れ）"))
+    return issues
+
+
+def _ga4_tracking(root: Path) -> list[Issue]:
+    """docs/integration-checklist — GA4 測定IDとスニペットの横断検証。"""
+    issues: list[Issue] = []
+    expected = ga4_measurement_id()
+
+    sa = root / "site-analytics.js"
+    if not sa.is_file():
+        issues.append(Issue("site-analytics.js がありません"))
+    elif expected:
+        dm = _GA4_DEFAULT_MID_RE.search(sa.read_text(encoding="utf-8"))
+        if not dm or dm.group(1) != expected:
+            got = dm.group(1) if dm else "(なし)"
+            issues.append(
+                Issue(f"site-analytics.js: DEFAULT_MID 不一致（期待 {expected!r}、実際 {got!r}）")
+            )
+
+    issues.extend(_ga4_page_issues(root, "index.html", require_page_view=True))
+    for rel in ("about.html", "privacy.html", "related-sites.html", "articles/index.html"):
+        issues.extend(_ga4_page_issues(root, rel))
+
+    samples: list[str] = []
+    for pattern in ("articles/*/index.html", "terms/g-*.html", "q/practice/*/index.html"):
+        for path in sorted(root.glob(pattern))[:1]:
+            samples.append(str(path.relative_to(root)))
+    for rel in samples:
+        issues.extend(_ga4_page_issues(root, rel))
+
+    return issues
+
+
 def _static_chrome(root: Path) -> list[Issue]:
     """docs/site-chrome.md — ヘッダー topnav 統一・旧 q-static-header 禁止。"""
     issues: list[Issue] = []
@@ -688,6 +753,7 @@ def main() -> int:
     issues.extend(_header_learning_nav(root))
     issues.extend(_responsive_css_source(root))
     issues.extend(_viewport_and_static_css(root))
+    issues.extend(_ga4_tracking(root))
 
     if not issues:
         print("validate_site_integration: OK")

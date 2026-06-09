@@ -69,6 +69,16 @@ STATIC_PAGE_CURRENTS = {
 _SPA_BREADCRUMB_TOP_RE = re.compile(
     r'(<li class="breadcrumb-item"><a href="/" onclick="event\.preventDefault\(\);gotoPage\(\'quiz-start\'\)" title=")[^"]*(">)[^<]*(</a></li>)',
 )
+_GA4_INLINE_RE = re.compile(r'window\.__GA4_MEASUREMENT_ID__="[^"]*";')
+_GA4_DEFAULT_MID_RE = re.compile(r'var DEFAULT_MID = "[^"]*";')
+
+
+def apply_ga4_measurement_ids(text: str) -> str:
+    """site-config の ga4MeasurementId を index / site-analytics へ常に反映する。"""
+    mid = ga4_measurement_id()
+    text = _GA4_INLINE_RE.sub(f'window.__GA4_MEASUREMENT_ID__="{mid}";', text)
+    text = _GA4_DEFAULT_MID_RE.sub(f'var DEFAULT_MID = "{mid}";', text)
+    return text
 
 
 def fix_spa_breadcrumb_top(text: str) -> str:
@@ -88,8 +98,6 @@ def replace_all(text: str) -> str:
         ("YOUR-DOMAIN.example", host),
         ("https://YOUR-DOMAIN.example", origin),
         ("https://example.com/contact", contact_url()),
-        ("window.__GA4_MEASUREMENT_ID__=\"\"", f'window.__GA4_MEASUREMENT_ID__="{ga4_measurement_id()}"'),
-        ('var DEFAULT_MID = "";', f'var DEFAULT_MID = "{ga4_measurement_id()}";'),
         ("一般社団法人 試験実施団体", official_organization()),
         ("試験実施団体（試験・登録の公式）", official.get("label", official_organization())),
         ("https://example.com/", official.get("url", "https://example.com/")),
@@ -106,6 +114,7 @@ def replace_all(text: str) -> str:
         replacements.append(("◯◯試験", exam_name()))
     for src, dst in replacements:
         text = text.replace(src, dst)
+    text = apply_ga4_measurement_ids(text)
 
     marker = '<script src="./site-config.js"></script>'
     if "site-config.js" not in text and "site-analytics.js" in text:
