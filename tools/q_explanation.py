@@ -957,6 +957,77 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
     return "\n    ".join(parts)
 
 
+def _wrong_note_dedupe_key(note: str) -> str:
+    """肢番号・選択肢引用を除いた比較用キー。"""
+    n = norm(note)
+    n = re.sub(r"（\d+）", "", n)
+    n = re.sub(r"「[^」]{0,80}」", "", n)
+    return _normalize_for_compare(n)
+
+
+def _is_generic_wrong_note(note: str) -> bool:
+    n = norm(note)
+    if not n or len(n) < 48:
+        return True
+    if _is_enrich_boilerplate_note(n):
+        return True
+    generic_markers = (
+        r"一見もっともらしい",
+        r"学習・制度・実務の観点",
+        r"記述自体としては正しい",
+        r"最も適切でない.*形式では、正しそうな肢",
+        r"正答の論点（.+）と両立しない",
+        r"が示す論点とずれています",
+        r"単体では適切な学習法・正しい対応",
+        r"設問形式の読み違え",
+    )
+    return any(re.search(p, n) for p in generic_markers)
+
+
+def _consolidated_wrong_choices_note(
+    page: dict, row: dict, wrong_nums: list[int]
+) -> str:
+    stem = norm(page.get("stem_plain") or page.get("stem") or "")
+    mode = question_ask_mode(stem)
+    correct = page.get("correct")
+    if mode == "least_appropriate":
+        return (
+            "いずれも、単体では適切な記述に当たります。"
+            f"本問は「最も適切でないもの」を選ぶ形式のため、正答は（{correct}）です。"
+            "四肢を比較し、最も不適切な一つだけを選びます。"
+        )
+    return (
+        f"いずれも、正答（{correct}）とは異なる論点です。"
+        "設問の条件と照らし、正答に最も合う肢を選び直してください。"
+    )
+
+
+def collapse_wrong_choice_items(
+    page: dict, row: dict, items: list[tuple[int, str, str]]
+) -> list[tuple[str, str]]:
+    """同一解説文の肢をまとめ、汎用テンプレの連打を防ぐ。"""
+    if not items:
+        return []
+    groups: list[dict] = []
+    index: dict[str, int] = {}
+    for num, _opt, note in items:
+        key = _wrong_note_dedupe_key(note)
+        if key not in index:
+            index[key] = len(groups)
+            groups.append({"nums": [num], "note": note})
+        else:
+            groups[index[key]]["nums"].append(num)
+    collapsed: list[tuple[str, str]] = []
+    for group in groups:
+        nums = sorted(group["nums"])
+        label = "、".join(str(n) for n in nums)
+        note = group["note"]
+        if len(nums) > 1 and _is_generic_wrong_note(note):
+            note = _consolidated_wrong_choices_note(page, row, nums)
+        collapsed.append((label, note))
+    return collapsed
+
+
 def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]:
     mode = _extended_question_mode(page, row)
     if mode in {"combination", "truefalse_group"}:
@@ -976,16 +1047,6 @@ def build_choice_commentary(page: dict, row: dict) -> list[tuple[int, str, str]]
             page, i, opt, row, csv_note=csv_note
         )
         items.append((i, opt, note))
-    notes = [note for _, _, note in items]
-    if len(notes) >= 2 and len(set(notes)) == 1:
-        items = []
-        for i, opt in enumerate(page["opts"], start=1):
-            if page.get("is_invalidated") or correct is None or i in correct_indices:
-                continue
-            note = resolve_wrong_choice_note(
-                page, i, opt, row, csv_note=""
-            )
-            items.append((i, opt, note))
     return items
 
 
@@ -1039,14 +1100,16 @@ def build_explanation_html(page: dict, row: dict) -> str:
                 parts.append(f"<p>{text_to_html(correct_body)}</p>")
         parts.append("</section>")
 
-        wrong_items = build_choice_commentary(page, row)
+        wrong_items = collapse_wrong_choice_items(
+            page, row, build_choice_commentary(page, row)
+        )
         if wrong_items:
             lis = "".join(
                 f'<li class="q-exp-choice-item">'
                 f'<p class="q-exp-choice-head">'
-                f'<span class="q-exp-choice-num">（{n}）</span></p>'
+                f'<span class="q-exp-choice-num">（{nums}）</span></p>'
                 f'<p class="q-exp-choice-note">{text_to_html(note)}</p></li>'
-                for n, _opt, note in wrong_items
+                for nums, note in wrong_items
             )
             parts.append(
                 '<section class="q-exp-section" aria-labelledby="q-exp-wrong-h">'
