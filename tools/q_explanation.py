@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""過去問・実践演習・一問一答の解説 HTML（要約・正解の理由・他肢/反対符号・学習のヒント）。"""
+"""過去問・実践演習・一問一答の解説 HTML（正解の理由・他肢コメント）。"""
 
 from __future__ import annotations
 
@@ -1008,19 +1008,6 @@ def build_combination_explanation_html(page: dict, row: dict) -> str:
     opts = page.get("opts") or []
     parts: list[str] = ['<div class="q-exp">']
 
-    if slots:
-        slot_bits = []
-        for slot in sorted(slots.keys()):
-            num = slots[slot]
-            word = opts[num - 1] if 1 <= num <= len(opts) else ""
-            if word:
-                slot_bits.append(f"{slot}→（{num}）{word}")
-            else:
-                slot_bits.append(f"{slot}→（{num}）")
-        parts.append(
-            f'<p class="q-exp-lead">正答の組合せ：{html.escape("、".join(slot_bits))}</p>'
-        )
-
     parts.append(
         '<section class="q-exp-section" aria-labelledby="q-exp-correct-h">'
         '<h3 id="q-exp-correct-h" class="q-exp-h3">正解の組合せ</h3>'
@@ -1040,13 +1027,6 @@ def build_combination_explanation_html(page: dict, row: dict) -> str:
     body = summary or base
     parts.append(f"<p>{text_to_html(body)}</p></section>")
 
-    hint = build_study_hint(page, row)
-    if hint:
-        parts.append(
-            '<section class="q-exp-section" aria-labelledby="q-exp-tip-h">'
-            '<h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3>'
-            f"<p>{text_to_html(hint)}</p></section>"
-        )
     parts.append("</div>")
     return "\n    ".join(parts)
 
@@ -1065,16 +1045,7 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
         for n in nums:
             idx_to_label[n] = disp
 
-    lead_bits: list[str] = []
-    for raw_label, nums in labels.items():
-        disp = _truefalse_display_label(raw_label)
-        nums_s = "、".join(str(n) for n in sorted(nums))
-        lead_bits.append(f"{disp}（{nums_s}）")
-    lead = f"正答：{'／'.join(lead_bits)}" if lead_bits else ""
-
     parts: list[str] = ['<div class="q-exp">']
-    if lead:
-        parts.append(f'<p class="q-exp-lead">{html.escape(lead)}</p>')
 
     parts.append(
         '<section class="q-exp-section" aria-labelledby="q-exp-stmts-h">'
@@ -1101,13 +1072,6 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
         parts.append("</li>")
     parts.append("</ul></section>")
 
-    hint = build_study_hint(page, row)
-    if hint:
-        parts.append(
-            '<section class="q-exp-section" aria-labelledby="q-exp-tip-h">'
-            '<h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3>'
-            f"<p>{text_to_html(hint)}</p></section>"
-        )
     parts.append("</div>")
     return "\n    ".join(parts)
 
@@ -1258,9 +1222,6 @@ def build_explanation_html(page: dict, row: dict) -> str:
 
     parts: list[str] = ['<div class="q-exp">']
     correct = page.get("correct")
-    if summary and not _is_redundant_answer_lead(summary, correct):
-        parts.append(f'<p class="q-exp-lead">{text_to_html(summary)}</p>')
-
     if correct and not page.get("is_invalidated"):
         correct_indices = correct_choice_indices(correct)
         numbered = parse_numbered_choice_notes(norm(row.get("explanation")))
@@ -1301,14 +1262,6 @@ def build_explanation_html(page: dict, row: dict) -> str:
                 '<h3 id="q-exp-wrong-h" class="q-exp-h3">他の選択肢</h3>'
                 f'<ul class="q-exp-choice-list">{lis}</ul></section>'
             )
-
-    hint = build_study_hint(page, row)
-    if hint:
-        parts.append(
-            '<section class="q-exp-section" aria-labelledby="q-exp-tip-h">'
-            '<h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3>'
-            f"<p>{text_to_html(hint)}</p></section>"
-        )
 
     parts.append("</div>")
     return "\n    ".join(parts)
@@ -1399,7 +1352,7 @@ def infer_ichimon_opposite_note(page: dict, row: dict) -> str:
 
 
 def build_ichimon_explanation_html(page: dict, row: dict) -> str:
-    """一問一答 — 過去問と同型（要約・正解の理由・もう一方の記号・学習のヒント）。"""
+    """一問一答 — 正解の理由・もう一方の記号のみ。"""
     statement = norm(page.get("statement") or row.get("question"))
     is_true = _ichimon_answer_is_true(page)
     ans = "○" if is_true else "×"
@@ -1429,8 +1382,6 @@ def build_ichimon_explanation_html(page: dict, row: dict) -> str:
         opposite = infer_ichimon_opposite_note(page, row)
 
     parts: list[str] = ['<div class="q-exp">']
-    if summary:
-        parts.append(f'<p class="q-exp-lead">{text_to_html(summary)}</p>')
 
     parts.append(
         '<section class="q-exp-section" aria-labelledby="q-exp-correct-h">'
@@ -1448,10 +1399,6 @@ def build_ichimon_explanation_html(page: dict, row: dict) -> str:
             f'<strong class="q-marubatsu">{html.escape(ans)}</strong> です。'
             f"</p>"
         )
-    if statement:
-        parts.append(
-            f'<blockquote class="q-exp-quote">{text_to_html(statement)}</blockquote>'
-        )
     parts.append("</section>")
 
     parts.append(
@@ -1460,14 +1407,6 @@ def build_ichimon_explanation_html(page: dict, row: dict) -> str:
         f"{html.escape(wrong)} を選びやすい考え方</h3>"
         f"<p>{text_to_html(opposite)}</p></section>"
     )
-
-    hint = build_study_hint(page, row)
-    if hint:
-        parts.append(
-            '<section class="q-exp-section" aria-labelledby="q-exp-tip-h">'
-            '<h3 id="q-exp-tip-h" class="q-exp-h3">学習のヒント</h3>'
-            f"<p>{text_to_html(hint)}</p></section>"
-        )
 
     parts.append("</div>")
     return "\n    ".join(parts)
