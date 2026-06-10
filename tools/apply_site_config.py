@@ -50,6 +50,7 @@ from tools.index_spa_patch import (
     ensure_site_config_before_fields,
     inject_index_fields_fallback,
     inject_index_noscript,
+    inject_index_spa_ui_leaks,
 )
 
 
@@ -596,6 +597,7 @@ def main() -> int:
             new = inject_index_faq_ldjson(new)
             new = inject_index_noscript(new)
             new = inject_index_fields_fallback(new)
+            new = inject_index_spa_ui_leaks(new)
             new = update_index_spa_seo_js(new)
             new = fix_spa_breadcrumb_top(new)
             new = ensure_index_theme(new)

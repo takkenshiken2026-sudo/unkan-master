@@ -134,6 +134,69 @@ def inject_index_fields_fallback(text: str) -> str:
     return text
 
 
+_FIELD_BARS_TIP_RE = re.compile(
+    r'(<span class="tip-box">)[^<]*(?:法令・制度・契約実務・設備等の各科目ごとの正解率[^<]*)',
+    re.I,
+)
+
+_TAG_LAW_KS_OLD = (
+    "return t.replace(/（((?:民法|法令・制度|宅地建物取引業法|労働衛生法令・制度|借地借家法|区分所有法|"
+    "不動産登記法|都市計画法|建築基準法|農地法|国土利用計画法|土地区画整理法|盛土規制法|租税特別措置法|"
+    "地方税法|地価公示法)[^）]{1,30}？)）/g,\n"
+    "      (_,m)=>`<span class=\"ks-law\">${m}</span>`);"
+)
+_TAG_LAW_RICH_OLD = (
+    "return t.replace(/（((?:民法|法令・制度|宅地建物取引業法|労働衛生法令・制度|借地借家法|区分所有法|"
+    "不動産登記法|都市計画法|建築基準法|農地法|国土利用計画法|土地区画整理法|盛土規制法|宅造法|租税特別措置法|"
+    "地方税法|地価公示法|住宅品質確保法|住宅金融支援機構法|住宅瑕疵担保履行法)[^）]{1,30}？)）/g,\n"
+    "      (_,m)=>`<span class=\"rich-law\">${m}</span>`);"
+)
+
+_DAILY_MSGS_BLOCK_RE = re.compile(
+    r"// ===== EXAM COUNTDOWN =====\s*"
+    r"\(function\(\)\{\s*"
+    r"const DAILY_MSGS = \[[\s\S]*?\];\s*"
+    r"// 試験日は地域等で異なるため、日数カウント表示は廃止\s*"
+    r"\}\)\(\);",
+    re.I,
+)
+
+
+def field_bars_tip_text() -> str:
+    names = [str(f.get("name") or f.get("id") or "").strip() for f in fields()]
+    names = [n for n in names if n]
+    if not names:
+        return "各分野ごとの正解率。回答済みの科目だけ4段階で表示"
+    if len(names) <= 3:
+        label = "・".join(names)
+    else:
+        label = "・".join(names[:3]) + "等"
+    return f"{label}の各分野ごとの正解率。回答済みの科目だけ4段階で表示"
+
+
+def tag_law_js_body(class_name: str) -> str:
+    return (
+        "return t.replace(/（((?:[^）]{1,34}(?:法|令|規則|条例|省令|告示|規程))[^）]{0,16}?)）/g,"
+        f'(_,m)=>`<span class="{class_name}">${{m}}</span>`);'
+    )
+
+
+def inject_index_spa_ui_leaks(text: str) -> str:
+    """他試験 fork 由来の SPA UI 文言（分野ツールチップ・法令ハイライト・未使用メッセージ）を site-config へ合わせる。"""
+    tip = html.escape(field_bars_tip_text(), quote=False)
+    text = _FIELD_BARS_TIP_RE.sub(rf"\1{tip}", text, count=1)
+    text = _DAILY_MSGS_BLOCK_RE.sub(
+        "// 試験日は地域等で異なるため、日数カウント表示は廃止（旧 DAILY_MSGS は削除）",
+        text,
+        count=1,
+    )
+    if _TAG_LAW_KS_OLD in text:
+        text = text.replace(_TAG_LAW_KS_OLD, tag_law_js_body("ks-law"), 1)
+    if _TAG_LAW_RICH_OLD in text:
+        text = text.replace(_TAG_LAW_RICH_OLD, tag_law_js_body("rich-law"), 1)
+    return text
+
+
 def inject_index_noscript(text: str) -> str:
     block = f"{INDEX_NOSCRIPT_MARKER_START}\n{index_noscript_inner()}\n    {INDEX_NOSCRIPT_MARKER_END}"
     if INDEX_NOSCRIPT_MARKER_START in text and INDEX_NOSCRIPT_MARKER_END in text:

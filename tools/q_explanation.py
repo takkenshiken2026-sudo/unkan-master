@@ -176,7 +176,12 @@ _WRONG_NOTE_BOILER_RE = re.compile(
     r"解説の要点[：「][^。]*[。]?|解説の要点は「[^」]*」[^。]*[。]?|"
     r"との違いを、?解説の要点[^。]*[。]?|との違いを確認し直してください[。]?|"
     r"[^。]*が示す論点と一致しません[。]?|"
-    r"解説では「[^」]{8,}」とある一方、（\d+）の記述はそれと矛盾します[。]?"
+    r"解説では「[^」]{8,}」とある一方、（\d+）の記述はそれと矛盾します[。]?|"
+    r"基準と照らすと正答になりません[。]?|"
+    r"制度・手続・学習法のいずれかの観点で適切な内容です[。]?|"
+    r"正答の解説と、主体・手続・効果のいずれかが一致していません[。]?|"
+    r"両立しない限定語・主体・手順がないか確認してください[。]?|"
+    r"[^。]*が示す論点とずれています[。]?"
 )
 
 
@@ -209,6 +214,13 @@ def _is_enrich_boilerplate_note(note: str) -> bool:
     n = norm(note)
     if not n:
         return False
+    if re.search(
+        r"基準と照らすと正答になりません|制度・手続・学習法のいずれかの観点|"
+        r"正答の解説と、主体・手続・効果|両立しない限定語・主体・手順|"
+        r"が示す論点とずれています",
+        n,
+    ):
+        return True
     if not re.search(
         r"解説の要点[：「]|解説の要点は「|が示す論点と一致しません|"
         r"との違いを、?解説の要点|との違いを確認し直してください",
@@ -498,13 +510,39 @@ def _choice_specific_lead(
             "学習・制度・実務の観点で問題がある記述ではありません。"
         )
     if mode == "most_correct":
+        if correct_text:
+            return (
+                f"（{choice_num}）「{snip}」は、"
+                f"正答（{correct}）「{_snippet(correct_text, 44)}」とは異なる内容です。"
+            )
         return (
-            f"（{choice_num}）「{snip}」は、"
-            f"{category or '本分野'}の基準と照らすと正答になりません。"
+            f"（{choice_num}）「{snip}」は、本問の正答（{correct}）とは論点が異なります。"
         )
     return (
         f"（{choice_num}）「{snip}」は、設問の求め方と照らすと正答になりません。"
     )
+
+
+def _wrong_choice_absolute_hint(opt: str) -> str:
+    """絶対表現・言い過ぎがあるときの短文ヒント。"""
+    if re.search(r"必ず|常に|すべて|全く|だけ|のみ", opt):
+        return (
+            "「必ず」「常に」「全く」などの断定は、例外や条件付きの整理と食い違うことが多いです。"
+            "設問が問う論点と照らして、言い過ぎ・取り違えがないか確認してください。"
+        )
+    if re.search(r"ない$|しない$|不要|できない|設けない", opt):
+        return (
+            "否定や「不要」「できない」の言い切りが、正答が示す要件・リスク・手続と矛盾していないか確認してください。"
+        )
+    return ""
+
+
+def _wrong_choice_correct_hint(correct_body: str) -> str:
+    for sent in re.split(r"(?<=[。！？!?])\s*", dedupe_prose(correct_body)):
+        s = sent.strip()
+        if len(s) >= 16:
+            return s if s.endswith("。") else s + "。"
+    return ""
 
 
 def infer_wrong_choice_note(
@@ -573,8 +611,18 @@ def infer_wrong_choice_note(
     elif mode == "most_correct":
         if not multi_pick and correct and correct_text:
             parts.append(
-                f"正答（{correct}）「{_snippet(correct_text, 56)}」は、"
-                "制度・手続・学習法のいずれかの観点で適切な内容です。"
+                f"本問で選ぶべき正答は（{correct}）「{_snippet(correct_text, 56)}」です。"
+                "この肢の記述は、その論点とは一致しません。"
+            )
+        abs_hint = _wrong_choice_absolute_hint(opt)
+        if abs_hint:
+            parts.append(abs_hint)
+        hint = _wrong_choice_correct_hint(correct_body)
+        if hint and hint not in "".join(parts):
+            hint_core = hint.rstrip("。．.!！?？")
+            parts.append(
+                f"正答の根拠は「{_snippet(hint_core, 60)}」です。"
+                "誤答肢との差分を一行メモに残してください。"
             )
     else:
         parts.append(
@@ -634,19 +682,6 @@ def infer_wrong_choice_note(
             if not any(re.search(pattern, p) for p in parts):
                 parts.append(msg)
             break
-
-    if mode == "most_correct" and correct_text and len(parts) < 4 and not multi_pick:
-        parts.append(
-            f"特に「{_snippet(opt, 32)}」の部分は、"
-            f"正答「{_snippet(correct_text, 32)}」と両立しない限定語・主体・手順がないか確認してください。"
-        )
-
-    if correct_body and len(parts) < 3:
-        hint = _snippet(correct_body, 56)
-        if hint and hint not in "".join(parts) and len(hint) >= 20:
-            parts.append(
-                f"正答の論点（{hint}）と両立しない限定語・主体・手順がないか確認してください。"
-            )
 
     if len(parts) < 2:
         parts.append(
@@ -1104,8 +1139,11 @@ def _is_generic_wrong_note(note: str) -> bool:
         r"単体では適切な学習法・正しい対応",
         r"設問形式の読み違え",
         r"単独の記述としては法令上妥当",
-        r"本問で選ぶべき正答は",
         r"問題文の条件（",
+        r"基準と照らすと正答になりません",
+        r"制度・手続・学習法のいずれかの観点",
+        r"正答の解説と、主体・手続・効果",
+        r"両立しない限定語・主体・手順",
     )
     return any(re.search(p, n) for p in generic_markers)
 
