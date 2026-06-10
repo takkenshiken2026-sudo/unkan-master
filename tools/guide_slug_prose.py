@@ -6,12 +6,17 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
+from urllib.parse import urlparse
 
 from tools.editorial_quality import norm
 
 # 本文中の slug 直書き（mentalhealth batch 等）を検出・置換する。
 _SLUG_TOKEN = r"[a-z][a-z0-9-]*"
-_URL_RE = re.compile(r"https?://[^\s\])）】\]]+", re.I)
+# URL 本体のみ（直後の日本語句読点や em dash まで食い込まない）
+_URL_CHARS = r"[\w\-./?#=%&+~]"
+_URL_RE = re.compile(rf"https?://{_URL_CHARS}+", re.I)
+_BARE_URL_RE = re.compile(rf"https?://{_URL_CHARS}+", re.I)
+_PAREN_URL_RE = re.compile(rf"[（(](https?://{_URL_CHARS}+)[）)]")
 _MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 _SLUG_BEFORE = r"(?<![a-z0-9-])"
 _SLUG_AFTER = r"(?![a-z0-9-])"
@@ -147,6 +152,103 @@ def plain_text_from_reader_prose(text: str) -> str:
     if not text:
         return text
     return re.sub(r"\[([^\]]+)\]\(\.\./[^)]+\)", r"\1", text)
+
+
+def url_label_map_from_sources(items: list[dict[str, str]]) -> dict[str, str]:
+    """primary_sources の label|url から URL・ホスト名 → ラベル辞書を作る。"""
+    out: dict[str, str] = {}
+    for item in items:
+        url = norm(item.get("url", ""))
+        label = norm(item.get("label", ""))
+        if not url or not label:
+            continue
+        out[url] = label
+        trimmed = url.rstrip("/")
+        if trimmed:
+            out[trimmed] = label
+        host = urlparse(url).netloc
+        if host:
+            out[host] = label
+            if host.startswith("www."):
+                out[host[4:]] = label
+    return out
+
+
+def _label_for_url(url: str, url_labels: dict[str, str]) -> str:
+    if url in url_labels:
+        return url_labels[url]
+    trimmed = url.rstrip("/")
+    if trimmed in url_labels:
+        return url_labels[trimmed]
+    host = urlparse(url).netloc
+    if host and host in url_labels:
+        return url_labels[host]
+    return ""
+
+
+def resolve_bare_urls(
+    text: str,
+    url_labels: dict[str, str],
+    *,
+    link_external: bool = True,
+) -> str:
+    """本文中の裸 URL・ホスト名直書きをラベル（または Markdown 外部リンク）へ。"""
+    raw = norm(text)
+    if not raw or not url_labels:
+        return raw
+
+    slots: list[tuple[str, str]] = []
+
+    def stash_md(match: re.Match[str]) -> str:
+        key = f"\ue000{len(slots)}\ue001"
+        slots.append((key, match.group(0)))
+        return key
+
+    out = _MD_LINK_RE.sub(stash_md, raw)
+
+    def render_url(url: str) -> str:
+        label = _label_for_url(url, url_labels)
+        if not label:
+            return url
+        if link_external:
+            return f"[{label}]({url})"
+        return label
+
+    out = _PAREN_URL_RE.sub(
+        lambda m: f"（{_label_for_url(m.group(1), url_labels) or m.group(1)}）",
+        out,
+    )
+
+    hosts = sorted(
+        {k for k in url_labels if k and not k.startswith("http")},
+        key=len,
+        reverse=True,
+    )
+    for host in hosts:
+        label = url_labels[host]
+        http_url = next(
+            (u for u in url_labels if u.startswith("http") and urlparse(u).netloc == host),
+            "",
+        )
+        replacement = f"[{label}]({http_url})" if link_external and http_url else label
+        out = re.sub(rf"(?<![:/\w.]){re.escape(host)}(?![\w./])", replacement, out)
+
+    out = _BARE_URL_RE.sub(lambda m: render_url(m.group(0)), out)
+    return _restore(out, slots)
+
+
+def scan_bare_url_leaks(text: str) -> list[str]:
+    """検証用: 本文中の裸 https:// 露出。"""
+    raw = norm(text)
+    if not raw:
+        return []
+    protected, _ = _protect(raw)
+    hits: list[str] = []
+    for match in _BARE_URL_RE.finditer(protected):
+        token = match.group(0)
+        if token not in hits:
+            hits.append(token)
+    return hits
 
 
 def resolve_slug_references(
