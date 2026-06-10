@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Validate sitemap.xml against noindex pages and excluded sample paths."""
+"""Validate sitemap.xml against noindex pages, excluded paths, and article canonical URLs."""
 
 from __future__ import annotations
 
@@ -14,9 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.seo_utils import is_noindex_html, is_sitemap_excluded_rel  # noqa: E402
+from tools.seo_utils import html_path_for_sitemap_loc, is_noindex_html, is_sitemap_excluded_rel  # noqa: E402
 
 LOC_RE = re.compile(r"<loc>(.*?)</loc>")
+# articles/{slug}/index.html in sitemap — canonical is articles/{slug}/
+ARTICLE_DETAIL_INDEX_HTML = re.compile(r"^articles/[^/]+/index\.html$")
 
 
 @dataclass
@@ -50,7 +52,16 @@ def main() -> int:
             if is_sitemap_excluded_rel(rel):
                 issues.append(Issue("ERROR", f"除外対象の URL が含まれています: {rel}"))
                 continue
-            html_path = ROOT / rel
+            if ARTICLE_DETAIL_INDEX_HTML.match(rel):
+                slug = rel.split("/")[1]
+                issues.append(
+                    Issue(
+                        "ERROR",
+                        f"試験ガイドは canonical（末尾 /）に合わせてください: {rel} → articles/{slug}/",
+                    )
+                )
+                continue
+            html_path = ROOT / html_path_for_sitemap_loc(rel)
             if html_path.is_file() and is_noindex_html(html_path):
                 issues.append(Issue("ERROR", f"noindex ページが含まれています: {rel}"))
 

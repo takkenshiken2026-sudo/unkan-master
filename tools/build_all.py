@@ -40,6 +40,7 @@ def main() -> int:
     run([py, "tools/build_glossary_pages.py"])
     run([py, "tools/build_hub_retire_redirects.py"])
     run([py, "tools/build_sitemap.py"])
+    run([py, "tools/validate_sitemap.py"])
     run([py, "tools/validate_generated_seo.py"])
     run([py, "tools/validate_site_integration.py"])
     run([py, "tools/validate_internal_links.py"])

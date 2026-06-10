@@ -19,6 +19,10 @@ CONTENT_DATE_COLUMNS: tuple[str, ...] = (
 SITEMAP_EXCLUDED_REL_PREFIXES: tuple[str, ...] = (
     "terms/samples/",
     "terms/diagram-samples/",
+    # 廃止知識ハブ（noindex リダイレクトのみ。build_hub_retire_redirects.py）
+    "terms/compare/",
+    "terms/numbers/",
+    "terms/mistakes/",
 )
 
 SITEMAP_EXCLUDED_BASENAMES: frozenset[str] = frozenset(
@@ -43,6 +47,30 @@ def content_date_from_row(row: dict[str, str] | None) -> str | None:
         if d:
             return d
     return None
+
+
+_ARTICLE_DETAIL_INDEX = re.compile(r"^articles/([^/]+)/index\.html$")
+
+
+def sitemap_loc_rel(rel: str) -> str:
+    """Map on-disk HTML path to sitemap loc (canonical-aligned public path).
+
+    Only article *detail* pages (articles/{slug}/index.html) become articles/{slug}/.
+    articles/index.html, q/*, terms/* are unchanged.
+    """
+    normalized = rel.replace("\\", "/").lstrip("/")
+    m = _ARTICLE_DETAIL_INDEX.match(normalized)
+    if m:
+        return f"articles/{m.group(1)}/"
+    return normalized
+
+
+def html_path_for_sitemap_loc(loc_path: str) -> Path:
+    """Resolve a sitemap loc path to the on-disk HTML file (for noindex checks)."""
+    normalized = loc_path.replace("\\", "/").lstrip("/")
+    if normalized.endswith("/"):
+        return Path(normalized) / "index.html"
+    return Path(normalized)
 
 
 def is_sitemap_excluded_rel(rel: str) -> bool:

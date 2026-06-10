@@ -16,6 +16,7 @@ from tools.seo_utils import (  # noqa: E402
     content_date_from_row,
     is_noindex_html,
     is_sitemap_excluded_rel,
+    sitemap_loc_rel,
 )
 from tools.site_config import clean_origin  # noqa: E402
 from tools.sitemap_utils import SitemapEntry, iso_date, iso_from_mtime, write_sitemap  # noqa: E402
@@ -150,7 +151,8 @@ def add_file(
     if not path.is_file():
         return
     mod = csv_dates.get(rel) or lastmod or iso_from_mtime(path)
-    entries.append(SitemapEntry(loc=f"{base}/{rel.replace(chr(92), '/')}", lastmod=mod))
+    loc_rel = sitemap_loc_rel(rel)
+    entries.append(SitemapEntry(loc=f"{base}/{loc_rel}", lastmod=mod))
 
 
 def add_home(entries: list[SitemapEntry], base: str) -> None:
