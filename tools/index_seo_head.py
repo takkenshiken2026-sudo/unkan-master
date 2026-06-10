@@ -48,7 +48,7 @@ def index_spa_hash_url(hash_frag: str) -> str:
     bp = base_path()
     if bp:
         return f"{origin}{bp}{frag}"
-    return f"{origin}/{frag.lstrip('#')}"
+    return f"{origin}/{frag}"
 
 
 def index_description() -> str:

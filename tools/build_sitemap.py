@@ -153,6 +153,14 @@ def add_file(
     entries.append(SitemapEntry(loc=f"{base}/{rel.replace(chr(92), '/')}", lastmod=mod))
 
 
+def add_home(entries: list[SitemapEntry], base: str) -> None:
+    """canonical が / の SPA トップをサイトマップに載せる（index.html とは別 URL）。"""
+    path = ROOT / "index.html"
+    if not path.is_file() or not should_include_rel("index.html"):
+        return
+    entries.append(SitemapEntry(loc=f"{base}/", lastmod=iso_from_mtime(path)))
+
+
 def collect_entries(base: str) -> list[SitemapEntry]:
     entries: list[SitemapEntry] = []
     guide_dates = guide_lastmod_by_slug()
@@ -160,7 +168,8 @@ def collect_entries(base: str) -> list[SitemapEntry]:
         **glossary_lastmod_by_rel(),
     }
 
-    static_pages = ["index.html", "about.html", "privacy.html", "related-sites.html"]
+    add_home(entries, base)
+    static_pages = ["about.html", "privacy.html", "related-sites.html"]
     for rel in static_pages:
         add_file(entries, base, rel, csv_dates=csv_dates)
 

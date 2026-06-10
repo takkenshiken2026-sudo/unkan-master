@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.site_config import (
+    base_path,
     brand_logo_lines,
     brand_logo_size_class,
     brand_mark,
@@ -121,6 +122,26 @@ def apply_ga4_measurement_ids(text: str) -> str:
 def fix_spa_breadcrumb_top(text: str) -> str:
     """SPA 内パンくず1段目はサイト名ではなく「トップ」に統一する。"""
     return _SPA_BREADCRUMB_TOP_RE.sub(r"\1トップ\2トップ\3", text)
+
+
+_LEGACY_SPA_PREFIXES = ("/fp3", "/fp2")
+
+
+def fix_legacy_base_path_hrefs(text: str) -> str:
+    """basePath 未設定時に旧多級サブパス（/fp3 等）へのリンク・canonical をルートに揃える。"""
+    if base_path():
+        return text
+    origin = clean_origin()
+    for legacy in _LEGACY_SPA_PREFIXES:
+        text = text.replace(f'href="{legacy}#', 'href="/#')
+        text = text.replace(f"href='{legacy}#", "href='/#")
+        text = text.replace(f'href="{legacy}/index.html"', 'href="/index.html"')
+        text = text.replace(f"href='{legacy}/index.html'", "href='/index.html'")
+        text = text.replace(f'href="{legacy}/"', 'href="/"')
+        text = text.replace(f"{origin}{legacy}/", f"{origin}/")
+        text = text.replace(f"{origin}{legacy}#", f"{origin}/#")
+        text = text.replace(f"{origin}{legacy}\"", f'{origin}/"')
+    return text
 
 
 def replace_all(text: str) -> str:
@@ -559,6 +580,7 @@ def main() -> int:
         old = path.read_text(encoding="utf-8")
         new = replace_all(old)
         if path.suffix == ".html":
+            new = fix_legacy_base_path_hrefs(new)
             new = migrate_legacy_takken_leaks(new)
             new = fix_wrong_official_urls(new)
             new = update_static_page_canonical(new, path)

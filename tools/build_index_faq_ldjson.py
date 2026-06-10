@@ -46,6 +46,17 @@ def answer_text(row: dict[str, str]) -> str:
     return ""
 
 
+def is_usable_faq_answer(text: str) -> bool:
+    t = norm(text)
+    if not t or len(t) < 30:
+        return False
+    if "（解説は未入力です。）" in t or t.startswith("（解説は未入力"):
+        return False
+    if has_template_leak(t):
+        return False
+    return True
+
+
 def load_rows() -> list[dict[str, str]]:
     if not CSV_PATH.is_file():
         return []
@@ -63,7 +74,10 @@ def pick_questions(rows: list[dict[str, str]], limit: int = 10) -> list[dict[str
             continue
         if norm(row.get("is_invalidated")).upper() == "TRUE":
             continue
-        if not answer_text(row):
+        ans = answer_text(row)
+        if not is_usable_faq_answer(ans):
+            continue
+        if has_template_leak(stem):
             continue
         candidates.append(row)
 
@@ -138,9 +152,7 @@ def inject_index_faq_ldjson(text: str) -> str:
     rows = load_rows()
     picked = pick_questions(rows)
     if not picked:
-        if brand_name().endswith("プレースホルダー") or "プレースホルダー" in exam_name():
-            return FAQ_SCRIPT_RE.sub("", text, count=1)
-        return text
+        return FAQ_SCRIPT_RE.sub("", text, count=1)
     payload = faq_payload(picked)
     generated = render_script(payload)
     if has_template_leak(json.dumps(payload, ensure_ascii=False)):
