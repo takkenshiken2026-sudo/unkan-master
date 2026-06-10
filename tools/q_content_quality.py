@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import re
 
-from tools.seo_utils import INDEX_ROBOTS_META, NOINDEX_ROBOTS_META
+from tools.seo_utils import NOINDEX_ROBOTS_META
 
 _ICHIMON_ID_NUMERIC = re.compile(r"^(\d{4})-(\d+)-(\d+)$")
 _ICHIMON_ID_KANA = re.compile(r"^(\d{4}-\d+)-([アイウエオ])$")
@@ -146,7 +146,9 @@ def ichimon_is_primary_seo_row(row_id: str) -> bool:
 
 
 def ichimon_robots_meta(row_id: str) -> str:
-    return INDEX_ROBOTS_META if ichimon_is_primary_seo_row(row_id) else NOINDEX_ROBOTS_META
+    """一問一答の個別ページはサイト内演習用。過去問・実践演習を index の正本とする。"""
+    del row_id  # 枝番・y9000 を問わず個別 URL はすべて noindex
+    return NOINDEX_ROBOTS_META
 
 
 def ichimon_body_already_states_truth(body: str, *, is_true: bool) -> bool:
