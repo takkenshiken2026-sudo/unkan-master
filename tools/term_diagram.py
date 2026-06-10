@@ -216,4 +216,8 @@ def list_diagram_ids() -> list[str]:
 
 
 def diagram_id_exists(diagram_id: str) -> bool:
-    return load_diagram(diagram_id) is not None
+    if load_diagram(diagram_id) is not None:
+        return True
+    # FP 等: 過去問・実践用図解は data/question_diagrams/ に置く場合がある
+    qpath = ROOT / "data" / "question_diagrams" / f"{diagram_id}.json"
+    return bool(diagram_id and DIAGRAM_ID_RE.fullmatch(diagram_id) and qpath.is_file())

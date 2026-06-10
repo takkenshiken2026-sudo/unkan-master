@@ -53,6 +53,7 @@ from tools.site_config import (
     external_links,
     field_labels,
     primary_external_link,
+    public_url as site_public_url,
 )
 
 from tools.seo_editorial_chrome import (  # noqa: E402
@@ -188,7 +189,8 @@ def slug_file_for_glossary_row(row: dict, used_slugs: dict[str, str]) -> str:
 
 
 def public_url(base: str, rel_path: str) -> str:
-    return f"{base.rstrip('/')}/{rel_path.lstrip('/')}"
+    del base
+    return site_public_url(rel_path)
 
 
 def rel_to_root(rel_file: Path) -> str:

@@ -600,7 +600,8 @@ def explanation_choices_is_boilerplate(value: str) -> bool:
         return False
     return bool(
         re.search(
-            r"解説の要点：|との違いを確認し直してください|"
+            r"解説の要点[：「]|解説の要点は「|が示す論点と一致しません|"
+            r"との違いを、?解説の要点|との違いを確認し直してください|"
             r"解説では「[^」]{8,}」とある一方、（\d+）の記述はそれと矛盾",
             v,
         )

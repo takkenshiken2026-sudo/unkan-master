@@ -184,8 +184,47 @@ def clean_ichimon_correct_body(
 
 
 def strip_four_choice_leak(text: str) -> str:
-    """一問一答用: 4択由来の「正解は（n）」を除去。"""
+    """一問一答用: 4択過去問インポート由来の「選択肢N」表現を除去・言い換え。"""
     t = norm(text)
-    t = re.sub(r"^正解は\s*[（(]?\d+[）)]?\s*です[。.]?\s*", "", t)
-    t = re.sub(r"正答は\s*[（(]?\d+[）)]?\s*です[。.]?", "", t)
-    return t.strip()
+    if not t:
+        return t
+
+    t = re.sub(
+        r"^正解は\s*(?:選択肢\s*)?[（(]?\d+[）)]?\s*です[。.]?\s*",
+        "",
+        t,
+    )
+    t = re.sub(
+        r"^正答は\s*(?:選択肢\s*)?[（(]?\d+[）)]?\s*です[。.]?\s*",
+        "",
+        t,
+    )
+    t = re.sub(
+        r"正解は\s*(?:選択肢\s*)?[（(]?\d+[）)]?\s*です[。.]?",
+        "",
+        t,
+    )
+    t = re.sub(
+        r"正答は\s*(?:選択肢\s*)?[（(]?\d+[）)]?\s*です[。.]?",
+        "",
+        t,
+    )
+
+    def _choice_quote_repl(m: re.Match[str]) -> str:
+        quote = m.group(1).strip()
+        if quote.endswith("..."):
+            quote = quote[:-3].rstrip()
+        return f"問題文は「{quote}」の趣旨どおりであり、制度の整理と一致します。"
+
+    t = re.sub(
+        r"選択肢\s*[（(]?\d+[）)]?\s*の[「「]([^」]+)[」」]という内容が結論に合います[。.]?",
+        _choice_quote_repl,
+        t,
+    )
+    t = re.sub(r"選択肢\s*[（(]?\d+[）)]?\s*の", "問題文の", t)
+    t = re.sub(
+        r"その他の記述は、主体・手続・期間・効果などの点でずれています[。.]?\s*",
+        "",
+        t,
+    )
+    return dedupe_prose(t.strip())

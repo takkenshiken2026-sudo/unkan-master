@@ -219,6 +219,22 @@ _INDEX_SEO_POLLUTED_REGION = re.compile(
     re.I,
 )
 
+_HEAD_BODY_ANCHOR = r'(?=<meta name="format-detection"|<link rel="preconnect")'
+
+_INDEX_SEO_REGION_COLLAPSE = re.compile(
+    rf"{re.escape(INDEX_SEO_MARKER_START)}[\s\S]*?{_HEAD_BODY_ANCHOR}",
+    re.I,
+)
+
+_ORPHAN_SEO_BETWEEN_END_AND_ANCHOR = re.compile(
+    rf"{re.escape(INDEX_SEO_MARKER_END)}\s*"
+    r"(?:<!--/?INDEX_SEO_HEAD-->[\s\S]*?)*"
+    r"(?:<meta name=\"keywords\"[\s\S]*?</script>\s*)*"
+    r"(?:<!-- Open Graph[\s\S]*?</script>\s*)*"
+    r'(?=<meta name="format-detection"|<link rel="preconnect")',
+    re.I,
+)
+
 _ORPHAN_SEO_TAIL_RE = re.compile(
     r"(?:(?:<!-- Open Graph )?\(SNS・Slack等でのリッチ表示\) -->[\s\S]*?<!--/INDEX_SEO_HEAD-->\s*)+",
     re.I,
@@ -260,30 +276,48 @@ def _strip_duplicate_seo_after_marker(text: str) -> str:
     return text
 
 
+def _strip_orphan_seo_after_index_end(text: str) -> str:
+    """INDEX_SEO 終了マーカー直後〜 format-detection 手前の重複 SEO を除去。"""
+    while True:
+        cleaned = _ORPHAN_SEO_BETWEEN_END_AND_ANCHOR.sub(INDEX_SEO_MARKER_END + "\n", text, count=1)
+        if cleaned == text:
+            break
+        text = cleaned
+    return text
+
+
 def inject_index_seo_head(text: str) -> str:
     """Replace or insert site-config driven SEO head for SPA index.html."""
     block_inner = index_seo_head_inner()
     block = f"{INDEX_SEO_MARKER_START}\n{block_inner}\n{INDEX_SEO_MARKER_END}\n"
-    polluted = _INDEX_SEO_POLLUTED_REGION.search(text)
-    if polluted:
-        return text[: polluted.start()] + block + text[polluted.end() :]
-    while INDEX_SEO_MARKER_START in text and INDEX_SEO_MARKER_END in text:
-        text = _INDEX_SEO_BLOCK.sub("", text, count=1)
-    text = _ORPHAN_SEO_TAIL_RE.sub("", text)
-    text = _strip_legacy_index_seo(text)
-    if "<!--SITE_VERIFICATION_META_INJECT-->" in text:
-        text = text.replace("<!--SITE_VERIFICATION_META_INJECT-->", block, 1)
-    elif _ORPHAN_TWITTER_AFTER_IMAGE.search(text):
-        text = _ORPHAN_TWITTER_AFTER_IMAGE.sub(r"\1\n" + block, text, count=1)
-    elif "<!--BRAND_ASSET_HEAD-->" in text:
-        text = re.sub(
-            r"(<!--BRAND_ASSET_HEAD-->[\s\S]*?<link rel=\"apple-touch-icon\"[^>]+>)",
-            r"\1\n" + block,
-            text,
-            count=1,
-        )
+
+    collapsed = _INDEX_SEO_REGION_COLLAPSE.search(text)
+    if collapsed:
+        text = text[: collapsed.start()] + block + text[collapsed.end() :]
     else:
-        text = re.sub(r'(<meta charset="UTF-8">)', r"\1\n" + block, text, count=1)
+        polluted = _INDEX_SEO_POLLUTED_REGION.search(text)
+        if polluted:
+            text = text[: polluted.start()] + block + text[polluted.end() :]
+        else:
+            while INDEX_SEO_MARKER_START in text and INDEX_SEO_MARKER_END in text:
+                text = _INDEX_SEO_BLOCK.sub("", text, count=1)
+            text = _ORPHAN_SEO_TAIL_RE.sub("", text)
+            text = _strip_legacy_index_seo(text)
+            if "<!--SITE_VERIFICATION_META_INJECT-->" in text:
+                text = text.replace("<!--SITE_VERIFICATION_META_INJECT-->", block, 1)
+            elif _ORPHAN_TWITTER_AFTER_IMAGE.search(text):
+                text = _ORPHAN_TWITTER_AFTER_IMAGE.sub(r"\1\n" + block, text, count=1)
+            elif "<!--BRAND_ASSET_HEAD-->" in text:
+                text = re.sub(
+                    r"(<!--BRAND_ASSET_HEAD-->[\s\S]*?<link rel=\"apple-touch-icon\"[^>]+>)",
+                    r"\1\n" + block,
+                    text,
+                    count=1,
+                )
+            else:
+                text = re.sub(r'(<meta charset="UTF-8">)', r"\1\n" + block, text, count=1)
+
+    text = _strip_orphan_seo_after_index_end(text)
     while True:
         cleaned = _strip_duplicate_seo_after_marker(text)
         if cleaned == text:
@@ -310,24 +344,29 @@ _OTHER_SITE_HOSTS = (
 def migrate_legacy_takken_leaks(text: str) -> str:
     """他サイト fork 残骸を site-config のブランド・ドメインへ置換。"""
     origin = clean_origin()
-    is_takken = "takken-master.jp" in origin
-    if not is_takken:
-        bn = brand_name()
-        en = exam_name()
-        replacements = [
-            ("https://takken-master.jp", origin),
-            ("宅建マスター", bn),
-            ("宅地建物取引士試験対策サイト", f"{en}対策サイト"),
-            ("宅地建物取引士試験", en),
-            ("マン管マスター", bn),
-            ("マンション管理士試験対策サイト", f"{en}対策サイト"),
-            ("マンション管理士試験", en),
-            ("運管マスター", bn),
-            ("運行管理者試験対策サイト", f"{en}対策サイト"),
-            ("運行管理者試験", en),
-            ("FPマスター", bn),
-        ]
-        for src, dst in replacements:
+    bn = brand_name()
+    en = exam_name()
+    replacements = [
+        ("https://takken-master.jp", origin),
+        ("宅建マスター", bn),
+        ("宅地建物取引士試験対策サイト", f"{en}対策サイト"),
+        ("宅地建物取引士試験", en),
+        ("マン管マスター", bn),
+        ("マンション管理士試験対策サイト", f"{en}対策サイト"),
+        ("マンション管理士試験", en),
+        ("運管マスター", bn),
+        ("運行管理者試験対策サイト", f"{en}対策サイト"),
+        ("運行管理者試験", en),
+        ("FPマスター", bn),
+        ("ファイナンシャル・プランナー試験（FP2級・FP3級）", en),
+        ("Sample試験", en),
+        ("賃管マスター", bn),
+        ("賃貸不動産経営管理士試験", en),
+        ("管業マスター", bn),
+        ("管理業務主任者試験", en),
+    ]
+    for src, dst in replacements:
+        if src != dst:
             text = text.replace(src, dst)
     host = origin.replace("https://", "").replace("http://", "").strip("/")
     if host:
@@ -344,6 +383,11 @@ _SPA_PAGE_SEO_JS = """\
 function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || 'Sampleマスター'; }
 function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }
 function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }
+function _cfgSiteSlug(){
+  const o=String((window.SITE_CONFIG&&SITE_CONFIG.siteOrigin)||'').replace(/^https?:\\/\\//,'').replace(/\\/.*$/,'');
+  if(o) return o.split('.')[0]||'site';
+  try{ return (location.hostname||'site').split('.')[0]||'site'; }catch(e){ return 'site'; }
+}
 function _pageSeo(pageTitle, descTemplate, path, hash) {
   const exam = _cfgExam();
   return {

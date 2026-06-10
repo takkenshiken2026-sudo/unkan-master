@@ -348,7 +348,8 @@ class Validator:
             self.error(
                 path,
                 line,
-                f"diagram_id に対応する JSON がありません: data/term_diagrams/{raw}.json",
+                f"diagram_id に対応する JSON がありません:"
+                f" data/term_diagrams/{raw}.json または data/question_diagrams/{raw}.json",
             )
 
     def validate_guide_articles(self) -> None:

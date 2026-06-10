@@ -27,7 +27,9 @@ HTML_BAD_RE = re.compile(
     r"現場判断と\d+分野|"
     r"「[^」]+」では、[^。]+について。衛生|"
     r"「[^」]+」では、[^。]+について。管業|"
-    r"「[^」]+」では、[^。]+について。ボイラー"
+    r"「[^」]+」では、[^。]+について。ボイラー|"
+    r"主体・期限・数値をメモしながら演習問題で定着を確認|"
+    r"防ぐに[。、]|進めるに[。、]"
 )
 
 
@@ -43,7 +45,7 @@ def _exam_aliases(root: Path) -> tuple[str, str]:
         return str(data.get("examName") or ""), str(data.get("brandMark") or "")
 
 
-def audit_csv(root: Path) -> dict:
+def audit_csv(root: Path, *, only_slugs: frozenset[str] | None = None) -> dict:
     guide_csv = root / "data" / "guide_articles.csv"
     if not guide_csv.is_file():
         return {"ok": False, "error": f"missing {guide_csv}"}
@@ -58,6 +60,8 @@ def audit_csv(root: Path) -> dict:
             continue
         pub += 1
         slug = norm(row.get("slug"))
+        if only_slugs is not None and slug not in only_slugs:
+            continue
         for col in PROSE_COLUMNS:
             raw = norm(row.get(col))
             if not raw:
@@ -98,12 +102,20 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="ERROR 時 exit 1")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--html-only", action="store_true")
+    parser.add_argument(
+        "--only-slugs",
+        metavar="SLUGS",
+        help="CSV 監査を指定 slug のみに限定（5本 batch 用。カンマ区切り）",
+    )
     args = parser.parse_args()
     root = args.root.resolve()
+    only: frozenset[str] | None = None
+    if args.only_slugs:
+        only = frozenset(s.strip() for s in args.only_slugs.split(",") if s.strip())
 
     report = {"site": root.name, "csv": {}, "html": {}}
     if not args.html_only:
-        report["csv"] = audit_csv(root)
+        report["csv"] = audit_csv(root, only_slugs=only)
     report["html"] = audit_html(root)
     ok = report.get("csv", {}).get("ok", True) and report["html"].get("ok", True)
 

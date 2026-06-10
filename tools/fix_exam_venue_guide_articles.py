@@ -24,6 +24,7 @@ from tools.exam_venue_official_links import (  # noqa: E402
 from tools.fix_guide_duplicate_bodies import load_site_lib  # noqa: E402
 from tools.guide_coherence_rules import check_guide_row_coherence, short_topic_from_title  # noqa: E402
 from tools.guide_exam_day_faq import faq_answer_for_belongings_question  # noqa: E402
+from tools.strip_generic_guide_padding import strip_padding_from_text  # noqa: E402
 
 VENUE_SECTIONS = [
     "基本情報",
@@ -127,6 +128,19 @@ def patch_venue_row(
             col = f"faq_{idx}_{suffix}"
             if col in fieldnames:
                 row[col] = ""
+
+    prose_cols = [
+        "meta_description",
+        "lead",
+        "user_intent",
+        "action_items",
+        "key_points",
+        *(f"section_{n}_body" for n in range(1, 9)),
+        *(f"faq_{n}_answer" for n in range(1, 5)),
+    ]
+    for col in prose_cols:
+        if col in fieldnames and row.get(col):
+            row[col] = strip_padding_from_text(row[col])
 
     return row
 

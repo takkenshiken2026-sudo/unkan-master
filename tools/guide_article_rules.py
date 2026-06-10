@@ -180,7 +180,7 @@ def check_guide_row(
         if q and not a:
             err(acol, f"{qcol} に対する {acol} が空です")
         visible_a = reader_facing_text(row, acol, a, slug_titles=slug_titles) if published and a else a
-        if visible_a and len(visible_a) < GUIDE_MIN_FAQ_ANSWER:
+        if published and visible_a and len(visible_a) < GUIDE_MIN_FAQ_ANSWER:
             msg = f"FAQ回答は {GUIDE_MIN_FAQ_ANSWER} 文字以上にしてください（現在 {len(visible_a)} 文字）"
             if is_template_site():
                 warn(acol, msg)

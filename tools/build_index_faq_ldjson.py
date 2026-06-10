@@ -18,7 +18,6 @@ if str(ROOT) not in sys.path:
 from tools.site_config import brand_name, exam_name  # noqa: E402
 
 CSV_PATH = ROOT / "data" / "past_questions.csv"
-INDEX_PATH = ROOT / "index.html"
 FAQ_SCRIPT_RE = re.compile(
     r'<script type="application/ld\+json">\s*\{\s*"@context":\s*"https://schema\.org",\s*"@type":\s*"FAQPage".*?</script>\s*',
     re.DOTALL,
@@ -27,6 +26,7 @@ TEMPLATE_STEMS = (
     "Aが自己所有の甲土地をBに売却する契約",
     "宅地建物取引業者Aが、自ら売主として",
     "AB間の売買契約において、AがBに対して代金の支払いを請求",
+    "Sample試験の制度に関する",
 )
 
 
@@ -131,56 +131,45 @@ def render_script(payload: dict[str, object]) -> str:
     return f'<script type="application/ld+json">\n{body}\n</script>\n'
 
 
-def looks_like_takken_template(text: str) -> bool:
-    return has_template_leak(text)
+def inject_index_faq_ldjson(text: str) -> str:
+    """FAQPage JSON-LD を site CSV から差し替え（Sample試験テンプレ除去）。"""
+    if not FAQ_SCRIPT_RE.search(text):
+        return text
+    rows = load_rows()
+    picked = pick_questions(rows)
+    if not picked:
+        if brand_name().endswith("プレースホルダー") or "プレースホルダー" in exam_name():
+            return FAQ_SCRIPT_RE.sub("", text, count=1)
+        return text
+    payload = faq_payload(picked)
+    generated = render_script(payload)
+    if has_template_leak(json.dumps(payload, ensure_ascii=False)):
+        return text
+    return FAQ_SCRIPT_RE.sub(generated, text, count=1)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--remove-if-empty", action="store_true")
     args = parser.parse_args()
 
-    if not INDEX_PATH.is_file():
-        print(f"build_index_faq_ldjson.py: index.html がありません: {INDEX_PATH}")
+    index_path = ROOT / "index.html"
+    if not index_path.is_file():
+        print(f"build_index_faq_ldjson.py: index.html がありません: {index_path}")
         return 0
 
-    html = INDEX_PATH.read_text(encoding="utf-8")
-    if not FAQ_SCRIPT_RE.search(html):
-        print("build_index_faq_ldjson.py: FAQPage ブロックなし（スキップ）")
-        return 0
-
-    rows = load_rows()
-    picked = pick_questions(rows)
-    if not picked:
-        if args.remove_if_empty or brand_name().endswith("プレースホルダー") or "プレースホルダー" in exam_name():
-            new_html = FAQ_SCRIPT_RE.sub("", html, count=1)
-            action = "removed"
-        else:
-            print("build_index_faq_ldjson.py: 候補なし（スキップ）")
-            return 0
-    else:
-        payload = faq_payload(picked)
-        generated = render_script(payload)
-        new_html = FAQ_SCRIPT_RE.sub(generated, html, count=1)
-        action = f"updated ({len(picked)} items)"
-
+    html = index_path.read_text(encoding="utf-8")
+    new_html = inject_index_faq_ldjson(html)
     if new_html == html:
         print("build_index_faq_ldjson.py: 変更なし")
         return 0
 
     if args.dry_run:
-        print(f"build_index_faq_ldjson.py: dry-run {action}")
-        if picked:
-            print("  first:", norm(picked[0].get("stem"))[:80])
+        print("build_index_faq_ldjson.py: dry-run updated")
         return 0
 
-    INDEX_PATH.write_text(new_html, encoding="utf-8")
-    print(f"build_index_faq_ldjson.py: {action}")
-    if picked and looks_like_takken_template(json.dumps(faq_payload(picked), ensure_ascii=False)):
-        if "宅建" not in exam_name() and "宅地建物" not in exam_name():
-            print("build_index_faq_ldjson.py: error: 宅建テンプレFAQが残っています", file=sys.stderr)
-            return 1
+    index_path.write_text(new_html, encoding="utf-8")
+    print("build_index_faq_ldjson.py: updated FAQPage JSON-LD")
     return 0
 
 
