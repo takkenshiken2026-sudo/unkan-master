@@ -24,10 +24,12 @@ from tools.site_config import (
     contact_url,
     copyright_text,
     exam_name,
+    external_links,
     ga4_measurement_id,
     learning_nav_label,
     official_organization,
     primary_external_link,
+    public_url,
     sync_config_files,
     fields,
 )
@@ -64,6 +66,28 @@ STATIC_PAGE_CURRENTS = {
     ROOT / "related-sites.html": "related",
     ROOT / "articles" / "index.html": "articles",
 }
+
+STATIC_PAGE_CANONICAL = {
+    ROOT / "about.html": "about.html",
+    ROOT / "privacy.html": "privacy.html",
+    ROOT / "related-sites.html": "related-sites.html",
+}
+
+_STATIC_CANONICAL_RE = re.compile(r'<link rel="canonical" href="[^"]*">', re.I)
+
+_RELATED_OFFICIAL_SECTION_RE = re.compile(
+    r'(<section class="site-page-section" aria-labelledby="sec-official">\s*'
+    r'<h2 id="sec-official">試験・資格（公式・準公式）</h2>\s*'
+    r"<ul>)(.*?)(</ul>\s*</section>)",
+    re.S,
+)
+
+_MANKAN_OFFICIAL_LINK_RE = re.compile(
+    r'<a href="https://www\.mankan\.org/"[^>]*>試験実施団体</a>'
+)
+_MLIT_OFFICIAL_LINK_RE = re.compile(
+    r'<a href="https://www\.mlit\.go\.jp/[^"]*"[^>]*>国土交通省(?:\s*住宅局)?</a>'
+)
 
 
 _SPA_BREADCRUMB_TOP_RE = re.compile(
@@ -154,6 +178,86 @@ def ensure_theme_link(text: str, rel_path: Path) -> str:
             count=1,
         )
     return text
+
+
+def fix_wrong_official_urls(text: str) -> str:
+    """他試験 fork 由来の公式リンク（mankan.org / 国土交通省 等）を site-config へ差し替え。"""
+    official = primary_external_link()
+    url = str(official.get("url") or "").strip()
+    label = str(official.get("label") or official_organization()).strip()
+    if url:
+        text = text.replace("https://www.mankan.org/", url)
+        if label:
+            text = _MANKAN_OFFICIAL_LINK_RE.sub(
+                f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">{html.escape(label)}</a>',
+                text,
+            )
+            text = _MANKAN_OFFICIAL_LINK_RE.sub(
+                f'<a href="{html.escape(url)}" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:underline">{html.escape(label)}</a>',
+                text,
+            )
+            text = text.replace(
+                f'href="{html.escape(url)}" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:underline">試験実施団体</a>',
+                f'href="{html.escape(url)}" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:underline">{html.escape(label)}</a>',
+            )
+    links = external_links()
+    if links and "jafp.or.jp" in links[0]["url"]:
+        text = text.replace(
+            "https://www.mlit.go.jp/jutakukentiku/house/",
+            "https://www.nta.go.jp/",
+        )
+        text = text.replace("https://www.mlit.go.jp/", "https://www.nta.go.jp/")
+        text = text.replace("国土交通省 住宅局", "国税庁")
+        text = _MLIT_OFFICIAL_LINK_RE.sub(
+            '<a href="https://www.nta.go.jp/" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:underline">国税庁</a>',
+            text,
+        )
+        text = _MLIT_OFFICIAL_LINK_RE.sub(
+            '<a href="https://www.nta.go.jp/" target="_blank" rel="noopener noreferrer">国税庁</a>',
+            text,
+        )
+        text = text.replace("法令・通達の原文は", "法令・税制の原文は")
+        text = text.replace(
+            'href="https://www.nta.go.jp/" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:underline">国土交通省</a>',
+            'href="https://www.nta.go.jp/" target="_blank" rel="noopener" style="color:var(--text2);text-decoration:underline">国税庁</a>',
+        )
+    en = exam_name()
+    if "FP3級" in en and "FP2" not in en:
+        text = text.replace("ファイナンシャル・プランナー試験（FP2級・FP3級）", en)
+        text = text.replace("（FP2級・FP3級）", "（FP3級）")
+    return text
+
+
+def update_related_sites_official_links(text: str) -> str:
+    """related-sites.html の公式リンク一覧を externalLinks から再生成。"""
+    links = external_links()
+    if not links:
+        return text
+    items: list[str] = []
+    for link in links:
+        url = html.escape(link["url"])
+        label = html.escape(link["label"])
+        desc = html.escape(link.get("description") or "")
+        items.append(
+            "          <li>\n"
+            f'            <a href="{url}" target="_blank" rel="noopener noreferrer">{label}</a>\n'
+            f"            … {desc}\n"
+            "          </li>"
+        )
+    new_ul = "\n".join(items)
+
+    def repl(match: re.Match[str]) -> str:
+        return match.group(1) + "\n" + new_ul + "\n        " + match.group(3)
+
+    return _RELATED_OFFICIAL_SECTION_RE.sub(repl, text, count=1)
+
+
+def update_static_page_canonical(text: str, path: Path) -> str:
+    rel = STATIC_PAGE_CANONICAL.get(path)
+    if not rel:
+        return text
+    url = html.escape(public_url(rel), quote=True)
+    return _STATIC_CANONICAL_RE.sub(f'<link rel="canonical" href="{url}">', text, count=1)
 
 
 def replace_static_chrome(text: str, path: Path) -> str:
@@ -408,8 +512,12 @@ def main() -> int:
             continue
         old = path.read_text(encoding="utf-8")
         new = replace_all(old)
-        if path == ROOT / "index.html":
+        if path.suffix == ".html":
             new = migrate_legacy_takken_leaks(new)
+            new = fix_wrong_official_urls(new)
+            new = update_static_page_canonical(new, path)
+            if path == ROOT / "related-sites.html":
+                new = update_related_sites_official_links(new)
         new = replace_static_chrome(new, path)
         rel = path.relative_to(ROOT)
         if path.suffix == ".html":

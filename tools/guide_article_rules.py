@@ -38,10 +38,11 @@ def reader_facing_text(
     raw: str,
     *,
     slug_titles: dict[str, str] | None = None,
+    prefix_labels: dict[str, str] | None = None,
 ) -> str:
     """ビルド後に読者へ出る本文（sanitize / resolve 後）。"""
     from tools.build_article_pages import resolve_guide_section_body, sanitize_guide_text
-    from tools.guide_slug_prose import resolve_slug_references
+    from tools.guide_field_prose import resolve_reader_slug_prose
 
     slug = norm(row.get("slug"))
     text = norm(raw)
@@ -55,11 +56,12 @@ def reader_facing_text(
         link_internal = (col.startswith("section_") and col.endswith("_body")) or (
             col.startswith("faq_") and col.endswith("_answer")
         )
-        text = resolve_slug_references(
+        text = resolve_reader_slug_prose(
             text,
-            slug_titles,
-            slug,
+            slug_titles=slug_titles,
+            current_slug=slug,
             link_internal=link_internal,
+            prefix_labels=prefix_labels,
         )
     return text
 

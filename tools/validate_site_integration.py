@@ -20,13 +20,24 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.index_seo_head import INDEX_SEO_MARKER_END, INDEX_SEO_MARKER_START  # noqa: E402
+from tools.index_seo_head import (  # noqa: E402
+    INDEX_SEO_MARKER_END,
+    INDEX_SEO_MARKER_START,
+    _OTHER_SITE_HOSTS,
+)
 from tools.index_spa_patch import (  # noqa: E402
     INDEX_FIELDS_FALLBACK_START,
     INDEX_NOSCRIPT_MARKER_END,
     INDEX_NOSCRIPT_MARKER_START,
 )
-from tools.site_config import clean_origin, exam_name, ga4_measurement_id, load_config  # noqa: E402
+from tools.site_config import (  # noqa: E402
+    base_path,
+    clean_origin,
+    exam_name,
+    ga4_measurement_id,
+    load_config,
+    public_url,
+)
 
 
 @dataclass
@@ -382,15 +393,30 @@ def _html_footer_source(root: Path) -> list[Issue]:
     return issues
 
 
+def _spa_nav_hash_hrefs() -> dict[str, str]:
+    """site-config basePath 付きサイト（fp-master 等）の SPA ハッシュリンク期待値。"""
+    bp = base_path()
+    hashes = {
+        "tnav-ichimondou": "#ichimondou",
+        "tnav-orig": "#orig",
+        "tnav-past": "#past",
+        "tnav-dash": "#dash",
+        "tnav-review": "#review",
+    }
+    if bp:
+        return {k: f"{bp}{h}" for k, h in hashes.items()}
+    return {k: f"/{h}" for k, h in hashes.items()}
+
+
+def _spa_home_url() -> str:
+    origin = clean_origin().rstrip("/")
+    bp = base_path()
+    return f"{origin}{bp}" if bp else origin
+
+
 def _header_learning_nav(root: Path) -> list[Issue]:
     """静的ページの学習ナビ href / q/index の active 状態（site-chrome.md §3, §7）。"""
-    spa_hash = {
-        "tnav-ichimondou": "/#ichimondou",
-        "tnav-orig": "/#orig",
-        "tnav-past": "/#past",
-        "tnav-dash": "/#dash",
-        "tnav-review": "/#review",
-    }
+    spa_hash = _spa_nav_hash_hrefs()
     article_sample = root / "articles" / "field-law-basics" / "index.html"
     if not article_sample.is_file():
         article_sample = root / "articles" / "exam-overview" / "index.html"
@@ -527,28 +553,28 @@ def _viewport_and_static_css(root: Path) -> list[Issue]:
             issues.append(Issue("index.html: og:title がありません（SNSカード用 SEO head 未適用）"))
         else:
             head = text.split("</head>", 1)[0]
-            origin = clean_origin().rstrip("/")
+            home_url = _spa_home_url()
             og_url_m = re.search(r'property="og:url"\s+content="([^"]+)"', head)
-            if og_url_m and og_url_m.group(1).rstrip("/") != origin:
+            if og_url_m and og_url_m.group(1).rstrip("/") != home_url:
                 issues.append(
                     Issue(
-                        f"index.html: og:url が siteOrigin と不一致です"
-                        f"（現在: {og_url_m.group(1)!r}、期待: {origin + '/'}）"
+                        f"index.html: og:url が SPA ホーム URL と不一致です"
+                        f"（現在: {og_url_m.group(1)!r}、期待: {home_url + '/'}）"
                         " — tools/apply_site_config.py を実行してください"
                     )
                 )
             canon_m = re.search(r'id="canonical-link"\s+href="([^"]+)"', head)
             if not canon_m:
                 canon_m = re.search(r'rel="canonical"\s+href="([^"]+)"', head)
-            if canon_m and canon_m.group(1).rstrip("/") != origin:
+            if canon_m and canon_m.group(1).rstrip("/") != home_url:
                 issues.append(
                     Issue(
-                        f"index.html: canonical が siteOrigin と不一致です"
-                        f"（現在: {canon_m.group(1)!r}、期待: {origin + '/'}）"
+                        f"index.html: canonical が SPA ホーム URL と不一致です"
+                        f"（現在: {canon_m.group(1)!r}、期待: {home_url + '/'}）"
                         " — tools/apply_site_config.py を実行してください"
                     )
                 )
-            site_host = origin.replace("https://", "").replace("http://", "").strip("/")
+            site_host = clean_origin().replace("https://", "").replace("http://", "").strip("/")
             for leak in (
                 "mentalhealth-master.jp",
                 "chintaikanrishi-master.jp",
@@ -715,6 +741,40 @@ def _static_chrome(root: Path) -> list[Issue]:
     return issues
 
 
+def _static_page_site_leaks(root: Path) -> list[Issue]:
+    """about / privacy / related-sites の他サイトドメイン漏れと canonical を検証。"""
+    issues: list[Issue] = []
+    site_host = clean_origin().replace("https://", "").replace("http://", "").strip("/")
+    static_pages = [
+        ("about.html", root / "about.html", public_url("about.html")),
+        ("privacy.html", root / "privacy.html", public_url("privacy.html")),
+        ("related-sites.html", root / "related-sites.html", public_url("related-sites.html")),
+    ]
+    for label, path, expected_canonical in static_pages:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for leak in _OTHER_SITE_HOSTS:
+            if leak != site_host and leak in text:
+                issues.append(
+                    Issue(
+                        f"{label}: 他サイトのドメイン {leak!r} が残っています"
+                        "（tools/apply_site_config.py を実行）"
+                    )
+                )
+                break
+        canon_m = re.search(r'<link rel="canonical" href="([^"]+)"', text, re.I)
+        if canon_m and canon_m.group(1) != expected_canonical:
+            issues.append(
+                Issue(
+                    f"{label}: canonical が不正です"
+                    f"（現在: {canon_m.group(1)!r}、期待: {expected_canonical!r}）"
+                    " — tools/apply_site_config.py を実行してください"
+                )
+            )
+    return issues
+
+
 def main() -> int:
     root = ROOT
     if len(sys.argv) > 1 and sys.argv[1] == "--root":
@@ -754,6 +814,7 @@ def main() -> int:
     issues.extend(_responsive_css_source(root))
     issues.extend(_viewport_and_static_css(root))
     issues.extend(_ga4_tracking(root))
+    issues.extend(_static_page_site_leaks(root))
 
     if not issues:
         print("validate_site_integration: OK")

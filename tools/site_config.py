@@ -108,6 +108,28 @@ def contact_url() -> str:
     return str(CONFIG.get("contactUrl") or "#")
 
 
+def base_path() -> str:
+    """SPA のサブパス（例: /fp3）。未設定なら空。"""
+    raw = str(CONFIG.get("basePath") or "").strip().rstrip("/")
+    if not raw:
+        return ""
+    return raw if raw.startswith("/") else f"/{raw}"
+
+
+def exam_grade() -> str:
+    return str(CONFIG.get("examGrade") or "").strip()
+
+
+def grade_portal_href() -> str:
+    """級選択ポータルへのリンク（FP 等の multi-grade サイト用）。"""
+    return str(CONFIG.get("gradePortalHref") or "").strip()
+
+
+def google_site_verification() -> str:
+    """Google Search Console の HTML タグ確認用トークン（未設定なら空）。"""
+    return str(CONFIG.get("googleSiteVerification") or "").strip()
+
+
 def ga4_measurement_id() -> str:
     return str(CONFIG.get("ga4MeasurementId") or "").strip()
 
@@ -372,7 +394,16 @@ def css_safe_field_id(field_id: str) -> str:
 
 
 def public_url(rel_path: str) -> str:
-    return f"{clean_origin()}/{rel_path.lstrip('/')}"
+    rel = rel_path.lstrip("/")
+    origin = clean_origin()
+    bp = base_path()
+    if bp and not rel.startswith(bp.lstrip("/")):
+        prefix = bp.lstrip("/")
+        if rel:
+            rel = f"{prefix}/{rel}"
+        else:
+            rel = prefix
+    return f"{origin}/{rel}" if rel else origin
 
 
 def paid_mock_exam() -> dict[str, str] | None:

@@ -13,6 +13,45 @@ ROOT = Path(__file__).resolve().parents[1]
 DIAGRAMS_DIR = ROOT / "data" / "term_diagrams"
 DIAGRAM_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
+# 他サイト fork 由来の eyebrow（ビルド時に site-config へ差し替え）
+_LEGACY_SITE_EYEBROWS = frozenset(
+    {
+        "宅建 図解",
+        "マン管 図解",
+        "運管 図解",
+        "賃貸 図解",
+        "衛生 図解",
+        "精神 図解",
+        "危険物 図解",
+        "ボイラー 図解",
+    }
+)
+
+
+def _site_diagram_eyebrow() -> str:
+    try:
+        from tools.site_config import brand_mark, brand_name, exam_grade
+
+        grade = exam_grade()
+        if grade:
+            return f"{grade} 図解"
+        mark = brand_mark()
+        if mark:
+            return f"{mark} 図解"
+        name = brand_name()
+        if name and name != "Sampleマスター":
+            return f"{name} 図解"
+    except Exception:
+        pass
+    return "図解"
+
+
+def resolve_diagram_eyebrow(data: dict) -> str:
+    raw = str(data.get("eyebrow") or "").strip()
+    if not raw or raw in _LEGACY_SITE_EYEBROWS:
+        return _site_diagram_eyebrow()
+    return raw
+
 
 def load_diagram(diagram_id: str) -> dict | None:
     if not diagram_id or not DIAGRAM_ID_RE.fullmatch(diagram_id):
@@ -91,7 +130,7 @@ def _compare_card_html(item: dict) -> str:
 def render_compare_dual(data: dict) -> str:
     left = data.get("left") if isinstance(data.get("left"), dict) else {}
     right = data.get("right") if isinstance(data.get("right"), dict) else {}
-    eyebrow = html.escape(str(data.get("eyebrow") or "図解"))
+    eyebrow = html.escape(resolve_diagram_eyebrow(data))
     title = html.escape(str(data.get("title") or ""))
     subtitle = html.escape(str(data.get("subtitle") or ""))
     exam_point = html.escape(str(data.get("exam_point") or ""))
