@@ -90,12 +90,14 @@ def parse_correct(raw: str, *, max_choice: int = 5) -> int | str | None:
 
 
 def build_stem_html(row: dict) -> str:
+    from tools.q_stem_format import format_past_stem_html
+
     parts: list[str] = []
     stem = norm(row.get("stem"))
     preamble = norm(row.get("preamble"))
     br = "<br>\n"
     if stem:
-        parts.append(f"<p>{html.escape(stem).replace(chr(10), br)}</p>")
+        parts.append(format_past_stem_html(stem))
     if preamble:
         parts.append(f"<p>{html.escape(preamble).replace(chr(10), br)}</p>")
     stmts: list[tuple[str, str]] = []
@@ -128,6 +130,12 @@ def stem_preview(text: str, limit: int = 52) -> str:
     return one[: limit - 1] + "…"
 
 
+def past_year_label(page: dict) -> str:
+    from tools.q_page_seo import past_year_display
+
+    return past_year_display(page["year"], page.get("wareki", ""))
+
+
 def page_heading(page: dict) -> str:
     from tools.q_page_seo import question_h1
 
@@ -136,11 +144,12 @@ def page_heading(page: dict) -> str:
         year=page["year"],
         qno=page["qno"],
         category=page["category"],
+        year_label=past_year_label(page),
     )
 
 
 def page_context_line(page: dict) -> str:
-    return f"{page['year']}年 · {page['category']}"
+    return f"{past_year_label(page)} · {page['category']}"
 
 
 def page_title_seo(page: dict) -> str:
@@ -151,6 +160,7 @@ def page_title_seo(page: dict) -> str:
         year=page["year"],
         qno=page["qno"],
         category=page["category"],
+        year_label=past_year_label(page),
     )
 
 
@@ -160,7 +170,10 @@ def page_meta_description(page: dict) -> str:
     return question_meta_description(
         "past",
         headline=question_meta_headline(
-            "past", year=page["year"], qno=page["qno"]
+            "past",
+            year=page["year"],
+            qno=page["qno"],
+            year_label=past_year_label(page),
         ),
         category=page["category"],
         body=norm(page.get("stem_plain")),

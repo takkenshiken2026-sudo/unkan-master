@@ -155,6 +155,14 @@ def index_page_title(mode: str) -> str:
     return f"{exam_name()} {label}一覧｜{sub}｜{brand_name()}"
 
 
+def past_year_display(year: int, wareki: str = "") -> str:
+    """過去問の年度表示。exam_wareki があれば優先（20202 等の内部 ID を避ける）。"""
+    w = (wareki or "").strip()
+    if w:
+        return w
+    return f"{year}年"
+
+
 def question_h1(
     mode: str,
     *,
@@ -162,12 +170,14 @@ def question_h1(
     qno: int = 0,
     question_id: str = "",
     category: str = "",
+    year_label: str = "",
 ) -> str:
     """各問ページの H1（試験名＋モード＋識別子＋分野）。"""
     ex = exam_name()
     label = MODE_LABEL[mode]
     if mode == "past":
-        return f"{ex} {label} {year}年 第{qno}問（{category}）"
+        yl = (year_label or "").strip() or past_year_display(year)
+        return f"{ex} {label} {yl} 第{qno}問（{category}）"
     if mode == "practice":
         return f"{ex} {label} 第{qno}問（{category}）"
     return f"{ex} {label} {question_id}（{category}）"
@@ -180,9 +190,13 @@ def question_page_title(
     qno: int = 0,
     question_id: str = "",
     category: str = "",
+    year_label: str = "",
 ) -> str:
     """各問ページの <title>。"""
-    return f"{question_h1(mode, year=year, qno=qno, question_id=question_id, category=category)}｜{brand_name()}"
+    return (
+        f"{question_h1(mode, year=year, qno=qno, question_id=question_id, category=category, year_label=year_label)}"
+        f"｜{brand_name()}"
+    )
 
 
 def question_meta_headline(
@@ -191,12 +205,14 @@ def question_meta_headline(
     year: int = 0,
     qno: int = 0,
     question_id: str = "",
+    year_label: str = "",
 ) -> str:
     """各問 meta description の headline 用。"""
     ex = exam_name()
     label = MODE_LABEL[mode]
     if mode == "past":
-        return f"{ex}の{label} {year}年 第{qno}問"
+        yl = (year_label or "").strip() or past_year_display(year)
+        return f"{ex}の{label} {yl} 第{qno}問"
     if mode == "practice":
         return f"{ex}の{label} 第{qno}問"
     return f"{ex}の{label} {question_id}"
