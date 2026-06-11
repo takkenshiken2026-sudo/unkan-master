@@ -151,6 +151,7 @@ def sanitize_guide_text(text: str, slug: str = "") -> str:
 
 
 from tools.affiliate_links import affiliate_article_is_buildable  # noqa: E402
+from tools.editorial_quality import is_published_guide  # noqa: E402
 from tools.guide_field_prose import field_prefix_labels, resolve_reader_slug_prose  # noqa: E402
 from tools.guide_slug_prose import url_label_map_from_sources  # noqa: E402
 from tools.guide_slug_prose import resolve_slug_references  # noqa: E402
@@ -1006,7 +1007,11 @@ def clean_generated_dirs() -> None:
 
 def main() -> int:
     articles = load_articles()
-    buildable = [article for article in articles if affiliate_article_is_buildable(article)]
+    buildable = [
+        article
+        for article in articles
+        if is_published_guide(article) and affiliate_article_is_buildable(article)
+    ]
     skipped_affiliate = len(articles) - len(buildable)
     by_slug = {norm(a.get("slug")): a for a in buildable if norm(a.get("slug"))}
     term_hrefs: dict[str, str] | None = None

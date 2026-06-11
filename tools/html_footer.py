@@ -28,6 +28,7 @@ from tools.site_config import (
 )
 
 FORM_URL = contact_url()
+GA4_MEASUREMENT_ID = ga4_measurement_id()
 
 # GA4 測定ID（site-analytics.js の DEFAULT_MID と揃えること）
 def _ga4_mid() -> str:
