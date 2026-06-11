@@ -59,6 +59,7 @@ def apply_retire(
     candidates: list[tuple[str, str, str]],
     *,
     dry_run: bool,
+    phase: int = 1,
 ) -> dict[str, int]:
     csv_path = root / "data" / "guide_articles.csv"
     retired_json = root / "data" / "guide_retired.json"
@@ -78,7 +79,7 @@ def apply_retire(
             if not dry_run:
                 row["content_status"] = "archived"
                 note = norm(row.get("revision_note"))
-                row["revision_note"] = f"{today}: archived（guide retire·{redirect_map[slug]}へ統合）"
+                row["revision_note"] = f"{today}: archived（guide retire p{phase}·{redirect_map[slug]}へ統合）"
                 orig = norm(row.get("original_note"))
                 tag = f"retire_redirect:{redirect_map[slug]}"
                 row["original_note"] = f"{orig};{tag}".strip(";") if orig else tag
@@ -115,9 +116,10 @@ def apply_retire(
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Retire redundant guide articles (~40%)")
+    ap = argparse.ArgumentParser(description="Retire redundant guide articles")
     ap.add_argument("--root", type=Path, default=ROOT, help="Site root")
     ap.add_argument("--ratio", type=float, default=0.4, help="Target retire ratio")
+    ap.add_argument("--phase", type=int, choices=(1, 2), default=1, help="Retire rule phase")
     ap.add_argument("--slugs-file", type=Path, help="One slug per line (skip auto select)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--list-only", action="store_true")
@@ -152,16 +154,17 @@ def main() -> int:
             site_field_ids=fields,
             template_slugs=template_slugs,
             ratio=args.ratio,
+            phase=args.phase,
         )
 
-    print(f"site: {root.name}  candidates: {len(candidates)}")
+    print(f"site: {root.name}  phase: {args.phase}  candidates: {len(candidates)}")
     for slug, reason, target in candidates:
         print(f"  {slug} -> {target}  ({reason})")
 
     if args.list_only:
         return 0
 
-    stats = apply_retire(root, candidates, dry_run=args.dry_run)
+    stats = apply_retire(root, candidates, dry_run=args.dry_run, phase=args.phase)
     mode = "dry-run" if args.dry_run else "applied"
     print(f"{mode}: archived={stats['archived']} related_patched={stats['related_patched']}")
     return 0
