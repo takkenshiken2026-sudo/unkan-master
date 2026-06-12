@@ -654,6 +654,15 @@ _GA4_SKIP_PREFIXES = (
 )
 
 
+def _is_guide_retire_redirect(text: str) -> bool:
+    """build_guide_retire_redirects が書く noindex スタブ（GA4 不要）。"""
+    return (
+        "記事移動中" in text
+        and 'content="noindex, follow"' in text
+        and "location.replace" in text
+    )
+
+
 def _ga4_page_issues(root: Path, rel: str, *, require_page_view: bool = False) -> list[Issue]:
     """公開 HTML の GA4 スニペット整合性（リダイレクト専用 URL は除外）。"""
     if any(rel.startswith(p) for p in _GA4_SKIP_PREFIXES):
@@ -662,6 +671,8 @@ def _ga4_page_issues(root: Path, rel: str, *, require_page_view: bool = False) -
     if not path.is_file():
         return []
     text = path.read_text(encoding="utf-8")
+    if _is_guide_retire_redirect(text):
+        return []
     issues: list[Issue] = []
     expected = ga4_measurement_id()
     if "site-analytics.js" not in text:
