@@ -43,7 +43,7 @@ REWRITES: dict[str, dict[str, str]] = {
                 "study-plan:学習計画の立て方",
             ]
         ),
-        "revision_note": "2026-06-11: 編集合格（手書きリライト·具体例·v2）",
+        "revision_note": "2026-06-12: 編集合格（手書きリライト·具体例·v2）",
         "section_1_heading": "試験形式と5科目の早見表",
         "section_1_body": (
             "試験の正本は公益財団法人 運行管理者試験センターが公表する受験要項です。"

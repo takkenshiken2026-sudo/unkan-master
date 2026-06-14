@@ -42,7 +42,7 @@ REWRITES: dict[str, dict[str, str]] = {
                 "exam-overview:試験概要",
             ]
         ),
-        "revision_note": "2026-06-11: 編集合格（手書きリライト·具体例·v2）",
+        "revision_note": "2026-06-12: 編集合格（手書きリライト·具体例·v2）",
         "section_1_heading": "用語一覧と5科目タグの開き方",
         "section_1_body": (
             "用語解説は演習の補助輪であり、正本は要項·公式テキストです。\n\n"

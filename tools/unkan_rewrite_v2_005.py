@@ -41,7 +41,7 @@ REWRITES: dict[str, dict[str, str]] = {
                 "study-plan-3months:3か月計画",
             ]
         ),
-        "revision_note": "2026-06-11: 編集合格（手書きリライト·具体例·v2）",
+        "revision_note": "2026-06-12: 編集合格（手書きリライト·具体例·v2）",
         "section_1_heading": "フェーズ1：要項と環境（第1週）",
         "section_1_body": (
             "第1週は要項確認と教材固定に充てます。\n\n"

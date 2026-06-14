@@ -42,7 +42,7 @@ REWRITES: dict[str, dict[str, str]] = {
                 "past-questions-review-cycle:解き直しサイクル",
             ]
         ),
-        "revision_note": "2026-06-11: 編集合格（手書きリライト·具体例·v2）",
+        "revision_note": "2026-06-12: 編集合格（手書きリライト·具体例·v2）",
         "section_1_heading": "過去問の目的（弱点特定）",
         "section_1_body": (
             "過去問の目的は周回数ではなく弱点特定です。"

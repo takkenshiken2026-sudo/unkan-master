@@ -44,7 +44,7 @@ REWRITES: dict[str, dict[str, str]] = {
                 "syllabus-how-to-read:要項の読み方",
             ]
         ),
-        "revision_note": "2026-06-11: 編集合格（手書きリライト·具体例·v2）",
+        "revision_note": "2026-06-12: 編集合格（手書きリライト·具体例·v2）",
         "section_1_heading": "一次情報の確認先一覧",
         "section_1_body": (
             "学習中も申込前も、参照順は次のとおりが基本です。\n\n"

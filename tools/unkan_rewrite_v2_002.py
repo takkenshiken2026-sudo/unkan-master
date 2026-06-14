@@ -41,7 +41,7 @@ REWRITES: dict[str, dict[str, str]] = {
                 "self-study-schedule:週間スケジュール",
             ]
         ),
-        "revision_note": "2026-06-11: 編集合格（手書きリライト·具体例·v2）",
+        "revision_note": "2026-06-12: 編集合格（手書きリライト·具体例·v2）",
         "section_1_heading": "学習計画の4ステップ",
         "section_1_body": (
             "学習計画は次の4ステップで組み立てます。"
