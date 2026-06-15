@@ -30,6 +30,7 @@ def slug_link_label(title: str) -> str:
     if "｜" in t:
         t = t.split("｜", 1)[0].strip()
     t = re.sub(r"^【[^】]+】\s*", "", t).strip()
+    t = re.sub(r"\s*【[^】]+】\s*$", "", t).strip()
     return t or norm(title)
 
 
