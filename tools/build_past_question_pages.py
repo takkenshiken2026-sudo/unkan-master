@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.guide_index_picks_ui import build_guide_index_picks_html
 from tools.q_explanation import build_explanation_html
 from tools.q_content_quality import is_demo_past_question_row
 from tools.q_similar_questions import build_similar_questions_html, load_question_catalog
@@ -899,6 +900,7 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
     page_lead = index_lead("past")
     search_placeholder = index_search_placeholder("past")
     study_modes_note = study_modes_note_html()
+    index_picks_html = build_guide_index_picks_html(rel_path)
 
     return f"""<!DOCTYPE html>
 <html lang="ja">
@@ -924,6 +926,7 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
   {q_index_breadcrumb}
   <h1>{html.escape(index_h1_text)}</h1>
   <p class="site-page-lead">{html.escape(page_lead)}</p>
+  {index_picks_html}
   {study_modes_note}
   {q_hub_links_html(rel_path, current="past")}
   <section class="past-index-panel" aria-labelledby="past-index-heading">

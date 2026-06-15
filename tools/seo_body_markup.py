@@ -177,6 +177,34 @@ def inject_enumeration_lists(text: str) -> str:
 
 _MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
 
+_PIPE_SEP_ROW = re.compile(r"\|\s*---\s*(?:\|\s*---\s*)+\|")
+_INLINE_TABLE_RE = re.compile(r"(?:\|[^|\n]+(?:\|[^|\n]+)+\|){2,}")
+
+
+def _split_block_with_inline_tables(block: str) -> list[str]:
+    """段落中に改行なし（|| 連結）で埋め込まれたパイプ表を独立ブロックへ分割する。"""
+    if not _PIPE_SEP_ROW.search(block):
+        return [block]
+    parts: list[str] = []
+    pos = 0
+    while pos < len(block):
+        match: re.Match[str] | None = None
+        for candidate in _INLINE_TABLE_RE.finditer(block, pos):
+            if _PIPE_SEP_ROW.search(candidate.group(0)):
+                match = candidate
+                break
+        if not match:
+            tail = block[pos:].strip()
+            if tail:
+                parts.append(tail)
+            break
+        before = block[pos : match.start()].strip()
+        if before:
+            parts.append(before)
+        parts.append(re.sub(r"\|\|", "|\n|", match.group(0)))
+        pos = match.end()
+    return parts or [block]
+
 
 def _split_pipe_row(line: str) -> list[str]:
     row = line.strip()
@@ -241,6 +269,13 @@ def _render_block(
     term_hrefs: dict[str, str] | None = None,
     linked_terms: set[str] | None = None,
 ) -> str:
+    subblocks = _split_block_with_inline_tables(block)
+    if len(subblocks) != 1:
+        return "".join(
+            _render_block(sub, term_hrefs=term_hrefs, linked_terms=linked_terms)
+            for sub in subblocks
+        )
+
     table_html = _render_pipe_table(block)
     if table_html:
         return table_html

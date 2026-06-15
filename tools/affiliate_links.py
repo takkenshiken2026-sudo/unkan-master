@@ -106,6 +106,109 @@ def affiliate_urls_in_brief(config: dict[str, Any]) -> list[str]:
 
 
 def affiliate_brief_has_links(config: dict[str, Any]) -> bool:
-    if norm(str(config.get("asp") or "")).lower() == "internal":
-        return True
     return bool(affiliate_urls_in_brief(config))
+
+
+AFFILIATE_SKIP_SECTION_HEADINGS = frozenset({"この記事でわかること"})
+
+
+def is_affiliate_skip_section(article: dict[str, str], heading: str) -> bool:
+    if not is_affiliate_article(article):
+        return False
+    return norm(heading) in AFFILIATE_SKIP_SECTION_HEADINGS
+
+
+def affiliate_product_key_points(brief: dict[str, Any] | None, *, max_items: int = 5) -> list[str]:
+    if not brief:
+        return []
+    names: list[str] = []
+    for product in brief.get("products") or []:
+        if not isinstance(product, dict):
+            continue
+        name = norm(str(product.get("name") or ""))
+        if name:
+            names.append(name)
+    return names[:max_items]
+
+
+AFFILIATE_RELATED_MAX_TOTAL = 6
+AFFILIATE_RELATED_MAX_PER_KIND = 3
+
+
+def is_affiliate_related_slug(slug: str, by_slug: dict[str, dict[str, str]]) -> bool:
+    if slug.startswith("affiliate-"):
+        return True
+    row = by_slug.get(slug)
+    return bool(row and is_affiliate_article(row))
+
+
+def affiliate_related_box_html(
+    value: str,
+    by_slug: dict[str, dict[str, str]],
+    article: dict[str, str],
+    *,
+    label_fn: Any | None = None,
+) -> str:
+    """アフィリエイト記事末尾：関連6件（非アフィリエイト3 + アフィリエイト3）。"""
+    import html
+
+    from tools.related_links import resolve_related_link_label
+
+    def label_text(text: str) -> str:
+        return label_fn(text) if label_fn else text
+
+    current = norm(article.get("slug", ""))
+    affiliate_items: list[str] = []
+    other_items: list[str] = []
+    seen: set[str] = set()
+
+    for item in split_semicolon(value):
+        target, label = parse_related_link_token(item)
+        target = norm(target)
+        if not target or target == current or target in seen:
+            continue
+        if target.startswith(("http://", "https://")):
+            continue
+
+        if target.startswith("../"):
+            text_label = label_text(label or target)
+            chunk = (
+                f'<a class="related-link" href="{html.escape(target)}">'
+                f"{html.escape(text_label)}</a>"
+            )
+            seen.add(target)
+            if len(other_items) < AFFILIATE_RELATED_MAX_PER_KIND:
+                other_items.append(chunk)
+            continue
+
+        if target not in by_slug:
+            continue
+        seen.add(target)
+        text_label = label_text(
+            resolve_related_link_label(target, label, by_slug[target]["title"])
+        )
+        href = f"../{target}/"
+        chunk = (
+            f'<a class="related-link" href="{html.escape(href)}">'
+            f"{html.escape(text_label)}</a>"
+        )
+        if is_affiliate_related_slug(target, by_slug):
+            if len(affiliate_items) < AFFILIATE_RELATED_MAX_PER_KIND:
+                affiliate_items.append(chunk)
+        elif len(other_items) < AFFILIATE_RELATED_MAX_PER_KIND:
+            other_items.append(chunk)
+
+    links = (other_items[:AFFILIATE_RELATED_MAX_PER_KIND] + affiliate_items[:AFFILIATE_RELATED_MAX_PER_KIND])[
+        :AFFILIATE_RELATED_MAX_TOTAL
+    ]
+    if not links:
+        return ""
+    links_html = "".join(links)
+    links_html += (
+        '<a class="related-link" href="../../terms/index.html">用語解説一覧</a>'
+        '<a class="related-link" href="../../index.html#past">過去問演習</a>'
+    )
+    return (
+        '<div class="related-box"><div class="related-box-title">関連記事・知識ハブ</div>'
+        f'<div class="related-links">{links_html}</div></div>'
+    )

@@ -786,6 +786,12 @@ def _static_page_site_leaks(root: Path) -> list[Issue]:
     return issues
 
 
+def _guide_index_picks(root: Path) -> list[Issue]:
+    from tools.validate_guide_index_picks import validate_guide_index_picks
+
+    return validate_guide_index_picks(root)
+
+
 def main() -> int:
     root = ROOT
     if len(sys.argv) > 1 and sys.argv[1] == "--root":
@@ -826,6 +832,7 @@ def main() -> int:
     issues.extend(_viewport_and_static_css(root))
     issues.extend(_ga4_tracking(root))
     issues.extend(_static_page_site_leaks(root))
+    issues.extend(_guide_index_picks(root))
 
     if not issues:
         print("validate_site_integration: OK")

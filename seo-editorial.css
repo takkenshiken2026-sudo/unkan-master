@@ -1095,19 +1095,75 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
   }
 }
 
-/* 講座 hub：商品数に応じた列数（2件で3列空きを防ぐ） */
-.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="2"] {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+/* 講座カード：縦1列。カード内はサムネ左・本文右 */
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid {
+  grid-template-columns: 1fr;
+  gap: 1rem;
 }
 
-.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="1"] {
-  grid-template-columns: minmax(0, 20rem);
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-card-hit {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
 
-@media (max-width: 760px) {
-  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="2"],
-  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-grid[data-product-count="1"] {
-    grid-template-columns: 1fr;
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-card-rank {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-cover {
+  width: clamp(8rem, 28%, 12rem);
+  max-width: none;
+  max-height: none;
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-right: 1px solid var(--seo-card-border);
+  border-bottom: none;
+  padding: 0.45rem 0.55rem;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-cover--course {
+  max-height: none;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-cover--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-cta {
+  margin-top: auto;
+}
+
+.seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-card-body h3 {
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-card-hit {
+    flex-direction: column;
+  }
+
+  .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-cover {
+    width: 100%;
+    max-width: none;
+    aspect-ratio: 16 / 9;
+    max-height: 11rem;
+    padding: 0.55rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--seo-card-border);
   }
 }
 

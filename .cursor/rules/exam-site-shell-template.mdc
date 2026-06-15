@@ -22,7 +22,7 @@ alwaysApply: true
 ## Content targets (production)
 
 - **100+** guide articles (`data/guide_articles.csv`); genres in `guideArticleGenres`, catalog in `docs/guide-article-catalog.md`
-- **~10** affiliate guide articles (`tags` includes `アフィリエイト`; same `articles/` URLs; A8.net / afb / Amazon) — see `docs/seo-article-guidelines.md`
+- **~10** affiliate guide articles (`tags` includes `アフィリエイト`; same `articles/` URLs; A8.net / afb / Amazon) — see `docs/affiliate/placement-and-rollout.md` and `docs/seo-article-guidelines.md`
 - **300+** glossary terms (`data/glossary_terms.csv`); **every row is a full detail article** (see `docs/glossary-term-template.md`); `validate_csv.py` enforces minimum column quality
 - Knowledge hub tabs (compare/numbers/mistakes) are **retired**; old URLs redirect via `build_hub_retire_redirects.py`.
 

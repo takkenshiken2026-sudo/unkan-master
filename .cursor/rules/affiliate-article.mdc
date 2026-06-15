@@ -6,7 +6,22 @@ alwaysApply: false
 
 # アフィリエイト記事ルール
 
-正本: `docs/affiliate/affiliate-article-rules.md` §3（執筆の必須原則）・§8
+正本: `docs/affiliate/placement-and-rollout.md`（設置・導線）・`affiliate-article-rules.md` §3・§8
+
+## 収益導線（最優先）
+
+```
+通常ガイド → affiliate-* 比較記事 → ASP
+```
+
+| 層 | ASP 直リンク |
+|----|--------------|
+| 通常ガイド（`affiliate-*` 以外） | **禁止** |
+| 比較記事（`tags` にアフィリエイト） | **可**（hub・要点・本文） |
+
+- 通常ガイド: `related_links` に比較記事 slug **1〜2 本** + 本文に slug **1文**
+- フッター一括・用語全ページバナーはしない
+- 設置箇所一覧: `placement-and-rollout.md` §2
 
 ## 執筆の必須原則（最優先・必ず運用）
 
@@ -61,11 +76,27 @@ alwaysApply: false
 
 - `layout: product-comparison` + brief → 比較表・カード・要点 UI
 - `related_links`: **非アフィリ3 + アフィリ3**（計6件）。ASP URL は関連ボックスに出さない
+- **通常ガイド**の `related_links`: 比較記事 **1〜2 本** + 他ガイド。ASP URL 行は書かない
 - 書籍カード: 縦1列、meta は価格のみ
 
 ## CSS 変更時
 
 `seo-editorial.css` を触ったら `tools/seo_editorial_chrome.py` の `SEO_EDITORIAL_CSS_VER` を更新。
+
+## ビルド退行（厳守）
+
+`build_article_pages.py` をテンプレ同期・マージするとき、次を **必ず残す**:
+
+- `affiliate_product_hub_html` / `affiliate_key_points_box_html` / `load_affiliate_brief`
+- `body_text_transform` / `is_affiliate_skip_section` / `affiliate_related_box_html`
+
+欠落すると CI 再生成で **記事内の商品画像・比較 hub が消える**。一覧バナーは `.cursor/rules/affiliate-banner.mdc` 参照。
+
+## 他サイト展開
+
+1. `sync_from_template.py --target …` でエンジン同期
+2. サイト固有: CSV・brief・`images/affiliate/`・`site-config.json` の `guideIndexPicks`
+3. `build_all.py` → デプロイ。手順: `placement-and-rollout.md` §6
 
 ## 完了時
 

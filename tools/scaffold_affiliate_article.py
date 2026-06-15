@@ -449,10 +449,9 @@ def resolve_config(
 
 
 def affiliate_lead(search_intent: str) -> str:
-    exam = exam_name()
     return (
-        f"{exam}を受験予定で、{search_intent}人向けに、比較のポイントと選び方をまとめました。"
-        "価格・版・キャンペーンは購入前に各販売ページでご確認ください。"
+        f"{search_intent}向けの比較記事です。"
+        "価格・条件は購入・申込前に各販売ページでご確認ください。"
     )
 
 
@@ -626,7 +625,6 @@ def main() -> int:
             parser.error(
                 "アフィリエイトリンク未設定のため guide_articles.csv に追記しません。"
                 " brief の products.*_url または related_links に ASP URL を入れてから --append してください。"
-                " （内部リンク中心の free-vs-paid-study のみ asp=internal で例外）"
             )
         append_row(row)
         write_brief(config, force=True)

@@ -406,6 +406,73 @@ def public_url(rel_path: str) -> str:
     return f"{origin}/{rel}" if rel else origin
 
 
+GUIDE_INDEX_PICK_KIND_LABELS: dict[str, str] = {
+    "course": "講座",
+    "textbook": "テキスト",
+    "problem-book": "問題集",
+    "mock": "模試",
+}
+
+GUIDE_INDEX_PICK_LAYOUTS = frozenset({"grid-3", "grid-2", "strip", "compact", "text"})
+
+
+def guide_index_picks() -> dict[str, Any] | None:
+    """ハブ一覧（articles/terms/q index）のおすすめ講座・教材カード。最大4件。"""
+    raw = CONFIG.get("guideIndexPicks")
+    if not isinstance(raw, dict):
+        return None
+    items_raw = raw.get("items")
+    if not isinstance(items_raw, list):
+        return None
+    layout = str(raw.get("layout") or "grid-3").strip().lower()
+    if layout not in GUIDE_INDEX_PICK_LAYOUTS:
+        layout = "grid-3"
+    max_items = 4 if layout == "grid-2" else 3
+    items: list[dict[str, str]] = []
+    for item in items_raw[:max_items]:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        href = str(item.get("href") or "").strip()
+        if not title or not href:
+            continue
+        kind = str(item.get("kind") or "textbook").strip() or "textbook"
+        kind_label = str(item.get("kindLabel") or "").strip() or GUIDE_INDEX_PICK_KIND_LABELS.get(kind, "教材")
+        description = str(item.get("description") or "").strip()
+        cta = str(item.get("cta") or "記事を読む").strip() or "記事を読む"
+        image = str(item.get("image") or "").strip()
+        image_alt = str(item.get("imageAlt") or "").strip()
+        pick: dict[str, str] = {
+            "kind": kind,
+            "kindLabel": kind_label,
+            "title": title,
+            "description": description,
+            "href": href,
+            "cta": cta,
+        }
+        if image:
+            pick["image"] = image
+        if image_alt:
+            pick["imageAlt"] = image_alt
+        items.append(pick)
+    if not items:
+        return None
+    leads_by_hub_raw = raw.get("leadsByHub")
+    leads_by_hub: dict[str, str] = {}
+    if isinstance(leads_by_hub_raw, dict):
+        for key, value in leads_by_hub_raw.items():
+            text = str(value or "").strip()
+            if text:
+                leads_by_hub[str(key)] = text
+    return {
+        "title": str(raw.get("title") or "おすすめの講座・教材").strip() or "おすすめの講座・教材",
+        "lead": str(raw.get("lead") or "").strip(),
+        "leadsByHub": leads_by_hub,
+        "layout": layout,
+        "items": items,
+    }
+
+
 def paid_mock_exam() -> dict[str, str] | None:
     raw = CONFIG.get("paidMockExam")
     if not isinstance(raw, dict):

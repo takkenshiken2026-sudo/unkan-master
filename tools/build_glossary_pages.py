@@ -33,6 +33,7 @@ from tools.html_footer import (
     site_page_wrap_close,
     site_page_wrap_open,
 )
+from tools.guide_index_picks_ui import build_guide_index_picks_html
 from tools.knowledge_hub_tabs import knowledge_hub_tab_hrefs, knowledge_hub_tabs_html
 from tools.seo_utils import (
     content_date_from_row,
@@ -1252,6 +1253,7 @@ def build_terms_index(entries: list[dict], base_url: str) -> str:
         f"{exam_name()}の試験で押さえたい用語を、分野別にまとめています。"
         "各ページで意味や試験での論点を確認できます。学習の進め方は試験ガイド（articles/）をご覧ください。"
     )
+    index_picks_html = build_guide_index_picks_html(idx_path)
     return f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -1283,6 +1285,7 @@ def build_terms_index(entries: list[dict], base_url: str) -> str:
   {page_breadcrumb}
   <h1>用語解説</h1>
   <p class="site-page-lead">{html.escape(lead)}</p>
+  {index_picks_html}
   {knowledge_hub_tabs_html(current="terms", **knowledge_hub_tab_hrefs(here="terms"))}
   <section class="terms-index-panel" aria-labelledby="terms-index-heading">
     <div class="terms-index-head">

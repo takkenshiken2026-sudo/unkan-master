@@ -44,6 +44,7 @@ def main() -> int:
     run([py, "tools/validate_sitemap.py"])
     run([py, "tools/validate_generated_seo.py"])
     run([py, "tools/validate_site_integration.py"])
+    run([py, "tools/validate_guide_index_picks.py"])
     run([py, "tools/validate_internal_links.py"])
     run([py, "tools/validate_public_content.py"])
     run(["bash", "tools/prepare_public_site.sh"])

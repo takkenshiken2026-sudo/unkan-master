@@ -248,6 +248,48 @@
       "legacyGlossaryCat": "practice"
     }
   ],
+  "guideIndexPicks": {
+    "title": "おすすめのテキスト・問題集・CBT対策",
+    "lead": "2026年度版の比較記事から、テキスト・問題集・直前対策の選び方へ。",
+    "leadsByHub": {
+      "articles": "2026年度版の比較記事から、テキスト・問題集・CBT対策の選び方へ。",
+      "terms": "用語暗記と併用するテキスト・問題集の比較記事へ。",
+      "q": "無料演習と併用する問題集・CBT対策の比較記事へ。"
+    },
+    "layout": "grid-3",
+    "items": [
+      {
+        "kind": "textbook",
+        "kindLabel": "テキスト",
+        "title": "おすすめテキスト3選【貨物・旅客2026】",
+        "description": "ユーキャン貨物・翔泳社貨物・翔泳社旅客の3冊を比較。5科目12/20・100問180分を前提に1冊選びを解説します。",
+        "href": "affiliate-textbooks-recommend/",
+        "cta": "3冊を比較する",
+        "image": "images/affiliate/unkan-book-4426616654.webp",
+        "imageAlt": "2026年版 ユーキャンの運行管理者＜貨物＞ 合格テキスト&問題集 表紙"
+      },
+      {
+        "kind": "problem-book",
+        "kindLabel": "問題集",
+        "title": "おすすめ問題集3選【過去問2026】",
+        "description": "ユーキャン過去6回・翔泳社詳解・公論重要問題の3冊を比較。テキスト読了後の演習1冊の選び方をまとめます。",
+        "href": "affiliate-problem-books/",
+        "cta": "3冊を比較する",
+        "image": "images/affiliate/unkan-book-4426616662.webp",
+        "imageAlt": "2026年版 ユーキャンの運行管理者＜貨物＞ 過去6回問題集 表紙"
+      },
+      {
+        "kind": "mock-exam",
+        "kindLabel": "CBT対策",
+        "title": "CBT対策問題集3選【重要問題2026】",
+        "description": "公論重要問題（貨物・旅客）と翔泳社CBT対策の3冊を比較。CBT4週前の総仕上げ1冊の選び方を解説します。",
+        "href": "affiliate-mock-exam-materials/",
+        "cta": "3冊を比較する",
+        "image": "images/affiliate/unkan-book-4862753728.webp",
+        "imageAlt": "運行管理者試験 重要問題厳選集 貨物編 2026-2027 表紙"
+      }
+    ]
+  },
   "externalLinks": [
     {
       "label": "公益財団法人 運行管理者試験センター（公式）",

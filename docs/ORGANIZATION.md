@@ -66,7 +66,7 @@ exam-site-shell/
 │   ├── README.md          … ドキュメント索引（詳細版）
 │   ├── ORGANIZATION.md    … このファイル
 │   ├── audit/             … 監査CSV・ログ用（本番データではない）
-│   └── affiliate/         … アフィリエイト記事ルール
+│   └── affiliate/         … アフィリエイト（placement-and-rollout・記事ルール・SITE.template）
 ├── sites/
 │   ├── README.md          … 本番サイトID一覧・SITE.md への入口
 │   └── <サイトID>/        … 本番パス・同期メモ（コードは置かない）
