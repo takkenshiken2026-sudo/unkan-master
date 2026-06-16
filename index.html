@@ -1668,7 +1668,7 @@ body.is-solving .site-footer{display:none!important}
       <div id="q-result"></div>
       <div class="quiz-btns">
         <button class="btn-ghost" id="btn-back-to-score" style="display:none" onclick="backToScoreFromReplay()">結果に戻る</button>
-        <button class="btn-ghost" onclick="gotoPage('quiz-start')">中断</button>
+        <button class="btn-ghost" onclick="interruptQuiz()">中断</button>
         <button class="btn-primary btn-next-inline" id="btn-next-inline" onclick="handleNextFloat()">次へ → <span class="next-key-hint">Enter</span></button>
       </div>
     </div>
@@ -5698,6 +5698,25 @@ function getSessionFeedback(pct, total, res, u){
 
   return { msg, advice, streakNote, lvUpNote, levelUp };
 }
+function interruptQuiz(){
+  if(quizState.scoreReplayMode){
+    backToScoreFromReplay();
+    return;
+  }
+  if(timer) clearInterval(timer);
+  timer=null;
+  showNextBtn(false,null);
+  const res=quizState.sessionResults||[];
+  if(!res.length){
+    if(!confirm('まだ1問も解答していません。中断してよいですか？')) return;
+    gotoPage('quiz-start');
+    return;
+  }
+  quizState.scoreReplayMode=false;
+  quizState.fromReview=false;
+  showScore();
+}
+
 function showScore(){
   const res=quizState.sessionResults, correct=res.filter(r=>r.correct).length;
   const pct=Math.round(correct/res.length*100);
