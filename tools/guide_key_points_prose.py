@@ -51,6 +51,10 @@ def looks_like_key_point_sentence(text: str) -> bool:
         return True
     if t.startswith("「") and "」" in t:
         return True
+    if len(t) >= 18 and any(marker in t for marker in ("—", "：", "→", "・")):
+        return True
+    if "「" in t and len(t) >= 16:
+        return True
     if _SENTENCE_END_RE.search(t):
         return True
     if len(t) >= 28 and any(marker in t for marker in ("確認", "把握", "整理", "進め", "押さえ", "メモ")):
@@ -62,6 +66,10 @@ def normalize_key_point_item(text: str) -> str:
     """短い chip 形式の要点を、リスト向けの短い文に整える。"""
     t = (text or "").strip()
     if not t or looks_like_key_point_sentence(t):
+        if t and not t.endswith(("。", "！", "？")) and len(t) >= 18 and any(
+            marker in t for marker in ("—", "：", "→")
+        ):
+            return f"{t}。"
         return t
     if t.startswith("「") or ("」" in t and len(t) > 6):
         return t

@@ -72,7 +72,7 @@ READABILITY_FRAGMENTS: tuple[tuple[str, str], ...] = (
 # --- 試験ガイド（published 行の ERROR 下限は guide_article_rules が参照）---
 GUIDE_PRO = {
     "lead": 80,
-    "lead_max": 250,
+    "lead_max": 200,
     "meta_description_min": 70,
     "meta_description_max": 165,
     "user_intent": 50,

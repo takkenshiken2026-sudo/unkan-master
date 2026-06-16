@@ -124,7 +124,7 @@
     return `<tr class="terms-idx-table-row">
 <td class="terms-idx-td-term" data-label="用語"${hrefAttr} tabindex="0"><div class="terms-idx-term-cell"><a href="${escapeHtml(href)}">${highlightText(item.term, query)}</a></div></td>
 <td class="terms-idx-td-cat" data-label="分野"${hrefAttr}>${escapeHtml(item.category)}</td>
-<td class="terms-idx-td-snippet" data-label="定義"${hrefAttr}>${(item.shortDef || item.definition) ? highlightText(item.shortDef || item.definition, query) : ''}</td>
+<td class="terms-idx-td-snippet" data-label="概要"${hrefAttr}>${(item.shortDef || item.definition) ? highlightText(item.shortDef || item.definition, query) : ''}</td>
 </tr>`;
   }
 

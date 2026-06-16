@@ -24,7 +24,7 @@ from tools.glossary_term_rules import (
     GLOSSARY_PRODUCTION_TARGET,
     check_glossary_row,
 )
-from tools.guide_article_rules import check_guide_row
+from tools.guide_article_rules import GUIDE_ARTICLE_MAX, check_guide_row
 from tools.knowledge_hub_rules import (
     HUB_CSV_NAMES,
     HUB_LABELS,
@@ -365,12 +365,13 @@ class Validator:
             "section_1_body",
         }
         _, rows = self.read_csv(path, required)
-        if len(rows) < 100:
+        if len(rows) > GUIDE_ARTICLE_MAX:
             self.warn(
                 path,
                 None,
-                f"試験ガイドは本番テンプレート標準で100本以上を推奨します（現在 {len(rows)} 本）。"
-                " docs/guide-article-catalog.md の記事カタログを参照してください。",
+                f"試験ガイドはテンプレート標準で{GUIDE_ARTICLE_MAX}本以内です（現在 {len(rows)} 本）。"
+                " 資格に不要な slug を削るか draft 化してください。"
+                " 候補一覧は docs/guide-article-catalog.md を参照。",
             )
         slugs: set[str] = {self.norm(r.get("slug")) for r in rows if self.norm(r.get("slug"))}
         slug_titles: dict[str, str] = {

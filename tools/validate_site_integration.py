@@ -167,7 +167,7 @@ def _terms_js(js_path: Path) -> Issue | None:
     text = js_path.read_text(encoding="utf-8")
     if "shortDef || item.definition" not in text and "item.shortDef || item.definition" not in text:
         return Issue(
-            "site-terms-index.js: 定義列は item.shortDef || item.definition で表示してください"
+            "site-terms-index.js: 概要列は item.shortDef || item.definition で表示してください"
         )
     return None
 

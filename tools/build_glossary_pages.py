@@ -21,6 +21,9 @@ from xml.sax.saxutils import escape as xml_escape
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# 用語一覧テーブル3列目の見出し（詳細記事の「定義と基本理解」セクションとは別）
+TERMS_INDEX_SNIPPET_LABEL = "概要"
+
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -253,7 +256,7 @@ TERMS_INDEX_CSS_VER = "20260524-terms-table-14px"
 TERMS_INDEX_JS_VER = "20260521-terms-snippet"
 TERMS_INDEX_SEARCH_PLACEHOLDER = "例：ストレスチェック、ラインケア、うつ病…"
 
-# CSV enrich 時の分野テンプレ（一覧の定義抜粋には出さない）
+# CSV enrich 時の分野テンプレ（一覧の概要抜粋には出さない）
 _GENERIC_SNIPPET_SUFFIXES = (
     "に関わる用語です。",
     "を整理する際に使われます。",
@@ -295,7 +298,7 @@ def _is_generic_index_snippet(text: str, term: str) -> bool:
 
 
 def terms_index_snippet(entry: dict) -> str:
-    """一覧・検索用の定義抜粋。enrich テンプレ文は definition から実義を拾う。"""
+    """一覧・検索用の概要抜粋。enrich テンプレ文は definition から実義を拾う。"""
     term = (entry.get("term") or "").strip()
     short = (entry.get("short_def") or "").strip()
     definition = (entry.get("definition") or "").strip()
@@ -355,7 +358,7 @@ def render_terms_index_tbody(entries: list[dict]) -> str:
             f"</div></td>"
             f'<td class="terms-idx-td-cat" data-label="分野"{href_attr}>'
             f'{html.escape(item.get("category") or "")}</td>'
-            f'<td class="terms-idx-td-snippet" data-label="定義"{href_attr}>'
+            f'<td class="terms-idx-td-snippet" data-label="{TERMS_INDEX_SNIPPET_LABEL}"{href_attr}>'
             f"{short_def}</td>"
             "</tr>"
         )
@@ -469,9 +472,13 @@ def load_guide_slugs() -> list[dict[str, str]]:
     path = ROOT / "data" / "guide_articles.csv"
     if not path.is_file():
         return []
+    from tools.editorial_quality import is_published_guide
+
     text = path.read_text(encoding="utf-8-sig")
     rows: list[dict[str, str]] = []
     for row in csv.DictReader(text.splitlines()):
+        if not is_published_guide(row):
+            continue
         slug = norm(row.get("slug"))
         title = norm(row.get("title"))
         if slug and title:
@@ -1319,7 +1326,7 @@ def build_terms_index(entries: list[dict], base_url: str) -> str:
           <thead><tr>
             <th scope="col" class="terms-idx-th-term">用語</th>
             <th scope="col" class="terms-idx-th-cat">分野</th>
-            <th scope="col" class="terms-idx-th-def">定義</th>
+            <th scope="col" class="terms-idx-th-def">{TERMS_INDEX_SNIPPET_LABEL}</th>
           </tr></thead>
           <tbody id="terms-idx-flat-body">
 {tbody_html}

@@ -30,6 +30,7 @@ from tools.guide_rewrite_rules import (
 
 GUIDE_MIN_SECTION_BODY = 180  # ERROR（published）: 専門家解説の目安
 GUIDE_MIN_FAQ_ANSWER = 100
+GUIDE_ARTICLE_MAX = 50  # テンプレート標準: 試験ガイドは50本以内
 
 
 def reader_facing_text(

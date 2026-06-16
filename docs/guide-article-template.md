@@ -3,7 +3,7 @@
 `data/guide_articles.csv` に1行追加すると、`articles/{slug}/index.html` が生成されます。本ドキュメントは **執筆・CSV入力のテンプレ** です。
 
 - ジャンル一覧（21区分）: [guide-article-genres.md](./guide-article-genres.md)
-- 100本以上の slug 例: [guide-article-catalog.md](./guide-article-catalog.md)
+- 50本以内の slug 候補: [guide-article-catalog.md](./guide-article-catalog.md)
 - SEO・公開境界の正本: [seo-article-guidelines.md](./seo-article-guidelines.md)
 - **試験ガイドと用語解説の立ち位置:** [content-positioning.md](./content-positioning.md)
 - **編集品質（専門家×プロライター）:** [editorial-quality.md](./editorial-quality.md)

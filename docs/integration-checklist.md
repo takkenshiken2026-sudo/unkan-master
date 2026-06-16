@@ -204,7 +204,7 @@ python3 tools/validate_site_integration.py
 |-----|------|
 | `/q/index.html` | タブ3つ・過去問が current |
 | `/q/practice/index.html` | タブから過去問ハブへ遷移 |
-| `/terms/index.html` | 定義列が JS 適用後も非空 |
+| `/terms/index.html` | 概要列が JS 適用後も非空 |
 | `/` | フッター「過去問一覧」→ `/q/index.html`（実践ではない） |
 | `/`（トップ） | ページソースに `og:title` / `twitter:title` が **自サイト名**（`INDEX_SEO_HEAD` あり） |
 | **375px 幅** | `/`, `articles/index.html`, `terms/index.html`, `q/index.html` … 横スクロールなし（[responsive-layout.md §6.2](./responsive-layout.md)） |

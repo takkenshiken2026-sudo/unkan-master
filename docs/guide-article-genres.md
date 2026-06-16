@@ -1,6 +1,6 @@
 # 試験ガイドのジャンル（MECE・12区分）
 
-複数資格に展開し **100本以上** の記事を置くとき、記事の `genre` は **`site-config.json` の `guideArticleGenres`** で定義した **12ラベルのみ** を使います。`tools/validate_csv.py` がホワイトリスト検証します。
+複数資格に展開し **50本以内** の記事を置くとき、記事の `genre` は **`site-config.json` の `guideArticleGenres`** で定義した **12ラベルのみ** を使います。`tools/validate_csv.py` がホワイトリスト検証します。
 
 - **試験ガイドと用語解説の立ち位置:** [content-positioning.md](./content-positioning.md)（正本）
 - 記事 slug の具体例: **[guide-article-catalog.md](./guide-article-catalog.md)**
@@ -14,7 +14,7 @@
 
 ## フェーズとジャンル一覧（12）
 
-| フェーズ | genre | 主な検索意図 | 100本で増やす軸 |
+| フェーズ | genre | 主な検索意図 | 50本以内で置く軸 |
 |----------|-------|--------------|-----------------|
 | 制度を知る | 試験概要 | 全体像、公式の見方、サイトの使い方 | 公式情報・比較・初めて |
 | 制度を知る | 受験・申込 | 資格、日程、手数料、申込、免除 | 手続き別・地域別 |

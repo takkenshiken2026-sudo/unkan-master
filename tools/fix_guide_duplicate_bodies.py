@@ -69,11 +69,13 @@ def load_site_lib(root: Path) -> ModuleType:
     exam = str(cfg.get("examName") or "")
     brand = str(cfg.get("brandName") or "")
     picks: list[tuple[tuple[str, ...], str]] = [
+        (("証券外務員", "外務員", "証外"), "shogai_guide_content_lib"),
         (("ボイラー",), "boiler_guide_content_lib"),
         (("危険物", "乙種", "乙4"), "kikenbutsu_guide_content_lib"),
         (("第二種衛生", "二衛"), "eisei2shu_guide_content_lib"),
         (("第一種衛生", "一衛"), "eisei1shu_guide_content_lib"),
         (("賃貸不動産", "賃管"), "chintaikanrishi_guide_content_lib"),
+        (("証券外務員", "外務員", "証外"), "shogai_guide_content_lib"),
         (("マンション管理士", "マ管"), "mankan_guide_content_lib"),
         (("運行管理者", "運管"), "unkan_guide_content_lib"),
         (("管理業務主任者", "管業"), "kangyou_guide_content_lib"),

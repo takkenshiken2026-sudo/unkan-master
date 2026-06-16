@@ -470,10 +470,6 @@ def toc_html(
 
     slug = norm(article.get("slug"))
     items: list[tuple[str, str]] = []
-    if key_points_items(article, affiliate_brief=affiliate_brief) or norm(
-        apply_vars(article.get("user_intent", ""))
-    ):
-        items.append(("key-points-title", "この記事の要点"))
     items.append(("quality-panel-title", "この記事の信頼性について"))
     extras = extra_after_section or {}
     for idx in range(1, 9):
@@ -726,7 +722,7 @@ def build_article_html(
     from tools.affiliate_product_ui import affiliate_hub_toc_item, affiliate_product_hub_html  # noqa: E402
 
     brief = load_affiliate_brief(slug)
-    from tools.guide_lead_limit import cap_lead_text  # noqa: E402
+    from tools.guide_lead_limit import pick_guide_lead_text  # noqa: E402
     from tools.guide_tatoeba_limit import cap_article_tatoeba_fields  # noqa: E402
 
     article = cap_article_tatoeba_fields(article)
@@ -744,9 +740,16 @@ def build_article_html(
         link_external_urls=False,
     )
     lead_text = sanitize_guide_text(apply_vars(article.get("lead", "")), slug)
+    intent_text = apply_vars(article.get("user_intent", ""))
     if is_affiliate_article(article):
         lead_text = prepare_affiliate_prose(
             lead_text,
+            brief=brief,
+            article=article,
+            apply_links=False,
+        )
+        intent_text = prepare_affiliate_prose(
+            intent_text,
             brief=brief,
             article=article,
             apply_links=False,
@@ -760,7 +763,16 @@ def build_article_html(
             prefix_labels=field_labels,
             url_labels=url_labels,
         )
-    lead_text = cap_lead_text(lead_text)
+        intent_text = resolve_reader_prose(
+            intent_text,
+            slug_titles=slug_titles,
+            current_slug=slug,
+            link_internal=False,
+            prefix_labels=field_labels,
+            url_labels=url_labels,
+            link_external_urls=False,
+        )
+    lead_text = pick_guide_lead_text(lead_text, intent_text)
     if lead_text and "[" in lead_text:
         from tools.inline_markup import render_inline_markup  # noqa: E402
 
@@ -812,14 +824,6 @@ def build_article_html(
         url_labels=url_labels,
         extra_after_section=toc_extra,
         affiliate_brief=brief if has_product_hub else None,
-    )
-    key_points_box = key_points_box_html(
-        article,
-        slug_titles=slug_titles,
-        url_labels=url_labels,
-        affiliate_brief=brief if has_product_hub else None,
-        rel_path=rel_path,
-        site_root=ROOT,
     )
     from tools.affiliate_links import affiliate_related_box_html  # noqa: E402
     from tools.build_glossary_pages import field_hub_slug  # noqa: E402
@@ -991,7 +995,6 @@ def build_article_html(
     </div>
     <h1 class="article-title">{html.escape(title)}</h1>
     <p class="article-lead">{lead_html}</p>
-    {key_points_box}
     {toc}
     {quality_panel}
     {sections}

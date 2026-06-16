@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.guide_key_points_prose import key_points_prose_issues  # noqa: E402
 from tools.guide_lead_limit import MAX_LEAD_CHARS, lead_char_count_in_reader_html  # noqa: E402
 from tools.guide_slug_prose import bare_urls_in_reader_html  # noqa: E402
 from tools.guide_tatoeba_limit import MAX_TATOEBA_PER_ARTICLE, tatoeba_in_reader_html  # noqa: E402
@@ -75,16 +74,13 @@ class GeneratedSeoValidator:
                 f"本文の「たとえば」が多すぎます: {len(tatoeba_hits)}件（上限 {MAX_TATOEBA_PER_ARTICLE}）",
             )
         lead_len = lead_char_count_in_reader_html(text)
-        if lead_len > MAX_LEAD_CHARS:
+        if lead_len == 0:
+            self.error(path, "冒頭リード文がありません")
+        elif lead_len > MAX_LEAD_CHARS:
             self.error(
                 path,
                 f"冒頭リード文が長すぎます: {lead_len}文字（上限 {MAX_LEAD_CHARS}文字）",
             )
-        kp_issues = key_points_prose_issues(text)
-        for message in kp_issues[:3]:
-            self.error(path, message)
-        if len(kp_issues) > 3:
-            self.error(path, f"要点ボックスの prose 問題が他 {len(kp_issues) - 3} 件あります")
 
     def validate_full_seo_page(
         self,
@@ -92,14 +88,24 @@ class GeneratedSeoValidator:
         *,
         require_fact_checked: bool,
         check_guide_prose: bool = False,
+        require_key_points_box: bool = True,
     ) -> None:
         text = self.text(path)
         required_markers = {
-            "要点ボックス": 'id="key-points-title"',
             "信頼性ブロック": 'id="quality-panel-title"',
             "記事の基本情報": 'id="article-info-title"',
             "公式情報の確認": 'id="official-info-title"',
         }
+        if require_key_points_box:
+            required_markers = {
+                "要点ボックス": 'id="key-points-title"',
+                **required_markers,
+            }
+        else:
+            required_markers = {
+                "冒頭リード": 'class="article-lead"',
+                **required_markers,
+            }
         positions: dict[str, int] = {}
         for label, marker in required_markers.items():
             pos = self.index_of(text, marker)
@@ -122,12 +128,20 @@ class GeneratedSeoValidator:
             self.error(path, "FAQ が生成されていません")
 
         if all(pos >= 0 for pos in positions.values()):
-            ordered = [
-                ("要点ボックス", "信頼性ブロック"),
-                ("信頼性ブロック", "FAQ"),
-                ("FAQ", "記事の基本情報"),
-                ("記事の基本情報", "公式情報の確認"),
-            ]
+            if require_key_points_box:
+                ordered = [
+                    ("要点ボックス", "信頼性ブロック"),
+                    ("信頼性ブロック", "FAQ"),
+                    ("FAQ", "記事の基本情報"),
+                    ("記事の基本情報", "公式情報の確認"),
+                ]
+            else:
+                ordered = [
+                    ("冒頭リード", "信頼性ブロック"),
+                    ("信頼性ブロック", "FAQ"),
+                    ("FAQ", "記事の基本情報"),
+                    ("記事の基本情報", "公式情報の確認"),
+                ]
             for before, after in ordered:
                 if positions[before] > positions[after]:
                     self.error(path, f"{before} は {after} より前に配置してください")
@@ -207,6 +221,7 @@ class GeneratedSeoValidator:
                     path,
                     require_fact_checked=True,
                     check_guide_prose=True,
+                    require_key_points_box=False,
                 )
             elif profile == "term":
                 self.validate_full_seo_page(path, require_fact_checked=False)
