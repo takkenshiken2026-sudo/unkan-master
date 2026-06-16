@@ -16,7 +16,7 @@ from tools.affiliate_brief import (
     product_affiliate_url,
     product_offer_type,
 )
-from tools.affiliate_links import is_affiliate_url
+from tools.affiliate_links import is_trackable_asp_url
 
 EXTERNAL_REL = "nofollow sponsored noopener noreferrer"
 
@@ -122,7 +122,7 @@ def cover_html(
 
 
 def cta_link(url: str, label: str, *, css_class: str = "affiliate-product-cta") -> str:
-    if not is_affiliate_url(url):
+    if not is_trackable_asp_url(url):
         return ""
     return (
         f'<a class="{css_class}" href="{html.escape(url)}" target="_blank" rel="{EXTERNAL_REL}">'
@@ -161,7 +161,7 @@ def supplement_html(product: dict[str, Any]) -> str:
     if offer_type == "book":
         workbook = norm(str(product.get("workbook_name") or ""))
         workbook_url = norm(str(product.get("workbook_amazon_url") or ""))
-        if workbook and is_affiliate_url(workbook_url):
+        if workbook and is_trackable_asp_url(workbook_url):
             return (
                 f'<p class="affiliate-product-supplement">'
                 f"セット問題集: {html.escape(workbook)} "
@@ -171,7 +171,7 @@ def supplement_html(product: dict[str, Any]) -> str:
         return ""
     trial = norm(str(product.get("trial_label") or ""))
     trial_url = norm(str(product.get("trial_url") or product.get("affiliate_url") or ""))
-    if trial and is_affiliate_url(trial_url):
+    if trial and is_trackable_asp_url(trial_url):
         return (
             f'<p class="affiliate-product-supplement">'
             f"{html.escape(trial)} "
@@ -189,12 +189,14 @@ def product_card_html(
     brief: dict[str, Any] | None = None,
 ) -> str:
     offer_type = product_offer_type(product, brief)
-    rank = product.get("rank", "")
+    rank_raw = norm(str(product.get("rank") or ""))
     try:
-        rank_num = int(rank)
+        rank_num = int(rank_raw)
+        rank_label = f"{rank_num}位"
+        rank_id = str(rank_num)
     except (TypeError, ValueError):
-        rank_num = 0
-    rank_label = f"{rank_num}位" if rank_num else ""
+        rank_label = rank_raw
+        rank_id = rank_raw.lower().replace(" ", "-") if rank_raw else "0"
     name = norm(str(product.get("name") or ""))
     url = product_affiliate_url(product)
     highlights = product_highlights(product)
@@ -214,7 +216,7 @@ def product_card_html(
         f"</div>"
     )
     aria = f'{name} を{"公式サイト" if offer_type == "course" else "Amazon"}で見る'
-    if is_affiliate_url(url):
+    if is_trackable_asp_url(url):
         hit = (
             f'<a class="affiliate-product-card-hit" href="{html.escape(url)}" target="_blank" '
             f'rel="{EXTERNAL_REL}" aria-label="{html.escape(aria)}">'
@@ -224,7 +226,7 @@ def product_card_html(
         hit = f'<div class="affiliate-product-card-hit affiliate-product-card-hit--static">{body}</div>'
     return (
         f'<article class="affiliate-product-card affiliate-product-card--{offer_type}" '
-        f'id="affiliate-product-r{rank_num}">'
+        f'id="affiliate-product-r{html.escape(rank_id)}">'
         f"{hit}{supplement_html(product)}</article>"
     )
 
@@ -363,7 +365,7 @@ def key_points_aside_cover_html(
         course_cls += " seo-key-points-aside-cover--placeholder"
     url = product_affiliate_url(product)
     cover = f'<span class="seo-key-points-aside-cover{course_cls}">{inner}</span>'
-    if is_affiliate_url(url):
+    if is_trackable_asp_url(url):
         return (
             f'<a class="seo-key-points-aside-link" href="{html.escape(url)}" '
             f'target="_blank" rel="{EXTERNAL_REL}">{cover}</a>'

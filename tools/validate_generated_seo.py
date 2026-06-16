@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.guide_key_points_prose import key_points_prose_issues  # noqa: E402
+from tools.guide_lead_limit import MAX_LEAD_CHARS, lead_char_count_in_reader_html  # noqa: E402
+from tools.guide_slug_prose import bare_urls_in_reader_html  # noqa: E402
+from tools.guide_tatoeba_limit import MAX_TATOEBA_PER_ARTICLE, tatoeba_in_reader_html  # noqa: E402
 from tools.seo_utils import is_noindex_html, is_sitemap_excluded_rel  # noqa: E402
 
 
@@ -55,7 +59,40 @@ class GeneratedSeoValidator:
         if re.search(r'href="https://example\.com/?', text):
             self.warn(path, "本番サイトでは example.com の公式リンクを実URLに差し替えてください")
 
-    def validate_full_seo_page(self, path: Path, *, require_fact_checked: bool) -> None:
+    def validate_guide_article_prose(self, path: Path, text: str) -> None:
+        bare_urls = bare_urls_in_reader_html(text)
+        if bare_urls:
+            sample = bare_urls[0][:80]
+            extra = f" 他{len(bare_urls) - 1}件" if len(bare_urls) > 1 else ""
+            self.error(
+                path,
+                f"本文に裸 URL が残っています: {sample}{extra}（primary_sources またはビルド時ラベル化を確認）",
+            )
+        tatoeba_hits = tatoeba_in_reader_html(text)
+        if len(tatoeba_hits) > MAX_TATOEBA_PER_ARTICLE:
+            self.error(
+                path,
+                f"本文の「たとえば」が多すぎます: {len(tatoeba_hits)}件（上限 {MAX_TATOEBA_PER_ARTICLE}）",
+            )
+        lead_len = lead_char_count_in_reader_html(text)
+        if lead_len > MAX_LEAD_CHARS:
+            self.error(
+                path,
+                f"冒頭リード文が長すぎます: {lead_len}文字（上限 {MAX_LEAD_CHARS}文字）",
+            )
+        kp_issues = key_points_prose_issues(text)
+        for message in kp_issues[:3]:
+            self.error(path, message)
+        if len(kp_issues) > 3:
+            self.error(path, f"要点ボックスの prose 問題が他 {len(kp_issues) - 3} 件あります")
+
+    def validate_full_seo_page(
+        self,
+        path: Path,
+        *,
+        require_fact_checked: bool,
+        check_guide_prose: bool = False,
+    ) -> None:
         text = self.text(path)
         required_markers = {
             "要点ボックス": 'id="key-points-title"',
@@ -109,6 +146,8 @@ class GeneratedSeoValidator:
             self.error(path, "主な参照元は quality-source-list のリストで表示してください")
 
         self.validate_common_leaks(path, text)
+        if check_guide_prose:
+            self.validate_guide_article_prose(path, text)
 
     def validate_hub_detail_page(self, path: Path) -> None:
         text = self.text(path)
@@ -164,7 +203,11 @@ class GeneratedSeoValidator:
                 continue
             validated += 1
             if profile == "full":
-                self.validate_full_seo_page(path, require_fact_checked=True)
+                self.validate_full_seo_page(
+                    path,
+                    require_fact_checked=True,
+                    check_guide_prose=True,
+                )
             elif profile == "term":
                 self.validate_full_seo_page(path, require_fact_checked=False)
             elif profile == "hub":

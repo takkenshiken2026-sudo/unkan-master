@@ -167,6 +167,23 @@ def article_url_labels(article: dict[str, str]) -> dict[str, str]:
     return url_label_map_from_sources(parse_source_links(article.get("primary_sources", "")))
 
 
+def site_url_labels_from_articles(by_slug: dict[str, dict[str, str]]) -> dict[str, str]:
+    """全ガイド記事の primary_sources から URL ラベル辞書を集約（記事横断の裸 URL 解決用）。"""
+    merged: dict[str, str] = {}
+    for row in by_slug.values():
+        for key, label in article_url_labels(row).items():
+            merged.setdefault(key, label)
+    return merged
+
+
+def merged_url_labels(
+    article: dict[str, str],
+    by_slug: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    """サイト共通ラベルに記事固有の primary_sources を上書きマージ。"""
+    return {**site_url_labels_from_articles(by_slug), **article_url_labels(article)}
+
+
 def resolve_reader_prose(
     text: str,
     *,
@@ -198,19 +215,16 @@ def paragraphs(text: str) -> str:
 def body_text_transform(affiliate_brief: dict | None = None, article: dict | None = None):
     """Apply site vars, 「」括り、optional affiliate product name → markdown links."""
     from tools.affiliate_body_links import prepare_affiliate_prose  # noqa: E402
-    from tools.affiliate_brief import brief_has_product_comparison  # noqa: E402
     from tools.affiliate_links import is_affiliate_article  # noqa: E402
-
-    use_brief = brief_has_product_comparison(affiliate_brief) if affiliate_brief else False
 
     def transform(text: str) -> str:
         out = apply_vars(text)
         if article and is_affiliate_article(article):
             out = prepare_affiliate_prose(
                 out,
-                brief=affiliate_brief if use_brief else None,
+                brief=affiliate_brief,
                 article=article,
-                apply_links=bool(use_brief and affiliate_brief),
+                apply_links=bool(affiliate_brief),
             )
         return out
 
@@ -395,6 +409,12 @@ def key_points_box_html(
             url_labels=url_labels,
             link_external_urls=False,
         )
+    from tools.guide_key_points_prose import (  # noqa: E402
+        normalize_key_points_intro,
+        normalize_key_points_items,
+    )
+
+    intro = normalize_key_points_intro(intro)
     if (
         affiliate_brief
         and brief_has_product_comparison(affiliate_brief)
@@ -415,6 +435,7 @@ def key_points_box_html(
             )
 
     items = key_points_items(article, affiliate_brief=affiliate_brief)
+    items = normalize_key_points_items(items)
     from tools.affiliate_body_links import affiliate_name_labels, wrap_affiliate_names_in_quotes  # noqa: E402
     from tools.affiliate_links import is_affiliate_article  # noqa: E402
 
@@ -705,9 +726,13 @@ def build_article_html(
     from tools.affiliate_product_ui import affiliate_hub_toc_item, affiliate_product_hub_html  # noqa: E402
 
     brief = load_affiliate_brief(slug)
+    from tools.guide_lead_limit import cap_lead_text  # noqa: E402
+    from tools.guide_tatoeba_limit import cap_article_tatoeba_fields  # noqa: E402
+
+    article = cap_article_tatoeba_fields(article)
     slug_titles = slug_title_map(by_slug)
     field_labels = field_prefix_labels(ROOT)
-    url_labels = article_url_labels(article)
+    url_labels = merged_url_labels(article, by_slug)
     title = apply_vars(article["title"])
     title = resolve_reader_prose(
         title,
@@ -735,6 +760,7 @@ def build_article_html(
             prefix_labels=field_labels,
             url_labels=url_labels,
         )
+    lead_text = cap_lead_text(lead_text)
     if lead_text and "[" in lead_text:
         from tools.inline_markup import render_inline_markup  # noqa: E402
 
@@ -1163,7 +1189,7 @@ def main() -> int:
     buildable = [
         article
         for article in articles
-        if is_published_guide(article) and affiliate_article_is_buildable(article)
+        if is_published_guide(article) and affiliate_article_is_buildable(article, site_root=ROOT)
     ]
     skipped_affiliate = len(articles) - len(buildable)
     by_slug = {norm(a.get("slug")): a for a in buildable if norm(a.get("slug"))}

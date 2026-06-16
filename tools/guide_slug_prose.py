@@ -149,10 +149,11 @@ def _replace_bare_slugs(
 
 
 def plain_text_from_reader_prose(text: str) -> str:
-    """Markdown 内部リンクをラベルだけのプレーンテキストへ。"""
+    """Markdown リンクをラベルだけのプレーンテキストへ。"""
     if not text:
         return text
-    return re.sub(r"\[([^\]]+)\]\(\.\./[^)]+\)", r"\1", text)
+    out = re.sub(r"\[([^\]]+)\]\(\.\./[^)]+\)", r"\1", text)
+    return re.sub(r"\[([^\]]+)\]\(https?://[^)]+\)", r"\1", out)
 
 
 def url_label_map_from_sources(items: list[dict[str, str]]) -> dict[str, str]:
@@ -239,16 +240,51 @@ def resolve_bare_urls(
 
 
 def scan_bare_url_leaks(text: str) -> list[str]:
-    """検証用: 本文中の裸 https:// 露出。"""
+    """検証用: 本文中の裸 https:// 露出（Markdown 外部リンク内は除外）。"""
     raw = norm(text)
     if not raw:
         return []
-    protected, _ = _protect(raw)
+    slots: list[tuple[str, str]] = []
+
+    def stash_md(match: re.Match[str]) -> str:
+        key = f"\ue000{len(slots)}\ue001"
+        slots.append((key, match.group(0)))
+        return key
+
+    protected = _MD_LINK_RE.sub(stash_md, raw)
     hits: list[str] = []
     for match in _BARE_URL_RE.finditer(protected):
         token = match.group(0)
         if token not in hits:
             hits.append(token)
+    return hits
+
+
+_READER_HTML_TAGS = ("p", "li", "td", "th", "h2", "h3", "h4", "dd", "div")
+
+
+def bare_urls_in_reader_html(html: str) -> list[str]:
+    """生成 HTML の読者向け本文（main 内）に裸 URL が残っていないか検出。"""
+    main_m = re.search(r"<main[^>]*>(.*)</main>", html, re.I | re.S)
+    if not main_m:
+        return []
+    chunk = main_m.group(1)
+    chunk = re.sub(
+        r'<section[^>]*id="official-info-title"[^>]*>.*?</section>',
+        "",
+        chunk,
+        flags=re.I | re.S,
+    )
+    hits: list[str] = []
+    tag_alt = "|".join(_READER_HTML_TAGS)
+    for m in re.finditer(rf"<({tag_alt})[^>]*>(.*?)</\1>", chunk, re.I | re.S):
+        inner = m.group(2)
+        if re.search(r"<a\s", inner, re.I):
+            inner = re.sub(r"<a[^>]*>.*?</a>", "", inner, flags=re.I | re.S)
+        plain = re.sub(r"<[^>]+>", "", inner)
+        for url in _BARE_URL_RE.findall(plain):
+            if url not in hits:
+                hits.append(url)
     return hits
 
 

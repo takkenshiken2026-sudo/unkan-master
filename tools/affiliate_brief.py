@@ -88,9 +88,9 @@ def product_affiliate_url(product: dict[str, Any]) -> str:
     for key in ("amazon_url", "affiliate_url", "a8_url", "afb_url", "url"):
         url = norm(str(product.get(key) or ""))
         if url:
-            from tools.affiliate_links import is_affiliate_url
+            from tools.affiliate_links import is_trackable_asp_url
 
-            if is_affiliate_url(url):
+            if is_trackable_asp_url(url):
                 return url
     return ""
 

@@ -215,6 +215,11 @@ def check_guide_row(
     lead = norm(row.get("lead"))
     if lead and len(lead) < GUIDE_PRO["lead"]:
         warn("lead", f"リードは {GUIDE_PRO['lead']} 文字以上を推奨（現在 {len(lead)} 文字）")
+    if lead and len(lead) > GUIDE_PRO["lead_max"]:
+        warn(
+            "lead",
+            f"リードは {GUIDE_PRO['lead_max']} 文字以内を推奨（現在 {len(lead)} 文字。ビルド時に自動短縮されます）",
+        )
 
     meta = norm(row.get("meta_description"))
     if meta:
