@@ -5190,10 +5190,23 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
     border-right: none;
     box-shadow: none;
   }
+  .hub-promo--grid-3 .hub-promo__grid,
+  .hub-promo--grid-3 .article-index-picks-grid,
+  .hub-promo--grid-2 .hub-promo__grid,
+  .hub-promo--grid-2 .article-index-picks-grid,
+  .hub-promo--compact .hub-promo__grid,
+  .hub-promo--compact .article-index-picks-grid,
+  .hub-promo--text .hub-promo__grid,
+  .hub-promo--text .article-index-picks-grid,
   .article-index-picks-grid,
   .hub-promo__grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+  .article-index-pick-foot,
+  .hub-promo-card__foot {
+    flex-wrap: wrap;
+    row-gap: 6px;
   }
   .hub-promo-card__link--strip {
     flex-direction: column;

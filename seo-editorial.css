@@ -1154,6 +1154,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
 @media (max-width: 480px) {
   .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-card-hit {
     flex-direction: column;
+    flex-wrap: nowrap;
   }
 
   .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="courses"] .affiliate-product-cover {
@@ -1222,6 +1223,7 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
 @media (max-width: 480px) {
   .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-card-hit {
     flex-direction: column;
+    flex-wrap: nowrap;
   }
 
   .seo-editorial.seo-article-card .affiliate-product-hub[data-comparison-kind="books"] .affiliate-product-cover {
