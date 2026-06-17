@@ -1532,10 +1532,10 @@ body.is-solving .site-footer{display:none!important}
       <nav class="breadcrumb" aria-label="パンくずリスト">
         <ol class="breadcrumb-list">
           <li class="breadcrumb-item"><a href="/" onclick="event.preventDefault();gotoPage('quiz-start')" title="トップ">トップ</a></li>
-          <li class="breadcrumb-item breadcrumb-current" aria-current="page">問題を解く</li>
+          <li class="breadcrumb-item breadcrumb-current" aria-current="page">「運行管理者試験」の問題を解く</li>
         </ol>
       </nav>
-      <h2 class="page-title">問題を解く</h2>
+      <h2 class="page-title">「運行管理者試験」の問題を解く</h2>
       <div class="page-sub">学習目的に合わせてモードを選んでください</div>
 
       <div class="mode-list-v2">
@@ -3129,7 +3129,7 @@ function enterApp(){
   handleDailyFirstVisit();
 }
 
-const PAGE_TITLES={'quiz-start':'問題を解く','past-config':'過去問','quiz':'問題','score':'結果','dash':'記録・分析','review':'復習','analytics':'記録・分析','orig':'実践演習','ichimondou':'一問一答','ichimondou-score':'一問一答・結果'};
+const PAGE_TITLES={'past-config':'過去問','quiz':'問題','score':'結果','dash':'記録・分析','review':'復習','analytics':'記録・分析','orig':'実践演習','ichimondou':'一問一答','ichimondou-score':'一問一答・結果'};
 const NAV_PAGE_MAP = {'orig':'orig','quiz-start':'quiz-start','dash':'dash','review':'review','ichimondou':'ichimondou'};
 
 /*INDEX_SPA_PAGE_SEO*/
@@ -3137,6 +3137,7 @@ const NAV_PAGE_MAP = {'orig':'orig','quiz-start':'quiz-start','dash':'dash','rev
 function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || '運管マスター'; }
 function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '運行管理者試験'; }
 function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }
+function _pageTitleFor(id){ return id === 'quiz-start' ? _cfgQuizStartTitle() : (PAGE_TITLES[id] || ''); }
 function _pageSeo(pageTitle, descTemplate, path, hash) {
   const exam = _cfgExam();
   return {
@@ -3147,7 +3148,7 @@ function _pageSeo(pageTitle, descTemplate, path, hash) {
   };
 }
 const PAGE_SEO = {
-  'quiz-start': _pageSeo('問題を解く', '{exam}の学習モードを選択。実践演習・過去問・一問一答から選んで学習スタート。', '/', ''),
+  'quiz-start': _pageSeo(_cfgQuizStartTitle(), '{exam}の学習モードを選択。実践演習・過去問・一問一答から選んで学習スタート。', '/', ''),
   'past-config': _pageSeo('過去問演習', '{exam}の過去問を年度別・分野別に絞り込んで学習。', '/#past', '#past'),
   'orig': _pageSeo('実践演習', '{exam}対策の実践演習問題。分野別データで弱点克服。', '/#orig', '#orig'),
   'dash': _pageSeo('記録・学習分析', '学習日記カレンダー・獲得バッジ・レベルや分野別正答率で、学習の振り返りと弱点把握ができます。', '/#dash', '#dash'),
@@ -3844,7 +3845,7 @@ function gotoPage(id, opts){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  document.getElementById('topbar-title').textContent=PAGE_TITLES[id]||'';
+  document.getElementById('topbar-title').textContent=_pageTitleFor(id);
   // SEOメタ情報・URL更新
   _updatePageMeta(id, opts);
   // top nav active state

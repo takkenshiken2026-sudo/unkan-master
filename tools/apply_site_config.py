@@ -120,6 +120,25 @@ def apply_ga4_measurement_ids(text: str) -> str:
     return text
 
 
+def fix_quiz_start_page_titles(text: str) -> str:
+    """トップ（quiz-start）の見出し・パンくずを「試験名」の問題を解くに統一。"""
+    title = html.escape(f"「{exam_name()}」の問題を解く")
+    for old in (
+        '<li class="breadcrumb-item breadcrumb-current" aria-current="page">問題を解く</li>',
+        '<li class="breadcrumb-item breadcrumb-current" aria-current="page">「◯◯試験（プレースホルダー）」の問題を解く</li>',
+    ):
+        text = text.replace(
+            old,
+            f'<li class="breadcrumb-item breadcrumb-current" aria-current="page">{title}</li>',
+        )
+    for old in (
+        '<h2 class="page-title">問題を解く</h2>',
+        '<h2 class="page-title">「◯◯試験（プレースホルダー）」の問題を解く</h2>',
+    ):
+        text = text.replace(old, f'<h2 class="page-title">{title}</h2>')
+    return text
+
+
 def fix_spa_breadcrumb_top(text: str) -> str:
     """SPA 内パンくず1段目はサイト名ではなく「トップ」に統一する。"""
     return _SPA_BREADCRUMB_TOP_RE.sub(r"\1トップ\2トップ\3", text)
@@ -599,6 +618,7 @@ def main() -> int:
             new = inject_index_fields_fallback(new)
             new = inject_index_spa_ui_leaks(new)
             new = update_index_spa_seo_js(new)
+            new = fix_quiz_start_page_titles(new)
             new = fix_spa_breadcrumb_top(new)
             new = ensure_index_theme(new)
             new = update_index_shell_footer(new)

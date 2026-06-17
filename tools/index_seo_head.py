@@ -382,7 +382,9 @@ _SPA_PAGE_SEO_JS = """\
 // ページごとのSEOメタ情報（SITE_CONFIG から組み立て）
 function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || 'Sampleマスター'; }
 function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }
+function _cfgQuizStartTitle(){ return '「' + _cfgExam() + '」の問題を解く'; }
 function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }
+function _pageTitleFor(id){ return id === 'quiz-start' ? _cfgQuizStartTitle() : (PAGE_TITLES[id] || ''); }
 function _cfgSiteSlug(){
   const o=String((window.SITE_CONFIG&&SITE_CONFIG.siteOrigin)||'').replace(/^https?:\\/\\//,'').replace(/\\/.*$/,'');
   if(o) return o.split('.')[0]||'site';
@@ -398,7 +400,7 @@ function _pageSeo(pageTitle, descTemplate, path, hash) {
   };
 }
 const PAGE_SEO = {
-  'quiz-start': _pageSeo('問題を解く', '{exam}の学習モードを選択。実践演習・過去問・一問一答から選んで学習スタート。', '/', ''),
+  'quiz-start': _pageSeo(_cfgQuizStartTitle(), '{exam}の学習モードを選択。実践演習・過去問・一問一答から選んで学習スタート。', '/', ''),
   'past-config': _pageSeo('過去問演習', '{exam}の過去問を年度別・分野別に絞り込んで学習。', '/#past', '#past'),
   'orig': _pageSeo('実践演習', '{exam}対策の実践演習問題。分野別データで弱点克服。', '/#orig', '#orig'),
   'dash': _pageSeo('記録・学習分析', '学習日記カレンダー・獲得バッジ・レベルや分野別正答率で、学習の振り返りと弱点把握ができます。', '/#dash', '#dash'),
@@ -473,4 +475,31 @@ def update_index_spa_seo_js(text: str) -> str:
         ),
     ):
         text = text.replace(old, new)
+    if "_cfgQuizStartTitle" not in text:
+        text = text.replace(
+            "function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }\n"
+            "function _cfgSiteLabel()",
+            "function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }\n"
+            "function _cfgQuizStartTitle(){ return '「' + _cfgExam() + '」の問題を解く'; }\n"
+            "function _cfgSiteLabel()",
+        )
+        text = text.replace(
+            "function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }\n"
+            "function _pageSeo(",
+            "function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }\n"
+            "function _pageTitleFor(id){ return id === 'quiz-start' ? _cfgQuizStartTitle() : (PAGE_TITLES[id] || ''); }\n"
+            "function _pageSeo(",
+        )
+    text = text.replace(
+        "'quiz-start': _pageSeo('問題を解く',",
+        "'quiz-start': _pageSeo(_cfgQuizStartTitle(),",
+    )
+    text = text.replace(
+        "const PAGE_TITLES={'quiz-start':'問題を解く',",
+        "const PAGE_TITLES={",
+    )
+    text = text.replace(
+        "document.getElementById('topbar-title').textContent=PAGE_TITLES[id]||'';",
+        "document.getElementById('topbar-title').textContent=_pageTitleFor(id);",
+    )
     return text
