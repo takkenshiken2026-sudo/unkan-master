@@ -436,6 +436,36 @@ _UPDATE_PAGE_META_FULL = """\
 """
 
 
+_CFG_EXAM_FN_RE = re.compile(
+    r"(function _cfgExam\(\)\{ return \(window\.SITE_CONFIG && SITE_CONFIG\.examName\) \|\| '[^']*'; \}\n)"
+)
+
+
+def inject_quiz_start_title_helpers(text: str) -> str:
+    """quiz-start タイトル用ヘルパー（_cfgSiteSlug 等が挟まっても挿入できる）。"""
+    if "function _cfgQuizStartTitle" not in text:
+        text, n = _CFG_EXAM_FN_RE.subn(
+            r"\1function _cfgQuizStartTitle(){ return '「' + _cfgExam() + '」の問題を解く'; }\n",
+            text,
+            count=1,
+        )
+        if n == 0:
+            text = text.replace(
+                "function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }\n",
+                "function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }\n"
+                "function _cfgQuizStartTitle(){ return '「' + _cfgExam() + '」の問題を解く'; }\n",
+                1,
+            )
+    if "function _pageTitleFor" not in text and "function _pageSeo(pageTitle" in text:
+        text = text.replace(
+            "function _pageSeo(pageTitle",
+            "function _pageTitleFor(id){ return id === 'quiz-start' ? _cfgQuizStartTitle() : (PAGE_TITLES[id] || ''); }\n"
+            "function _pageSeo(pageTitle",
+            1,
+        )
+    return text
+
+
 def update_index_spa_seo_js(text: str) -> str:
     """PAGE_SEO と _updatePageMeta を SITE_CONFIG 連動版に統一。"""
     if "_pageSeo(" not in text:
@@ -475,21 +505,7 @@ def update_index_spa_seo_js(text: str) -> str:
         ),
     ):
         text = text.replace(old, new)
-    if "_cfgQuizStartTitle" not in text:
-        text = text.replace(
-            "function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }\n"
-            "function _cfgSiteLabel()",
-            "function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '◯◯試験（プレースホルダー）'; }\n"
-            "function _cfgQuizStartTitle(){ return '「' + _cfgExam() + '」の問題を解く'; }\n"
-            "function _cfgSiteLabel()",
-        )
-        text = text.replace(
-            "function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }\n"
-            "function _pageSeo(",
-            "function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }\n"
-            "function _pageTitleFor(id){ return id === 'quiz-start' ? _cfgQuizStartTitle() : (PAGE_TITLES[id] || ''); }\n"
-            "function _pageSeo(",
-        )
+    text = inject_quiz_start_title_helpers(text)
     text = text.replace(
         "'quiz-start': _pageSeo('問題を解く',",
         "'quiz-start': _pageSeo(_cfgQuizStartTitle(),",

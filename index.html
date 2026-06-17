@@ -3136,6 +3136,7 @@ const NAV_PAGE_MAP = {'orig':'orig','quiz-start':'quiz-start','dash':'dash','rev
 // ページごとのSEOメタ情報（SITE_CONFIG から組み立て）
 function _cfgBrand(){ return (window.SITE_CONFIG && SITE_CONFIG.brandName) || '運管マスター'; }
 function _cfgExam(){ return (window.SITE_CONFIG && SITE_CONFIG.examName) || '運行管理者試験'; }
+function _cfgQuizStartTitle(){ return '「' + _cfgExam() + '」の問題を解く'; }
 function _cfgSiteLabel(){ return _cfgBrand() + '（' + _cfgExam() + '）'; }
 function _pageTitleFor(id){ return id === 'quiz-start' ? _cfgQuizStartTitle() : (PAGE_TITLES[id] || ''); }
 function _pageSeo(pageTitle, descTemplate, path, hash) {
