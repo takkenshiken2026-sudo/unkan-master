@@ -401,11 +401,14 @@ class Validator:
                     f"genre は site-config.json の guideArticleGenres に定義したラベルにしてください（許可: {allowed}）。現在: {genre!r}",
                 )
             self.require_text(path, row, idx, "title")
-            self.require_text(path, row, idx, "meta_description")
-            self.require_text(path, row, idx, "lead")
+            status = self.norm(row.get("content_status")).lower()
+            prose_optional = status in {"draft", "archived"} and not is_affiliate_article(row)
+            if not prose_optional:
+                self.require_text(path, row, idx, "meta_description")
+                self.require_text(path, row, idx, "lead")
+                self.require_text(path, row, idx, "section_1_heading")
+                self.require_text(path, row, idx, "section_1_body")
             self.require_int(path, row, idx, "priority", min_value=1)
-            self.require_text(path, row, idx, "section_1_heading")
-            self.require_text(path, row, idx, "section_1_body")
             for n in range(1, 8):
                 for kind in ("heading", "body"):
                     col = f"section_{n}_{kind}"

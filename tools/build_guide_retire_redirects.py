@@ -15,8 +15,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.editorial_quality import norm  # noqa: E402
+from tools.guide_rewrite_rules import is_affiliate_row  # noqa: E402
 
 RETIRED_JSON = ROOT / "data" / "guide_retired.json"
+GEN_MARKER = ".generated-by-exam-site"
+DRAFT_STUB_TARGET = "../index.html"
 
 REDIRECT_HTML = """<!DOCTYPE html>
 <html lang="ja">
@@ -87,6 +90,29 @@ def write_redirect(articles_dir: Path, slug: str, target_slug: str) -> None:
         marker.unlink()
 
 
+def write_draft_stubs(articles_dir: Path) -> int:
+    """draft 非アフィリエイト slug へ noindex スタブ（一覧へ誘導）。"""
+    csv_path = ROOT / "data" / "guide_articles.csv"
+    if not csv_path.is_file():
+        return 0
+    count = 0
+    with csv_path.open(encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            if is_affiliate_row(row):
+                continue
+            if norm(row.get("content_status")).lower() != "draft":
+                continue
+            slug = norm(row.get("slug"))
+            if not slug:
+                continue
+            out_dir = articles_dir / slug
+            if (out_dir / GEN_MARKER).is_file():
+                continue
+            write_redirect(articles_dir, slug, DRAFT_STUB_TARGET)
+            count += 1
+    return count
+
+
 def main() -> int:
     mapping = load_retired_map()
     articles_dir = ROOT / "articles"
@@ -97,7 +123,10 @@ def main() -> int:
             continue
         write_redirect(articles_dir, slug, target)
         count += 1
-    print(f"Wrote {count} retired guide redirect(s) under articles/")
+    draft_count = write_draft_stubs(articles_dir)
+    print(
+        f"Wrote {count} retired guide redirect(s) and {draft_count} draft stub(s) under articles/"
+    )
     return 0
 
 

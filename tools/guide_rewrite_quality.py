@@ -28,6 +28,7 @@ HAND_REVISION_MARKERS: tuple[str, ...] = (
     "手書きリライト",
     "全面リライト",
     "Amazon URL確定・本文全面リライト",
+    "ゼロ執筆",
 )
 
 
