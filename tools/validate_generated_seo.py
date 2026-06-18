@@ -15,7 +15,10 @@ if str(ROOT) not in sys.path:
 
 from tools.guide_lead_limit import MAX_LEAD_CHARS, lead_char_count_in_reader_html  # noqa: E402
 from tools.guide_slug_prose import bare_urls_in_reader_html  # noqa: E402
-from tools.guide_tatoeba_limit import MAX_TATOEBA_PER_ARTICLE, tatoeba_in_reader_html  # noqa: E402
+from tools.guide_tatoeba_limit import (  # noqa: E402
+    MAX_EXAMPLE_MARKERS_PER_ARTICLE,
+    example_markers_in_reader_html,
+)
 from tools.seo_utils import is_noindex_html, is_sitemap_excluded_rel  # noqa: E402
 
 
@@ -67,11 +70,11 @@ class GeneratedSeoValidator:
                 path,
                 f"本文に裸 URL が残っています: {sample}{extra}（primary_sources またはビルド時ラベル化を確認）",
             )
-        tatoeba_hits = tatoeba_in_reader_html(text)
-        if len(tatoeba_hits) > MAX_TATOEBA_PER_ARTICLE:
+        marker_hits = example_markers_in_reader_html(text)
+        if len(marker_hits) > MAX_EXAMPLE_MARKERS_PER_ARTICLE:
             self.error(
                 path,
-                f"本文の「たとえば」が多すぎます: {len(tatoeba_hits)}件（上限 {MAX_TATOEBA_PER_ARTICLE}）",
+                f"本文の「例えば/たとえば」が多すぎます: {len(marker_hits)}件（上限 {MAX_EXAMPLE_MARKERS_PER_ARTICLE}）",
             )
         lead_len = lead_char_count_in_reader_html(text)
         if lead_len == 0:

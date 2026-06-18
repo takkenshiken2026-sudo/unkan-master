@@ -16,8 +16,8 @@ EXAMPLE_MARKERS_RE = re.compile(
     r"「[^」]{6,48}」(?:の|と|なら|では)"
 )
 
-# 5節中、中身のある例示が必要な節数
-MIN_SECTIONS_WITH_SUBSTANTIVE_EXAMPLE = 4
+# 5節中、中身のある例示が必要な節数（記事全体2～3例示を目安）
+MIN_SECTIONS_WITH_SUBSTANTIVE_EXAMPLE = 2
 
 # 例示がない節は表外 prose に必要な具体アンカー数
 MIN_ANCHORS_WITHOUT_EXAMPLE = 3
@@ -177,18 +177,19 @@ def _lead_errors(prefix: str, lead: str) -> list[str]:
     if not lead:
         return errors
     has_time = bool(LEAD_TIME_RE.search(lead))
+    has_numeric_anchor = section_concrete_anchor_count(lead) >= 1
     has_substantive = bool(substantive_example_sentences(lead))
     has_marker_with_anchors = (
         EXAMPLE_MARKERS_RE.search(lead) is not None
         and section_concrete_anchor_count(lead) >= 2
     )
-    if not has_time:
+    if not has_time and not has_numeric_anchor:
         errors.append(
-            f"{prefix} lead needs 逆算 anchor (残り○週 / ○か月 / ○月○日)"
+            f"{prefix} lead needs numbers/dates anchors (18/30, 6,660円, 締切 等)"
         )
-    if not has_substantive and not has_marker_with_anchors:
+    if not has_substantive and not has_marker_with_anchors and section_concrete_anchor_count(lead) < 2:
         errors.append(
-            f"{prefix} lead needs substantive 例えば/たとえば scene with numbers or dates"
+            f"{prefix} lead needs numbers/dates anchors (18/30, 6,660円, 締切 等)"
         )
     if EXAMPLE_MARKERS_RE.search(lead) and not has_substantive:
         if SHALLOW_AFTER_MARKER_RE.search(lead):
@@ -260,10 +261,6 @@ def validate_concrete_rewrite(slug: str, patch: dict[str, str]) -> list[str]:
         errors.append(
             f"{prefix} need {MIN_FAQ_WITH_CONCRETE}+ FAQ answers with example or "
             f"2+ anchors (got {concrete_faq})"
-        )
-    if faq_answers and not any(substantive_example_sentences(a) for a in faq_answers):
-        errors.append(
-            f"{prefix} need at least 1 FAQ answer with substantive 例えば/たとえば"
         )
 
     errors.extend(validate_field_guide_genre(slug, patch))
