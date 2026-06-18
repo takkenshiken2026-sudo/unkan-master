@@ -2951,6 +2951,7 @@ async function saveAnswerToSupabase(q,picked,correct,elapsed){
 }
 
 // ===== AUTH =====
+const LOGIN_UI_ENABLED = false; // 再開時は true に戻す
 function switchAuthTab(tab){
   document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1)));
   document.getElementById('auth-login').style.display=tab==='login'?'':'none';
@@ -3114,7 +3115,7 @@ function enterApp(){
   const isGuest = currentUser && currentUser.email === '__guest__';
   const loginBtn = document.getElementById('topnav-login-btn');
   const logoutBtn = document.getElementById('topnav-logout-btn');
-  if(loginBtn) loginBtn.style.display = isGuest ? '' : 'none';
+  if(loginBtn) loginBtn.style.display = (LOGIN_UI_ENABLED && isGuest) ? '' : 'none';
   if(logoutBtn) logoutBtn.style.display = isGuest ? 'none' : '';
   const u=getUserData();
   syncBestStreakFromHistory(u);
