@@ -414,18 +414,49 @@ def _spa_home_url() -> str:
     return f"{origin}{bp}" if bp else origin
 
 
+GEN_MARKER = ".generated-by-exam-site"
+
+
+def _guide_article_sample_html(root: Path) -> Path | None:
+    """生成済みガイド記事（リダイレクト stub 除外）の index.html を返す。"""
+    articles_dir = root / "articles"
+    if not articles_dir.is_dir():
+        return None
+    preferred = (
+        "field-law-basics",
+        "exam-overview",
+        "affiliate-textbooks-recommend",
+        "affiliate-problem-books",
+        "affiliate-mock-exam-materials",
+    )
+    for slug in preferred:
+        d = articles_dir / slug
+        html = d / "index.html"
+        if (d / GEN_MARKER).is_file() and html.is_file():
+            return html
+    for d in sorted(articles_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        html = d / "index.html"
+        if (d / GEN_MARKER).is_file() and html.is_file():
+            return html
+    return None
+
+
 def _header_learning_nav(root: Path) -> list[Issue]:
     """静的ページの学習ナビ href / q/index の active 状態（site-chrome.md §3, §7）。"""
     spa_hash = _spa_nav_hash_hrefs()
-    article_sample = root / "articles" / "field-law-basics" / "index.html"
-    if not article_sample.is_file():
-        article_sample = root / "articles" / "exam-overview" / "index.html"
-    samples: list[tuple[str, Path]] = [
-        ("articles sample", article_sample),
-        ("terms/index.html", root / "terms" / "index.html"),
-        ("about.html", root / "about.html"),
-        ("q/index.html", root / "q" / "index.html"),
-    ]
+    article_sample = _guide_article_sample_html(root)
+    samples: list[tuple[str, Path]] = []
+    if article_sample is not None:
+        samples.append(("articles sample", article_sample))
+    samples.extend(
+        [
+            ("terms/index.html", root / "terms" / "index.html"),
+            ("about.html", root / "about.html"),
+            ("q/index.html", root / "q" / "index.html"),
+        ]
+    )
     issues: list[Issue] = []
     for label, path in samples:
         if not path.is_file():
