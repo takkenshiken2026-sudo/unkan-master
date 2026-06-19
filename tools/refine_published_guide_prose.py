@@ -47,8 +47,8 @@ ACTION_ITEMS = "action_items"
 STUDY_SLUGS = frozenset({"study-plan", "study-plan-3months"})
 
 MAX_EXAMPLES_PER_ARTICLE = 3
-MAX_DATES_PER_ARTICLE = 8
-MAX_DATES_STUDY_ARTICLE = 6
+MAX_DATES_PER_ARTICLE = 0
+MAX_DATES_STUDY_ARTICLE = 0
 
 DATE_MD_RE = re.compile(
     r"(?<!\d)(?:(\d{1,2})月(\d{1,2})日（([月火水木金土日])）|(\d{1,2})/(\d{1,2})（([月火水木金土日])）)"
