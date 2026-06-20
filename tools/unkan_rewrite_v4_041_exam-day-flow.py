@@ -147,7 +147,7 @@ REWRITES: dict[str, dict[str, str]] = {
             "慣れておくと"
             "安心です。"
         ),
-        "section_4_heading": "90分30問 — 本番の進め方",
+        "section_4_heading": "本番90分 — 30問の進め方",
         "section_4_body": (
             "試験時間は"
             "90分·30問です。"
