@@ -96,7 +96,13 @@ def _try_trigger_list(block: str) -> str | None:
 
 
 def inject_comma_sentence_list(text: str) -> str:
-    """列挙トリガーが無い段落でも、読点の多い文から箇条書きを起こす（控えめ）。"""
+    """明示的な手がかり語（「手順は、」等）がある段落のみ箇条書きへ起こす。
+
+    かつては手がかり語が無くても「読点が2つ以上ある文」を機械的に箇条書き
+    化していたが、ふつうの叙述文（例:「令和3年度第1回以降、書面申込は廃止
+    され、インターネット申請のみとなりました。」）まで節の途中で分割して
+    しまうため廃止した。明示的な `- ` 行・手がかり語による列挙だけを残す。
+    """
     if not text.strip() or "\n-" in text or ";" in text or "；" in text:
         return text
 
@@ -107,51 +113,7 @@ def inject_comma_sentence_list(text: str) -> str:
             out.append(block)
             continue
         triggered = _try_trigger_list(block)
-        if triggered:
-            out.append(triggered)
-            continue
-        # 定義文（「試験は、…とおり、…です」）を箇条書きに分解しない
-        flat = block.replace("\n", "")
-        if re.search(
-            r"(?:試験|制度|資格)は、.+、.{6,}(?:です|ます|でした|である)[。]?$",
-            flat,
-        ):
-            out.append(block)
-            continue
-
-        sentences = [s for s in re.split(r"(?<=[。！？])", block) if s.strip()]
-        best_items: list[str] = []
-        best_idx = -1
-        best_prefix = ""
-        for idx, sent in enumerate(sentences):
-            if sent.count("、") < 2:
-                continue
-            if "とは、" in sent:
-                continue
-            pos = -1
-            for m in re.finditer(r"(?<![に])は、", sent):
-                pos = m.start()
-            chunk = sent[pos + 2 :] if pos >= 0 else sent
-            chunk = re.sub(r"(?:です|ます|でした|である|であり)[。]?$", "", chunk.strip())
-            chunk = chunk.rstrip("。")
-            items = _comma_list_items(chunk)
-            if len(items) >= 2 and len(items) > len(best_items):
-                best_items = items
-                best_idx = idx
-                best_prefix = sent[:pos].strip() if pos >= 0 else ""
-        if best_idx < 0:
-            out.append(block)
-            continue
-        rebuilt: list[str] = []
-        if best_idx > 0:
-            rebuilt.append("".join(sentences[:best_idx]).strip())
-        if best_prefix:
-            rebuilt.append(best_prefix + "。")
-        rebuilt.append("\n".join(f"- {item}" for item in best_items))
-        tail = "".join(sentences[best_idx + 1 :]).strip()
-        if tail:
-            rebuilt.append(tail)
-        out.append("\n\n".join(p for p in rebuilt if p))
+        out.append(triggered if triggered else block)
     return "\n\n".join(out)
 
 
