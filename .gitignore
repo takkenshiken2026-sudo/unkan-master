@@ -2,3 +2,5 @@
 public_site/
 .local-notes/
 visual-smoke/
+__pycache__/
+*.pyc
