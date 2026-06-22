@@ -1,4 +1,10 @@
 {
   "updated": "2026-06-22",
-  "redirects": {}
+  "redirects": {
+    "pass-only-past-questions-myth": "textbook-vs-past-questions",
+    "weight-by-topic": "subject-breakdown",
+    "exam-scope-overview": "subject-breakdown",
+    "exam-difficulty": "pass-rate",
+    "study-plan-beginner": "study-plan"
+  }
 }
