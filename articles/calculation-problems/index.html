@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<!--BRAND_ASSET_HEAD-->
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="48x48" href="../../assets/brand/favicon-48.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../../assets/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../../assets/brand/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../../assets/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#8f5a24">
+<meta property="og:image" content="https://unkan-master.jp/assets/brand/og-image.png">
+<meta property="og:image:secure_url" content="https://unkan-master.jp/assets/brand/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:image" content="https://unkan-master.jp/assets/brand/og-image.png">
+<meta name="twitter:image:alt" content="運管マスター｜運行管理者試験">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離｜運管マスター</title>
+<meta name="description" content="運行管理者試験で出る計算問題（速度・時間・距離、平均速度、出会い・追越し、停止距離、燃費、改善基準告示の時間計算）の解き方を、例題・途中式・答えの順に解説します。最初に km/h と m/s の単位換算を固めれば、ほとんどの問題は小学校の算数で解けます。ミスしやすい単位換算と2乗則のコツを実際の数値でまとめ…">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://unkan-master.jp/articles/calculation-problems/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離">
+<meta property="og:description" content="運行管理者試験で出る計算問題（速度・時間・距離、平均速度、出会い・追越し、停止距離、燃費、改善基準告示の時間計算）の解き方を、例題・途中式・答えの順に解説します。最初に km/h と m/s の単位換算を固めれば、ほとんどの問題は小学校の算数で解けます。ミスしやすい単位換算と2乗則のコツを実際の数値でまとめ…">
+<meta property="og:url" content="https://unkan-master.jp/articles/calculation-problems/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "@id": "https://unkan-master.jp/articles/calculation-problems/#article",
+      "headline": "運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離",
+      "description": "運行管理者試験で出る計算問題（速度・時間・距離、平均速度、出会い・追越し、停止距離、燃費、改善基準告示の時間計算）の解き方を、例題・途中式・答えの順に解説します。最初に km/h と m/s の単位換算を固めれば、ほとんどの問題は小学校の算数で解けます。ミスしやすい単位換算と2乗則のコツを実際の数値でまとめ…",
+      "mainEntityOfPage": "https://unkan-master.jp/articles/calculation-problems/",
+      "inLanguage": "ja-JP",
+      "about": [
+        "分野別対策",
+        "計算問題",
+        "実務"
+      ],
+      "isPartOf": "https://unkan-master.jp/articles/index.html",
+      "dateModified": "2026-06-23",
+      "author": {
+        "@type": "Person",
+        "name": "運管マスター編集部"
+      },
+      "reviewedBy": {
+        "@type": "Person",
+        "name": "公式情報確認担当"
+      },
+      "citation": [
+        "https://www.unkan.or.jp/past.html",
+        "https://www.mhlw.go.jp/content/001082040.pdf",
+        "https://driver-roudou-jikan.mhlw.go.jp/truck/notice",
+        "https://wwwtb.mlit.go.jp/kinki/content/000306033.pdf",
+        "https://kouronpub.com/pdf/correction/unkan/unkan_basetext_r.pdf"
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://unkan-master.jp/articles/calculation-problems/#webpage",
+      "url": "https://unkan-master.jp/articles/calculation-problems/",
+      "name": "運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離",
+      "description": "運行管理者試験で出る計算問題（速度・時間・距離、平均速度、出会い・追越し、停止距離、燃費、改善基準告示の時間計算）の解き方を、例題・途中式・答えの順に解説します。最初に km/h と m/s の単位換算を固めれば、ほとんどの問題は小学校の算数で解けます。ミスしやすい単位換算と2乗則のコツを実際の数値でまとめ…",
+      "inLanguage": "ja-JP"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "トップ",
+          "item": "https://unkan-master.jp/index.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "試験ガイド",
+          "item": "https://unkan-master.jp/articles/index.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離",
+          "item": "https://unkan-master.jp/articles/calculation-problems/"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://unkan-master.jp/articles/calculation-problems/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "計算問題は何問くらい出ますか。",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "計算は主に実務分野（出題区分の(5)）で出題され、グラフや図を読み取る形式が中心です。出題数は回によって変わりますが、停止距離・速度・距離・時間・燃費・改善基準告示の時間判定が定番です。数値で正誤が決まるため、正確に解ければ確実な得点源になります。配点や足切りの仕組みは合格基準の記事で確認してください。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "速度の単位換算で混乱します。確実な方法はありますか。",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "「km/h を m/s にするには 3.6 で割る」だけを覚えてください。答えが秒や m を含むなら、計算に入る前に速度を m/s へ直す習慣をつけます。54km/h なら 15m/s、72km/h なら 20m/s と、よく出る値を覚えておくとさらに速く解けます。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "停止距離でいちばん間違えやすい点はどこですか。",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "制動距離が「速度の2乗に比例する」点です。空走距離は速度に比例しますが、制動距離は2乗に比例します。速度が 2 倍なら制動距離は 4 倍、3 倍なら 9 倍です。「制動距離は速度に比例する」とする選択肢は誤りで、ここがひっかけの本丸になります。"
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../site-pages.css?v=20260527-guide">
+<link rel="stylesheet" href="../../site-theme.css">
+<link rel="stylesheet" href="../../seo-editorial.css?v=20260616-fix-affiliate-layout">
+</head>
+<body class="guide-article-page site-shell-column-page">
+<div class="site-page-wrap">
+<header class="topnav site-shell-header">
+      <div class="topnav-inner">
+        <a class="topnav-logo" href="../../index.html" aria-label="運管マスター、運行管理者試験対策のトップへ">
+          <div class="topnav-logo-mark" aria-hidden="true"><span class="logo-mark-line">運管</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></div>
+          <span class="topnav-logo-stack">
+            <span class="topnav-logo-text">運管マスター</span>
+            <span class="topnav-logo-sub">運行管理者試験</span>
+          </span>
+        </a>
+        <nav class="topnav-links" aria-label="メインナビゲーション">
+          <a class="topnav-link" id="tnav-ichimondou" href="/#ichimondou"><svg viewBox="0 0 16 16"><path d="M8 2v12M4 4h8M4 8h8M4 12h8"/></svg>一問一答</a>
+          <a class="topnav-link" id="tnav-past" href="/#past"><svg viewBox="0 0 16 16"><path d="M3 2h10v12H3z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>過去問</a>
+          <a class="topnav-link" id="tnav-orig" href="/#orig"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1"/></svg>実践演習</a>
+          <a class="topnav-link" id="tnav-dash" href="/#dash"><svg viewBox="0 0 16 16"><path d="M2 13L5 8l3 2 3-5 3 2"/></svg>記録・分析</a>
+          <a class="topnav-link" id="tnav-review" href="/#review"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h8M2 12h10"/></svg>復習</a>
+          <a class="topnav-link" id="tnav-glossary" href="../../terms/index.html"><svg viewBox="0 0 16 16"><rect x="2.5" y="2" width="11" height="12" rx="1.5"/><path d="M5 6h6M5 9h4"/></svg>用語解説</a>
+        </nav>
+      </div>
+    </header>
+<main class="seo-article-main">
+  <nav class="site-page-header-crumb" aria-label="パンくず">
+      <ol class="q-breadcrumb">
+        <li><a href="../../index.html">トップ</a></li>
+        <li><a href="../index.html">試験ガイド</a></li>
+        <li aria-current="page">運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離</li>
+      </ol>
+    </nav>
+  <article class="seo-article-card article-body seo-editorial">
+    <div class="article-meta">
+      <span class="meta-category">分野別対策</span>
+      <span class="meta-updated">更新日：2026-06-23</span>
+    </div>
+    <h1 class="article-title">運行管理者試験の計算問題の解き方｜速度・時間・距離と停止距離</h1>
+    <p class="article-lead">運行管理者試験の計算問題は、難しい公式の暗記ではなく、速度・時間・距離の関係と単位換算を正確に扱えるかで決まります。実際に問われる計算の中身は小学校の算数の範囲です。にもかかわらず取りこぼしが多いのは、km/h と m/s の換算でつまずく、停止距離の2乗則を取り違える、改善基準告示の時間判定の手順を知らない、という三つが原因です。</p>
+    <nav class="seo-toc" aria-labelledby="seo-toc-title"><h2 id="seo-toc-title">目次</h2><ol><li><a href="#quality-panel-title">この記事の信頼性について</a></li><li><a href="#article-sec-1">計算の土台 — 単位換算と速度・時間・距離の基本</a></li><li><a href="#article-sec-2">平均速度と所要時間 — 合計で割る・休憩を足す</a></li><li><a href="#article-sec-3">出会い算と追越し — 「速度の和・差」で時間を出す</a></li><li><a href="#article-sec-4">停止距離 — 空走距離＋制動距離、制動は速度の2乗に比例</a></li><li><a href="#article-sec-5">燃料消費と燃費 — 単位を「km/L」にそろえる</a></li><li><a href="#article-sec-6">改善基準告示の時間計算 — 拘束・連続運転・運転時間の判定手順</a></li><li><a href="#article-sec-7">計算問題で落とさないための最終チェック</a></li><li><a href="#article-sec-faq">よくある質問</a></li><li><a href="#article-info-title">記事の基本情報</a></li><li><a href="#official-info-title">公式情報の確認</a></li></ol></nav>
+    <section class="seo-quality-panel" aria-labelledby="quality-panel-title"><h2 id="quality-panel-title">この記事の信頼性について</h2><table class="seo-info-table"><tbody><tr><th>執筆</th><td>運管マスター編集部（資格学習サイトの編集チーム）</td></tr><tr><th>確認</th><td>公式情報確認担当（公開前に一次情報との照合を行う担当者）</td></tr><tr><th>事実確認日</th><td>2026-06-23</td></tr><tr><th>主な参照元</th><td><ul class="quality-source-list"><li><a href="https://www.unkan.or.jp/past.html" target="_blank" rel="noopener noreferrer">公益財団法人 運行管理者試験センター（過去の試験問題）</a></li><li><a href="https://www.mhlw.go.jp/content/001082040.pdf" target="_blank" rel="noopener noreferrer">厚生労働省「改善基準告示（令和6年4月1日適用）に関するQ＆A」</a></li><li><a href="https://driver-roudou-jikan.mhlw.go.jp/truck/notice" target="_blank" rel="noopener noreferrer">厚生労働省 自動車運転者の長時間労働改善ポータルサイト「トラック運転者の改善基準告示」</a></li><li><a href="https://wwwtb.mlit.go.jp/kinki/content/000306033.pdf" target="_blank" rel="noopener noreferrer">国土交通省 近畿運輸局「トラック運転者の改善基準告示 ー2024年4月適用ー 解説」</a></li><li><a href="https://kouronpub.com/pdf/correction/unkan/unkan_basetext_r.pdf" target="_blank" rel="noopener noreferrer">株式会社自動車公論社「運行管理者試験 基礎補習解説」</a></li></ul></td></tr></tbody></table></section>
+    <section class="seo-article-section" aria-labelledby="article-sec-1"><h2 id="article-sec-1"><span class="section-heading-num">1</span>計算の土台 — 単位換算と速度・時間・距離の基本</h2><p>計算問題でいちばん多いミスは、速度の単位を取り違えることです。問題文の速度は時速（km/h）で与えられ、答えは秒単位（m や m/s）で求めることが多い。ここを最初に固めます。</p><p>換算の関係は次のひとつだけ覚えれば足ります。</p><p>・km/h を m/s にするには、3.6 で割る。<br>・m/s を km/h にするには、3.6 を掛ける。</p><p>理由は単純です。1 時間は 3,600 秒、1 km は 1,000 m なので、1 km/h ＝ 1,000 m ÷ 3,600 秒 ＝ 1 ÷ 3.6 m/s になります。よく出る速度を覚えておくと計算が速くなります。</p><table class="seo-info-table"><thead><tr><th>速度（km/h）</th><th>速度（m/s）</th><th>計算</th></tr></thead><tbody><tr><td>36 km/h</td><td>10 m/s</td><td>36 ÷ 3.6</td></tr><tr><td>54 km/h</td><td>15 m/s</td><td>54 ÷ 3.6</td></tr><tr><td>72 km/h</td><td>20 m/s</td><td>72 ÷ 3.6</td></tr><tr><td>90 km/h</td><td>25 m/s</td><td>90 ÷ 3.6</td></tr></tbody></table><p>例題で確認します。時速 72km の<a href="../../terms/g-1ab53e75814378ae.html">自動車</a>は 1 秒間に何 m 進むか。途中式は 72 ÷ 3.6 ＝ 20。答えは 20m です。3.6 で割るだけで「1 秒あたりに進む距離（m/s）」が出る、と体で覚えてください。</p><p>速度・時間・距離は「距離 ＝ 速度 × 時間」という一つの関係から、すべて導けます。覚える公式は実質一つです。</p><p>・距離 ＝ 速度 × 時間<br>・速度 ＝ 距離 ÷ 時間<br>・時間 ＝ 距離 ÷ 速度</p><p>例題です。時速 60km で 2 時間 30 分走ると、何 km 進むか。まず時間を時間単位にそろえます。2 時間 30 分 ＝ 2.5 時間。途中式は 60 × 2.5 ＝ 150。答えは 150km です。30 分を 0.3 と書いてしまうのが定番のミスで、正しくは 0.5 です。分を時間に直すときは 60 で割る（30 ÷ 60 ＝ 0.5）と覚えます。</p><p>逆向きの例題です。150km を時速 60km で走ると何時間かかるか。途中式は 150 ÷ 60 ＝ 2.5 時間 ＝ 2 時間 30 分。答えは 2 時間 30 分です。</p></section>
+<section class="seo-article-section" aria-labelledby="article-sec-2"><h2 id="article-sec-2"><span class="section-heading-num">2</span>平均速度と所要時間 — 合計で割る・休憩を足す</h2><p>平均速度は、速度どうしを足して 2 で割る計算ではありません。区間ごとの距離と時間をそれぞれ合計し、距離の合計を時間の合計で割ります。ここは誤答が集中する論点です。</p><p>例題です。ある運行で、前半 120km を時速 60km、後半 120km を時速 40km で走った。全区間の平均速度は何 km/h か。</p><p>まず区間ごとの所要時間を出します。</p><p>・前半: 120 ÷ 60 ＝ 2 時間<br>・後半: 120 ÷ 40 ＝ 3 時間</p><p>次に合計で割ります。</p><p>・距離の合計: 120 ＋ 120 ＝ 240km<br>・時間の合計: 2 ＋ 3 ＝ 5 時間<br>・平均速度: 240 ÷ 5 ＝ 48km/h</p><p>答えは 48km/h です。速度を単純平均した (60 ＋ 40) ÷ 2 ＝ 50km/h は誤りです。遅い区間に時間が多くかかるぶん、平均は単純平均より下がります。この差がそのままひっかけになります。</p><p>到着時刻を問う問題では、走行時間に<a href="../../terms/g-bb94ddd7577addef.html">休憩時間</a>を加える必要があります。走行時間だけで計算して休憩を足し忘れるのが最大のミスです。</p><p>例題です。午前 8 時 00 分に出発し、240km 先の目的地へ時速 60km で向かう。途中で合計 40 分の休憩をとる。到着時刻は何時何分か。</p><p>・走行時間: 240 ÷ 60 ＝ 4 時間<br>・休憩を加えた所要時間: 4 時間 ＋ 40 分 ＝ 4 時間 40 分<br>・到着時刻: 8 時 00 分 ＋ 4 時間 40 分 ＝ 12 時 40 分</p><p>答えは 12 時 40 分です。<a href="../../terms/g-dc5f21a5d2811aa3.html">改善基準告示</a>がからむ問題では、この休憩時間が連続運転の中断（おおむね連続 10 分以上で計 30 分以上）の要件を満たすかどうかも合わせて問われます。連続運転の判定は後半で扱います。</p></section>
+<section class="seo-article-section" aria-labelledby="article-sec-3"><h2 id="article-sec-3"><span class="section-heading-num">3</span>出会い算と追越し — 「速度の和・差」で時間を出す</h2><p>二台の車が向き合う、あるいは追いかける問題は、相対速度（速度の和・差）で考えると一気に解けます。</p><p>向き合って進む出会いの場合は、二台が近づく速さは速度の和です。例題です。100km 離れた地点から、A は時速 60km、B は時速 40km で向かい合って同時に出発した。何時間後に出会うか。</p><p>・近づく速さ（速度の和）: 60 ＋ 40 ＝ 100km/h<br>・出会うまでの時間: 100 ÷ 100 ＝ 1 時間</p><p>答えは 1 時間後です。</p><p>追いかける場合は、差が縮まる速さは速度の差です。例題です。前方を時速 50km で走る車を、後方の車が時速 70km で追う。両車の差は 2km。追いつくまでの時間と、その間に後方車が進む距離は。</p><p>・縮まる速さ（速度の差）: 70 − 50 ＝ 20km/h<br>・追いつくまでの時間: 2 ÷ 20 ＝ 0.1 時間 ＝ 6 分<br>・後方車が進む距離: 70 × 0.1 ＝ 7km</p><p>答えは 6 分後、距離は 7km です。0.1 時間を分に直すときは 60 を掛けます（0.1 × 60 ＝ 6 分）。</p><p><a href="../../terms/g-1ff6880916e09dfa.html">追越し</a>で車の長さまで考える問題では、追い越し始めから追い越し終わりまでに縮める距離に、両車の車長を加えます。考え方は同じで、加えた距離を速度の差で割れば時間が出ます。</p></section>
+<section class="seo-article-section" aria-labelledby="article-sec-4"><h2 id="article-sec-4"><span class="section-heading-num">4</span>停止距離 — 空走距離＋制動距離、制動は速度の2乗に比例</h2><p>停止距離は、計算問題と知識問題の両方で出る最重要テーマです。停止距離は二つの距離の合計です。</p><p>・空走距離: 危険を認知してからブレーキが効き始めるまでに進む距離。反応時間（空走時間）× 速度で求める。速度に比例する。<br>・制動距離: ブレーキが効き始めてから停止するまでの距離。速度の2乗に比例する。<br>・停止距離 ＝ 空走距離 ＋ 制動距離</p><p>まず基本の例題です。時速 54km で走行中、空走時間を 1 秒、制動距離を 9m とする。停止距離は何 m か。</p><p>・速度を m/s に換算: 54 ÷ 3.6 ＝ 15m/s<br>・空走距離: 15m/s × 1 秒 ＝ 15m<br>・停止距離: 15（空走）＋ 9（制動）＝ 24m</p><p>答えは 24m です。空走距離は必ず m/s に直してから反応時間を掛ける、という順番を守ります。</p><p>次に2乗則の例題です。これがひっかけの本丸です。ある速度で空走距離 15m・制動距離 9m（停止距離 24m）の車が、速度を 2 倍にすると停止距離はどうなるか。</p><p>・空走距離は速度に比例 → 2 倍 → 15 × 2 ＝ 30m<br>・制動距離は速度の2乗に比例 → 2² ＝ 4 倍 → 9 × 4 ＝ 36m<br>・停止距離: 30 ＋ 36 ＝ 66m</p><p>答えは 66m です。速度が 2 倍でも停止距離は単純な 2 倍（48m）にはなりません。制動距離が 4 倍に膨らむぶん大きく伸びます。速度 3 倍なら制動距離は 3² ＝ 9 倍です。「制動距離は速度に比例する」と書く選択肢は誤りで、正しくは「2乗に比例」です。この一点が実務分野でも頻出のひっかけになります。停止距離が出題される実務分野の全体像は、実務対策の記事で確認してください。</p></section>
+<section class="seo-article-section" aria-labelledby="article-sec-5"><h2 id="article-sec-5"><span class="section-heading-num">5</span>燃料消費と燃費 — 単位を「km/L」にそろえる</h2><p>燃費の計算は、走った距離と使った燃料の対応をそろえるだけです。</p><p>・燃費（km/L）＝ 走行距離（km）÷ 使用燃料（L）<br>・使用燃料（L）＝ 走行距離（km）÷ 燃費（km/L）</p><p>例題です。ある車が 480km を走り、燃料を 60L 使った。燃費は何 km/L か。途中式は 480 ÷ 60 ＝ 8。答えは 8km/L です。</p><p>逆向きの例題です。燃費 8km/L の車で 360km を走るには、燃料は何 L 必要か。途中式は 360 ÷ 8 ＝ 45。答えは 45L です。</p><p>割り切れない場合は、問題文の指示（小数第何位を四捨五入するか）に必ず従います。指示がある場合に勝手な桁で丸めると、選択肢とずれて失点します。</p></section>
+<section class="seo-article-section" aria-labelledby="article-sec-6"><h2 id="article-sec-6"><span class="section-heading-num">6</span>改善基準告示の時間計算 — 拘束・連続運転・運転時間の判定手順</h2><p>第5分野では、改善基準告示（令和 6 年 4 月適用・トラック）にからむ時間計算が出ます。数値の暗記だけでなく、判定の手順を知らないと解けません。基準の全体像は改善基準告示を扱った記事に譲り、ここでは計算の型に絞ります。</p><p>押さえる基準値は次のとおりです。</p><table class="seo-info-table"><thead><tr><th>項目</th><th>基準</th></tr></thead><tbody><tr><td>1 日の拘束時間</td><td>原則 13 時間、最大 15 時間</td></tr><tr><td>連続運転時間</td><td>4 時間まで（中断はおおむね連続 10 分以上で計 30 分以上）</td></tr><tr><td>運転時間</td><td>2 日平均 9 時間、2 週平均 44 時間</td></tr><tr><td>1 日の休息期間</td><td>継続 11 時間が基本（下限 9 時間）</td></tr></tbody></table><p><a href="../../terms/g-df920ea828aac81c.html">拘束時間</a>は、始業から終業までの時間（休憩を含む）です。例題です。始業 6 時 00 分、終業 20 時 30 分なら拘束時間は。20 時 30 分 − 6 時 00 分 ＝ 14 時間 30 分。原則 13 時間は超えますが最大 15 時間には収まる、という判定になります。</p><p>連続運転は、運転の途切れに「おおむね連続 10 分以上の中断」が計 30 分以上あるかで切れ目を判断します。1 回が 10 分未満の中断は、3 回以上続けてカウントできません。運転 2 時間 → 休憩 10 分 → 運転 2 時間 → 休憩 30 分、という並びなら、最初の 10 分の中断で連続運転が一度リセットされるため、4 時間連続にはならず適合します。</p><p>運転時間の「2 日平均 9 時間」は判定手順が独特で、ひっかけの定番です。特定の日（特定日）が違反になるのは、特定日と前日の平均、特定日と翌日の平均の両方が 9 時間を超えた場合だけです。片方だけが超えても違反になりません。</p><p>例題です。1 日目 10 時間、2 日目（特定日）10 時間、3 日目 8 時間の運転時間。2 日目は違反か。</p><p>・前日との平均: (10 ＋ 10) ÷ 2 ＝ 10 時間 → 9 時間超<br>・翌日との平均: (10 ＋ 8) ÷ 2 ＝ 9 時間 → 9 時間ちょうどで超えない<br>・両方が 9 時間を超えていないので、違反にはならない</p><p>答えは違反ではありません。「前日との平均が 9 時間を超えたから即違反」と判断するのが典型的な誤りです。前後の両方の平均がそろって 9 時間を超えて初めて違反になる、という二段構えを必ず確認します。</p></section>
+<section class="seo-article-section" aria-labelledby="article-sec-7"><h2 id="article-sec-7"><span class="section-heading-num">7</span>計算問題で落とさないための最終チェック</h2><p>計算問題は、解法そのものより単位と手順で差がつきます。問われる計算は小学校の算数の範囲ですが、単位の取り違えや手順の省略で失点する人が後を絶ちません。逆に言えば、確認の型を決めておけば、ここは安定した得点源になります。本番では時間に追われて焦りがちなので、解く前に必ず単位をそろえる癖をつけてください。最後に、取りこぼしを防ぐ確認点をまとめます。</p><p>・速度の単位を最初に確認する。答えが m なら速度は m/s に直す（÷3.6）。<br>・分は 60 で割って時間に直す。30 分は 0.5、40 分は約 0.667（＝ 2 ÷ 3）。<br>・平均速度は距離の合計 ÷ 時間の合計。速度の単純平均ではない。<br>・到着時刻は休憩時間を足す。走行時間だけで終わらせない。<br>・停止距離は空走（比例）＋制動（2乗に比例）。速度 2 倍で制動は 4 倍。<br>・運転時間の 2 日平均は、前日とも翌日とも平均が 9 時間を超えて初めて違反。<br>・四捨五入は問題文の指示どおりの桁で行う。</p><p>これらは中身を理解していれば防げるミスばかりです。計算問題は範囲が狭く、型が決まっています。単位換算を土台に手順どおり進めれば、得点源にできる分野です。新しい公式を増やす必要はなく、出る型を繰り返し解いて手が覚えるまで反復するのが近道です。本番でも、まず単位を確認し、途中式を紙に書き出してから答えを出す。この順番を崩さなければ、計算問題で大きく崩れることはありません。</p></section>
+    <section class="seo-article-section" aria-labelledby="article-sec-faq"><h2 id="article-sec-faq"><span class="section-heading-num">8</span>よくある質問</h2><details class="term-faq-item" open><summary>計算問題は何問くらい出ますか。</summary><div>計算は主に実務分野（出題区分の(5)）で出題され、グラフや図を読み取る形式が中心です。出題数は回によって変わりますが、停止距離・速度・距離・時間・燃費・改善基準告示の時間判定が定番です。数値で正誤が決まるため、正確に解ければ確実な得点源になります。配点や足切りの仕組みは合格基準の記事で確認してください。</div></details><details class="term-faq-item" open><summary>速度の単位換算で混乱します。確実な方法はありますか。</summary><div>「km/h を m/s にするには 3.6 で割る」だけを覚えてください。答えが秒や m を含むなら、計算に入る前に速度を m/s へ直す習慣をつけます。54km/h なら 15m/s、72km/h なら 20m/s と、よく出る値を覚えておくとさらに速く解けます。</div></details><details class="term-faq-item" open><summary>停止距離でいちばん間違えやすい点はどこですか。</summary><div>制動距離が「速度の2乗に比例する」点です。空走距離は速度に比例しますが、制動距離は2乗に比例します。速度が 2 倍なら制動距離は 4 倍、3 倍なら 9 倍です。「制動距離は速度に比例する」とする選択肢は誤りで、ここがひっかけの本丸になります。</div></details></section>
+    <section class="seo-article-section" aria-labelledby="article-info-title"><h2 id="article-info-title">記事の基本情報</h2><table class="seo-info-table"><tbody><tr><th>ジャンル</th><td>分野別対策</td></tr><tr><th>タグ</th><td>計算問題 / 実務</td></tr></tbody></table></section>
+    <section class="seo-article-section" aria-labelledby="official-info-title"><h2 id="official-info-title">公式情報の確認</h2><blockquote><p><strong>公式情報の確認：</strong>運行管理者試験の最新情報は、<a href="https://www.unkan.or.jp/" target="_blank" rel="noopener noreferrer">公益財団法人 運行管理者試験センター（公式）</a>などの公式情報を必ず確認してください。本人に割り当てられた試験会場は受験票の表記が正本です。</p></blockquote></section>
+    <div class="related-box"><div class="related-box-title">関連記事・知識ハブ</div><div class="related-links"><a class="related-link" href="../field-practice/">実務対策</a><a class="related-link" href="../kaizen-kijun-kokuji/">改善基準告示</a><a class="related-link" href="../../terms/index.html">用語解説一覧</a><a class="related-link" href="../../index.html#past">過去問演習</a></div></div>
+  </article>
+</main>
+<footer class="site-footer" role="contentinfo">
+    <div class="site-footer-scroll">
+      <div class="site-footer-inner">
+        <a class="site-footer-brand" href="../../index.html" title="運管マスター（運行管理者試験対策）トップへ">
+          <div class="topnav-logo-mark" aria-hidden="true"><span class="logo-mark-line">運管</span><span class="logo-mark-line logo-mark-line--sub">マスター</span></div>
+        </a>
+        <span class="site-footer-sep" aria-hidden="true"></span>
+        <nav class="site-footer-legal" aria-label="サイト情報・ポリシー">
+          <a href="../../index.html">トップ</a>
+          <a href="../../about.html">このサイトについて</a>
+          <a href="../../q/index.html">過去問一覧</a>
+          <a href="../../terms/index.html">用語解説</a>
+          <a href="../index.html" aria-current="page">試験ガイド</a>
+          <a href="../../related-sites.html">関連リンク</a>
+          <a href="../../privacy.html">プライバシー</a>
+          <a href="https://forms.gle/c2SxYVPDbdThhnYw8" target="_blank" rel="noopener noreferrer">お問い合わせ</a>
+        </nav>
+        <span class="site-footer-sep" aria-hidden="true"></span>
+        <span class="site-footer-copy">© 2026 運管マスター学習支援・unkan-master.jp</span>
+      </div>
+    </div>
+  </footer>
+<!-- GA4: tools/html_footer.analytics_snippet（測定IDは GA4_MEASUREMENT_ID） -->
+<script>window.__GA4_MEASUREMENT_ID__="G-N0F8L2Q698";</script>
+<script defer src="../../site-analytics.js"></script>
+</div>
+</body>
+</html>
