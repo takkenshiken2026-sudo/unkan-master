@@ -71,9 +71,9 @@ def article_redirect_href(target: str) -> str:
         base = t.rstrip("/")
         if base.endswith(".html"):
             return base
-        return f"{base}/index.html"
+        return f"{base}/"
     slug = t.rstrip("/")
-    return f"../{slug}/index.html"
+    return f"../{slug}/"
 
 
 def write_redirect(articles_dir: Path, slug: str, target_slug: str) -> None:

@@ -409,7 +409,7 @@ def guide_links_for_page(category: str, guides: list[dict[str, str]], *, limit: 
             slug = g["slug"]
             if slug not in seen:
                 seen.add(slug)
-                picked.append((f"articles/{slug}/index.html", g["title"]))
+                picked.append((f"articles/{slug}/", g["title"]))
         if len(picked) >= limit:
             return picked
     by_slug = {g["slug"]: g for g in guides}
@@ -423,7 +423,7 @@ def guide_links_for_page(category: str, guides: list[dict[str, str]], *, limit: 
         if not g:
             continue
         seen.add(resolved)
-        picked.append((f"articles/{resolved}/index.html", g["title"]))
+        picked.append((f"articles/{resolved}/", g["title"]))
     return picked
 
 
@@ -463,7 +463,7 @@ def parse_related_link_tokens(
             slug = target
             g = next((x for x in guides if x["slug"] == slug), None)
             add(
-                rel_href(rel_path, f"articles/{slug}/index.html"),
+                rel_href(rel_path, f"articles/{slug}/"),
                 label or (g["title"] if g else slug),
             )
         elif kind == "term":
