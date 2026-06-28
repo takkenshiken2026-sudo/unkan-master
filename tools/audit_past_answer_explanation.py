@@ -18,7 +18,9 @@ from tools.q_explanation import (
     build_choice_commentary,
     build_explanation_html,
     norm,
-    parse_fullwidth_numbered_explanation,
+    # 旧名 parse_fullwidth_numbered_explanation は未実装。
+    # 全角／半角の「１．…２．…」形式の肢別解説を分解する現行関数を使う。
+    parse_numbered_choice_notes as parse_fullwidth_numbered_explanation,
 )
 
 DATA_CSV = ROOT / "data" / "past_questions.csv"
