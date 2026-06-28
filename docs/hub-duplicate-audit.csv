@@ -1,0 +1,8 @@
+kind,hub,cluster_key,count,members
+label_variant,compare,事業用規制頻出比較,2,s34-kon-jigyoyo-kisei-cmp:事業用規制の頻出比較（頻出整理） | s37-kon-jigyoyo-kisei-cmp:事業用規制の頻出比較（試験頻出）
+label_variant,compare,休息時間頻出比較,2,s34-kon-kyukei-kikan-cmp:休息時間の頻出比較（頻出整理） | s37-kon-kyukei-kikan-cmp:休息時間の頻出比較（試験頻出）
+label_variant,compare,整備運行頻出比較,2,s34-kon-seibi-kanri-cmp:整備と運行の頻出比較（頻出整理） | s37-kon-seibi-kanri-cmp:整備と運行の頻出比較（試験頻出）
+label_variant,compare,点呼義務頻出比較,2,s34-kon-tenko-gimu-cmp:点呼義務の頻出比較（頻出整理） | s37-kon-tenko-gimu-cmp:点呼義務の頻出比較（試験頻出）
+label_variant,compare,速度規制頻出比較,2,s34-kon-sokudo-kisei-cmp:速度規制の頻出比較（頻出整理） | s37-kon-sokudo-kisei-cmp:速度規制の頻出比較（試験頻出）
+label_variant,compare,運行記録頻出比較,2,s34-kon-unko-kiroku-cmp:運行記録の頻出比較（頻出整理） | s37-kon-unko-kiroku-cmp:運行記録の頻出比較（試験頻出）
+label_variant,compare,選任届出頻出比較,2,s34-kon-sennin-todoke-cmp:選任と届出の頻出比較（頻出整理） | s37-kon-sennin-todoke-cmp:選任と届出の頻出比較（試験頻出）
