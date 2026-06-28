@@ -203,7 +203,6 @@
 ```bash
 python3 tools/validate_csv.py
 python3 tools/audit_editorial_quality.py
-python3 tools/audit_glossary_article_quality.py   # 用語: 演習連動・定型検出
 python3 tools/build_all.py
 ```
 

@@ -5,10 +5,9 @@
 - SEO・公開境界の正本: [seo-article-guidelines.md](./seo-article-guidelines.md)
 - **試験ガイドと用語解説の立ち位置:** [content-positioning.md](./content-positioning.md)
 - **編集品質（専門家×プロライター）:** [editorial-quality.md](./editorial-quality.md)
-- 品質監査: `python3 tools/audit_glossary_article_quality.py`
-- 演習 DB からの自動充填: `python3 tools/enrich_o4_glossary_details.py`
+- 品質チェック: `python3 tools/validate_csv.py`（CSV 必須項目・文字数・FAQ など）
 
-## 用語の作り方（3通り）
+## 用語の作り方（2通り）
 
 ### 1. スクリプトで雛形を生成（推奨）
 
@@ -33,14 +32,7 @@ python3 tools/scaffold_glossary_term.py --write-template-csv
 
 `data/templates/glossary_term_row.template.csv` の1行を `glossary_terms.csv` にコピーし、`term`・各列を編集します。
 
-### 3. 演習 DB から一括充填
-
-```bash
-python3 tools/enrich_o4_glossary_details.py --dry-run
-python3 tools/enrich_o4_glossary_details.py
-```
-
-自動生成後も人手で `term_detail_body`・FAQ・`related_terms` を確認してください。定型文だけの行は `audit_glossary_article_quality.py` で検出されます。
+いずれの方法でも、`term_detail_body`・FAQ・`related_terms` は人手で具体的に書いてください（定型文・薄い行は不可）。文字数・必須項目は `python3 tools/validate_csv.py` で検査されます。
 
 ---
 
@@ -149,7 +141,6 @@ FAQ 4件の役割分担:
 ```bash
 python3 tools/validate_csv.py
 python3 tools/audit_editorial_quality.py
-python3 tools/audit_glossary_article_quality.py
 python3 tools/build_all.py
 ```
 
