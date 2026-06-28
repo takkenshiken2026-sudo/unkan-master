@@ -37,12 +37,6 @@ tools/build_practice_ichimon_pages.py
 tools/q_similar_questions.py
 tools/csv_to_exam_site_past_js.py
 tools/validate_csv.py
-tools/import_unkan_freight_csv.py
-tools/import_unkan_practice_csv.py
-tools/import_unkan_ichimon_csv.py
-data/source_unkan_freight_questions.csv
-data/source_unkan_freight_practice.csv
-data/source_unkan_freight_ichimon.csv
 # 静的ページ採点用の JS / CSS（本番拡張）
 q-page-quiz.js
 q-page-quiz.css
