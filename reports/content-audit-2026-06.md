@@ -123,7 +123,20 @@
    「未検証なのに検証済」と誤表示になるため、検証実施 or バリデータ調整のいずれかで対応。
 8. **記事の残WARN（実害分・長文/及び等）**: 文脈を見て手作業で逐次。
 9. **用語672・問題1590の本文ファクト深掘り**: 抜き取り→機械監査の併用で継続。
-10. **壊れた監査ツール**: `audit_glossary_article_quality`（`o4_curated_batch50_rest` 欠落）を復旧。
+10. ~~壊れた監査ツール `audit_glossary_article_quality`~~ → 欠落モジュール依存で稼働不能だったため**削除済み**（下記リポジトリ整理）。
+
+---
+
+## 7. リポジトリ整理（不要コード・データの削除）
+
+デプロイ依存（`build_all.py` の import 閉包＝74ファイル）を基準に、**閉包外かつ未参照**のものだけを削除。各削除後に `build_all.py` EXIT 0 を確認。
+
+- **使い捨てスクリプト 183本**: `unkan_rewrite_v2/v3/v4_*`・`*_expert`・`o4_curated_*`・`clear_guide_prose_for_v4`・`curate_guide_articles_v4_45`。CSV を一度生成しただけの移行用。`tools/` は 377→191 本に。
+- **壊れていた連鎖**: `enrich_o4_glossary_details` / `audit_glossary_article_quality`（欠落 `o4_curated_batch50_rest` 依存で常時失敗）。
+- **取り込み済みの生ソース**: `data/source_unkan_freight_{questions,practice,ichimon}.csv`（約3.6MB）＋ `tools/import_unkan_{freight,practice,ichimon}_csv.py`。過去問等の正本は `data/{past,practice,ichimon}_questions.csv`。`template_site_only.paths` も更新。
+- **ドキュメント参照**: 削除ツールへの参照を docs から除去。
+
+いずれも `git` 履歴から復元可能。デプロイ生成物（`public_site/`）は不変。
 
 ---
 
