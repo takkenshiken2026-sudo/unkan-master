@@ -54,7 +54,7 @@ def index_spa_hash_url(hash_frag: str) -> str:
 def index_description() -> str:
     return (
         f"{exam_name()}の合格を目指す無料学習プラットフォーム。"
-        "過去問演習・実践演習・一問一答・重要用語解説を網羅。"
+        "過去問演習・実践演習・一問一答・重要用語解説を網羅（演習は貨物試験向け）。"
         "年度別・分野別に絞った効率学習で合格を目指す。"
     )
 
@@ -64,8 +64,9 @@ def index_description_long() -> str:
     subjects = field_names or "主要分野"
     return (
         f"{exam_name()}の合格を目指す無料学習プラットフォーム。"
-        f"過去問演習・実践演習・一問一答・重要用語解説を網羅。"
+        f"過去問演習・実践演習・一問一答・重要用語解説を網羅（演習は貨物試験向け）。"
         f"年度別・科目別（{subjects}）に絞った効率的な学習が可能です。"
+        "旅客試験の第1分野は別教材で対策してください。"
     )
 
 
@@ -84,7 +85,7 @@ def index_json_ld_graph() -> list[dict]:
     alt = f"{exam_name()}対策サイト"
     platform_desc = (
         f"{exam_name()}の過去問・実践演習・一問一答・用語解説を"
-        "網羅した無料学習プラットフォーム"
+        "網羅した無料学習プラットフォーム（演習は貨物試験向け）"
     )
     return [
         {

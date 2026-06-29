@@ -886,6 +886,7 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
     q_index_footer = site_page_footer(rel_path, current="q")
 
     from tools.q_page_seo import (
+        exercise_scope_note_html,
         index_h1,
         index_lead,
         index_meta_description,
@@ -900,6 +901,7 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
     page_lead = index_lead("past")
     search_placeholder = index_search_placeholder("past")
     study_modes_note = study_modes_note_html()
+    exercise_scope_note = exercise_scope_note_html()
     index_picks_html = build_guide_index_picks_html(rel_path)
 
     return f"""<!DOCTYPE html>
@@ -926,6 +928,7 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
   {q_index_breadcrumb}
   <h1>{html.escape(index_h1_text)}</h1>
   <p class="site-page-lead">{html.escape(page_lead)}</p>
+  {exercise_scope_note}
   {index_picks_html}
   {study_modes_note}
   {q_hub_links_html(rel_path, current="past")}

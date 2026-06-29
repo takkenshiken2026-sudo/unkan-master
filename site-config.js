@@ -102,13 +102,14 @@ window.SITE_CONFIG = {
   "fields": [
     {
       "id": "jigyo",
-      "name": "貨物自動車運送事業法関係",
+      "name": "貨物自動車運送事業法関係（貨物）",
       "aliases": [
         "貨物自動車運送事業法関係",
         "事業法関係",
         "貨物事業法",
         "事業法",
-        "契約・実務"
+        "契約・実務",
+        "貨物試験第1分野"
       ],
       "legacyGlossaryCat": "jigyo"
     },
@@ -153,5 +154,14 @@ window.SITE_CONFIG = {
       ],
       "legacyGlossaryCat": "practice"
     }
-  ]
+  ],
+  "coursePromo": {
+    "url": "https://px.a8.net/svt/ejp?a8mat=4B3TF0+DUXGNU+408S+BW0YB&a8ejpredirect=https%3A%2F%2Fonsuku.jp%2Ftraining%2Funkan",
+    "modeTitle": "オンスク.JP 運行管理者（貨物）講座",
+    "modePurpose": "動画と演習問題でWEB完結学習したい",
+    "priceLabel": "月額980円〜",
+    "tagLabel": "PR",
+    "footnote": "※ オンスク.JP公式サイトへ移動します。料金・受講条件は申込前に各ページでご確認ください。",
+    "lpUrl": "https://onsuku.jp/training/unkan"
+  }
 };

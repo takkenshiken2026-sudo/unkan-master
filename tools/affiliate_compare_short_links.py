@@ -9,7 +9,7 @@ import re
 _DEFAULT_LABELS: dict[str, str] = {
     "affiliate-textbooks-recommend": "おすすめテキスト3選",
     "affiliate-problem-books": "おすすめ問題集3選",
-    "affiliate-mock-exam-materials": "おすすめ一問一答・速習",
+    "affiliate-mock-exam-materials": "CBT対策問題集3選",
     "affiliate-free-vs-paid-study": "無料と有料教材の使い分け",
     "affiliate-correspondence-course": "おすすめ通信講座",
     "affiliate-online-course-compare": "オンライン講座比較",

@@ -71,6 +71,7 @@ from tools.html_footer import (  # noqa: E402
     site_page_wrap_open,
 )
 from tools.q_page_seo import (
+    exercise_scope_note_html,
     index_lead,
     index_meta_description,
     index_search_index_suffix,
@@ -708,6 +709,7 @@ def build_mode_index(
     """実践演習 / 一問一答の一覧（過去問 q/index.html と同型 UI）。"""
     cfg = {**INDEX_CONFIG[mode], "categoryOrder": category_order()}
     study_modes_note = study_modes_note_html()
+    exercise_scope_note = exercise_scope_note_html()
     search_placeholder = index_search_placeholder(mode)
 
     if mode == "practice":
@@ -810,6 +812,7 @@ def build_mode_index(
   {breadcrumb}
   <h1>{html.escape(h1)}</h1>
   <p class="site-page-lead">{html.escape(lead)}</p>
+  {exercise_scope_note}
   {study_modes_note}
   {q_hub_links_html(rel_path, current=current)}
   <section class="past-index-panel" aria-labelledby="mode-index-heading">

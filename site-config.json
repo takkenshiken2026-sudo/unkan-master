@@ -11,7 +11,8 @@
   "extendedCorrectAnswers": true,
   "seoCopy": {
     "mockExam": "模試・模擬試験",
-    "studyModes": "過去問・実践演習・一問一答"
+    "studyModes": "過去問・実践演習・一問一答",
+    "exerciseScopeNote": "掲載する過去問・実践演習・一問一答は貨物試験向けです。旅客試験の第1分野（道路運送法8問）は別教材等で対策してください。（2）～（5）分野は貨物・旅客共通のため、当サイトの演習も活用できます。"
   },
   "theme": {
     "accent": "#8f5a24",
@@ -196,13 +197,14 @@
   "fields": [
     {
       "id": "jigyo",
-      "name": "貨物自動車運送事業法関係",
+      "name": "貨物自動車運送事業法関係（貨物）",
       "aliases": [
         "貨物自動車運送事業法関係",
         "事業法関係",
         "貨物事業法",
         "事業法",
-        "契約・実務"
+        "契約・実務",
+        "貨物試験第1分野"
       ],
       "legacyGlossaryCat": "jigyo"
     },
@@ -296,5 +298,14 @@
       "url": "https://www.unkan.or.jp/",
       "description": "試験日程・要項・合格発表などの公式情報を確認してください。"
     }
-  ]
+  ],
+  "coursePromo": {
+    "url": "https://px.a8.net/svt/ejp?a8mat=4B3TF0+DUXGNU+408S+BW0YB&a8ejpredirect=https%3A%2F%2Fonsuku.jp%2Ftraining%2Funkan",
+    "lpUrl": "https://onsuku.jp/training/unkan",
+    "modeTitle": "オンスク.JP 運行管理者（貨物）講座",
+    "modePurpose": "動画と演習問題でWEB完結学習したい",
+    "priceLabel": "月額980円〜",
+    "tagLabel": "PR",
+    "footnote": "※ オンスク.JP公式サイトへ移動します。料金・受講条件は申込前に各ページでご確認ください。"
+  }
 }

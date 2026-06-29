@@ -9,6 +9,7 @@ import json
 import re
 from pathlib import Path
 
+from tools.q_page_seo import exercise_scope_note_text
 from tools.site_config import brand_name, contact_url, exam_name, fields
 
 INDEX_NOSCRIPT_MARKER_START = "<!--INDEX_NOSCRIPT-->"
@@ -93,14 +94,20 @@ def index_noscript_inner() -> str:
     if not practice_names:
         practice_names = "主要分野"
     subject_lines = "\n".join(_field_noscript_line(f) for f in field_rows) or "          <li>主要科目</li>"
+    scope_note = exercise_scope_note_text()
+    scope_para = (
+        f'        <p style="margin-top:16px;font-size:14px;line-height:1.75">{html.escape(scope_note)}</p>\n'
+        if scope_note
+        else ""
+    )
     return f"""    <noscript>
       <div style="max-width:860px;margin:40px auto;padding:0 20px;font-family:sans-serif;line-height:1.8">
         <h1>{bn}｜{en} 無料学習プラットフォーム</h1>
         <p>{en}の合格を目指す無料の学習プラットフォームです。本サービスをご利用いただくにはJavaScriptを有効にしてください。</p>
         <h2>主な機能</h2>
         <ul>
-          <li><strong>過去問演習</strong>：年度別・科目別に絞り込んで効率的に学習</li>
-          <li><strong>実践演習</strong>：{practice_names}の分野別練習（独自問題集）</li>
+          <li><strong>過去問演習</strong>：年度別・科目別に絞り込んで効率的に学習（<strong>貨物試験向け</strong>）</li>
+          <li><strong>実践演習</strong>：{practice_names}の分野別練習（独自問題集・<strong>貨物試験向け</strong>）</li>
           <li><strong>用語解説</strong>：重要用語をわかりやすく解説（静的ページ）</li>
           <li><strong>記録・学習分析</strong>：学習日記・バッジ・レベルに加え、正答率や科目別成績で進捗を可視化</li>
         </ul>
@@ -108,7 +115,7 @@ def index_noscript_inner() -> str:
         <ul>
 {subject_lines}
         </ul>
-        <p style="margin-top:24px;font-size:14px;line-height:2"><a href="about.html">このサイトについて</a> ・ <a href="q/index.html">過去問一覧</a> ・ <a href="q/practice/index.html">実践演習一覧</a> ・ <a href="q/ichimon/index.html">一問一答一覧</a> ・ <a href="terms/index.html">用語集</a> ・ <a href="articles/index.html">試験ガイド</a> ・ <a href="related-sites.html">関連リンク</a> ・ <a href="privacy.html">プライバシー</a> ・ <a href="{contact}" target="_blank" rel="noopener noreferrer">お問い合わせ</a></p>
+{scope_para}        <p style="margin-top:24px;font-size:14px;line-height:2"><a href="about.html">このサイトについて</a> ・ <a href="q/index.html">過去問一覧</a> ・ <a href="q/practice/index.html">実践演習一覧</a> ・ <a href="q/ichimon/index.html">一問一答一覧</a> ・ <a href="terms/index.html">用語集</a> ・ <a href="articles/index.html">試験ガイド</a> ・ <a href="related-sites.html">関連リンク</a> ・ <a href="privacy.html">プライバシー</a> ・ <a href="{contact}" target="_blank" rel="noopener noreferrer">お問い合わせ</a></p>
       </div>
     </noscript>"""
 

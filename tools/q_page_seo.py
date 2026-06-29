@@ -21,7 +21,19 @@ def seo_copy() -> dict[str, str]:
     return {
         "mockExam": str(raw.get("mockExam") or "模試・模擬試験"),
         "studyModes": str(raw.get("studyModes") or "過去問・実践演習・一問一答"),
+        "exerciseScopeNote": str(raw.get("exerciseScopeNote") or "").strip(),
     }
+
+
+def exercise_scope_note_text() -> str:
+    return seo_copy()["exerciseScopeNote"]
+
+
+def exercise_scope_note_html(*, class_name: str = "q-study-modes-note q-exercise-scope-note") -> str:
+    text = exercise_scope_note_text()
+    if not text:
+        return ""
+    return f'<p class="{class_name}">{html.escape(text)}</p>'
 
 
 def study_modes_note_html() -> str:
@@ -37,20 +49,21 @@ def study_modes_note_html() -> str:
 def index_lead(mode: str) -> str:
     ex = exam_name()
     c = seo_copy()
+    scope = "貨物"
     if mode == "past":
         return (
-            f"{ex}の過去問を年度別・分野別にまとめています。"
+            f"{ex}（{scope}）の過去問を年度別・分野別にまとめています。"
             f"{c['mockExam']}前の出題傾向の確認や、{c['studyModes']}の中心コンテンツとして使えます。"
             "検索と絞り込みで目的の問題を探し、解説ページで正誤と解説を確認できます。"
         )
     if mode == "practice":
         return (
-            f"{ex}の実践演習を分野別にまとめています。"
+            f"{ex}（{scope}）の実践演習を分野別にまとめています。"
             f"{c['mockExam']}に近い形式で力を測る演習として、{c['studyModes']}と組み合わせて学習できます。"
             "各問題の解説ページで正誤を確認し、アプリで演習できます。"
         )
     return (
-        f"{ex}の一問一答を年度・分野別にまとめています。"
+        f"{ex}（{scope}）の一問一答を年度・分野別にまとめています。"
         f"{c['mockExam']}前の知識確認や、{c['studyModes']}の隙間学習に使えます。"
         "検索と絞り込みのあと、解説ページからアプリ演習へ進めます。"
     )
@@ -59,21 +72,22 @@ def index_lead(mode: str) -> str:
 def index_meta_description(mode: str, *, count: int) -> str:
     ex = exam_name()
     c = seo_copy()
+    scope = "貨物"
     if mode == "past":
         base = (
-            f"{ex}の過去問{count}問を年度・分野別に掲載。"
+            f"{ex}（{scope}）の過去問{count}問を年度・分野別に掲載。"
             f"{c['mockExam']}対策・{c['studyModes']}の学習に対応。"
             "検索・絞り込みのあと解説ページへ。"
         )
     elif mode == "practice":
         base = (
-            f"{ex}の実践演習{count}問を分野別に掲載。"
+            f"{ex}（{scope}）の実践演習{count}問を分野別に掲載。"
             f"{c['mockExam']}前の演習として{c['studyModes']}と併用可能。"
             "検索・絞り込みと解説ページに対応。"
         )
     else:
         base = (
-            f"{ex}の一問一答{count}問を年度・分野別に掲載。"
+            f"{ex}（{scope}）の一問一答{count}問を年度・分野別に掲載。"
             f"{c['mockExam']}・本番前の{c['studyModes']}学習に対応。"
             "検索・絞り込みと解説に対応。"
         )
