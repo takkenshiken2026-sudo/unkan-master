@@ -68,6 +68,57 @@ OPERATOR_CONTENT_FRAGMENTS: list[tuple[str, str]] = [
     ("term_detail_body", "CSV列名の説明"),
 ]
 
+# --- Raw product-code (ISBN/ASIN) leak detection for reader-facing prose -------
+# Bare ISBN/ASIN codes (e.g. 4798184578) or their 4-digit tails (e.g. 3760) read
+# as meaningless numbers to a human. They belong in the product cards / links, not
+# in flowing body text. Amazon URLs and markdown link targets are intentionally ignored.
+_ISBN10_RE = re.compile(r"(?<![0-9A-Za-z])[0-9]{9}[0-9Xx](?![0-9A-Za-z])")
+_AMAZON_ASIN_RE = re.compile(r"/dp/([0-9A-Za-z]{10})")
+_URL_RE = re.compile(r"https?://\S+")
+_MD_LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
+_BARE_4DIGIT_RE = re.compile(r"(?<![0-9])[0-9]{4}(?![0-9])")
+
+
+def _guide_reader_text_columns() -> list[str]:
+    cols = ["title", "meta_description", "lead", "key_points"]
+    for n in range(1, 8):
+        cols.extend((f"section_{n}_heading", f"section_{n}_body"))
+    for n in range(1, 4):
+        cols.extend((f"faq_{n}_question", f"faq_{n}_answer"))
+    return cols
+
+
+def _known_product_codes(row: dict[str, str]) -> set[str]:
+    """ISBN/ASIN codes this row references via links/notes, plus their 4-digit tails."""
+    blob = " ".join(
+        (row.get(col) or "")
+        for col in ("related_links", "original_note", "primary_sources")
+    )
+    codes = set(_ISBN10_RE.findall(blob))
+    codes.update(_AMAZON_ASIN_RE.findall(blob))
+    codes.update({c[-4:] for c in list(codes)})
+    return codes
+
+
+def guide_reader_code_leaks(row: dict[str, str]) -> list[tuple[str, str]]:
+    """(column, code) pairs where a raw ISBN/ASIN or product-code fragment leaked
+    into reader-facing prose. Full ISBN/ASIN tokens are always flagged; bare 4-digit
+    fragments are flagged only when they match a product code the row itself links to
+    (so genuine years / prices are never false-positives)."""
+    known = _known_product_codes(row)
+    leaks: list[tuple[str, str]] = []
+    for col in _guide_reader_text_columns():
+        raw = row.get(col) or ""
+        if not raw:
+            continue
+        text = _URL_RE.sub(" ", _MD_LINK_TARGET_RE.sub("]", raw))
+        for match in _ISBN10_RE.findall(text):
+            leaks.append((col, match))
+        for frag in _BARE_4DIGIT_RE.findall(text):
+            if frag in known:
+                leaks.append((col, frag))
+    return leaks
+
 
 @dataclass
 class Issue:
@@ -446,6 +497,14 @@ class Validator:
                             idx,
                             f"faq_{n} に公開禁止の文言「{fragment}」: {reason}",
                         )
+            if status not in {"draft", "archived"}:
+                for col, code in guide_reader_code_leaks(row):
+                    self.error(
+                        path,
+                        idx,
+                        f"{col} に読者向けでない商品コード「{code}」が本文に露出しています。"
+                        " ISBN/ASIN は商品カード・リンクにのみ置き、本文では商品名・短縮名で表記してください。",
+                    )
             related = self.norm(row.get("related_links"))
             if related:
                 for item in split_semicolon(related):
