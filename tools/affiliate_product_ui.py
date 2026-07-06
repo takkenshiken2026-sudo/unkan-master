@@ -252,10 +252,20 @@ def comparison_table_html(brief: dict[str, Any], products: list[dict[str, Any]])
         else:
             spec = norm(str(product.get("pages") or "")) or "—"
         for_who = norm(str(product.get("for_who") or "")) or "—"
+        url = product_affiliate_url(product)
+        if name and is_trackable_asp_url(url):
+            aria = f'{name} を{"公式サイト" if offer_type == "course" else "Amazon"}で見る'
+            name_cell = (
+                f'<a class="affiliate-compare-name-link" href="{html.escape(url)}" '
+                f'target="_blank" rel="{EXTERNAL_REL}" aria-label="{html.escape(aria)}">'
+                f"{html.escape(name)}</a>"
+            )
+        else:
+            name_cell = html.escape(name)
         rows.append(
             "<tr>"
             f'<th scope="row">{html.escape(rank)}</th>'
-            f"<td>{html.escape(name)}</td>"
+            f'<td class="affiliate-compare-name">{name_cell}</td>'
             f"<td>{html.escape(price)}</td>"
             f"<td>{html.escape(spec)}</td>"
             f"<td>{html.escape(for_who)}</td>"

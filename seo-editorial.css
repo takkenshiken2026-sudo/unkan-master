@@ -1102,6 +1102,19 @@ body.seo-editorial-preview-page .seo-editorial.seo-article-card .related-box-tit
   border-bottom: 1px solid var(--seo-table-border);
 }
 
+.seo-editorial.seo-article-card .affiliate-compare-name-link {
+  color: var(--seo-link-inline);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.seo-editorial.seo-article-card .affiliate-compare-name-link:hover,
+.seo-editorial.seo-article-card .affiliate-compare-name-link:focus-visible {
+  text-decoration-thickness: 2px;
+}
+
 .seo-editorial.seo-article-card .affiliate-product-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
