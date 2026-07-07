@@ -1,0 +1,62 @@
+slug: affiliate-beginner-textbooks
+theme_key: textbooks-recommend
+search_intent: 運行管理者試験の初心者向けにやさしくわかりやすいテキストを選びたい
+title: 運行管理者試験の初心者向けわかりやすいテキスト3選【2026】
+layout: product-comparison
+asp_primary: amazon
+comparison_kind: books
+comparison_title: 初心者向けわかりやすいテキスト3選（比較）
+price_disclaimer: 価格・在庫・版情報は執筆時点（2026-07）のAmazon税込参考です。購入前に必ず販売ページでご確認ください。
+products:
+- rank: 1
+  offer_type: book
+  name: 改訂2版 この1冊で合格！ 教育系YouTuberルネスタよしおの運行管理者 貨物 テキスト&問題集
+  publisher: KADOKAWA
+  edition: 改訂2版
+  price_yen: 2640
+  price_note: Amazon税込参考・送料別
+  asin: '4046075503'
+  image_file: unkan-book-4046075503.webp
+  amazon_url: https://www.amazon.co.jp/dp/4046075503/ref=nosim?tag=ue083093-22
+  for_who: 活字が苦手・完全初心者で、まずは挫折せず読み切りたい人
+  highlights:
+  - カラー図解と会話形式で抜群にとっつきやすい
+  - YouTube動画とあわせて理解を補える
+  - テキストと問題集が1冊で、独学の入口に最適
+- rank: 2
+  offer_type: book
+  name: いちばんわかりやすい！ 運行管理者＜貨物＞合格テキスト
+  publisher: 成美堂出版 / コンデックス情報研究所
+  price_yen: 1650
+  price_note: Amazon税込参考・送料別
+  asin: 441523867X
+  image_file: unkan-book-441523867x.webp
+  amazon_url: https://www.amazon.co.jp/dp/441523867X/ref=nosim?tag=ue083093-22
+  for_who: 出るところに絞って、低価格でコンパクトに始めたい人
+  highlights:
+  - 頻出ポイントに絞ったコンパクトな構成
+  - 穴埋め問題と赤シートで暗記がしやすい
+  - まず1冊を安く試したい人の入門用に
+- rank: 3
+  offer_type: book
+  name: ズバリ合格！ 運行管理者＜貨物＞図解テキスト&問題集
+  publisher: ナツメ社 / 物流法務総合研究所（LLCA）
+  edition: 2025年版
+  price_yen: 2530
+  price_note: Amazon税込参考・送料別
+  pages: 392
+  asin: '4816376984'
+  image_file: unkan-book-4816376984.webp
+  amazon_url: https://www.amazon.co.jp/dp/4816376984/ref=nosim?tag=ue083093-22
+  for_who: 図で理解しながら、演習まで一気に進めたい人
+  highlights:
+  - 図解中心で用語や流れを視覚的に理解できる
+  - CBT過去問＋模擬問題で本番形式に慣れられる
+  - 入門から実戦演習まで1冊でカバー
+related_links:
+- study-method:独学の始め方
+- self-study-start:独学のはじめ方
+- affiliate-textbooks-recommend:おすすめテキスト3選
+- affiliate-problem-books:おすすめ問題集3選
+- pass-criteria:合格点の目安
+operator_note: Amazon tag=ue083093-22。4046075503 / 441523867X / 4816376984。2026-07 価格・版・ページは公開前に要再確認。ルネスタ・成美堂のページ数は未確定（—表示）。

@@ -1,0 +1,65 @@
+slug: affiliate-freight-textbooks
+theme_key: textbooks-recommend
+search_intent: 運行管理者試験（貨物）の独学向けテキストだけを比較して選びたい
+title: 運行管理者試験〈貨物〉のおすすめテキスト3選【2026】
+layout: product-comparison
+asp_primary: amazon
+comparison_kind: books
+comparison_title: 貨物向けおすすめテキスト3選（比較）
+price_disclaimer: 価格・在庫・版情報は執筆時点（2026-07）のAmazon税込参考です。購入前に必ず販売ページでご確認ください。
+products:
+- rank: 1
+  offer_type: book
+  name: 2026年版 ユーキャンの運行管理者＜貨物＞ 合格テキスト&問題集
+  publisher: ユーキャン / 自由国民社
+  edition: 2026年版
+  price_yen: 3080
+  price_note: Amazon税込参考・送料別
+  pages: 512
+  asin: '4426616654'
+  image_file: unkan-book-4426616654.webp
+  amazon_url: https://www.amazon.co.jp/dp/4426616654/ref=nosim?tag=ue083093-22
+  for_who: 貨物を1冊のオールインワンでやさしく始めたい初学者
+  highlights:
+  - 貨物5科目＋過去問＋模試を1冊にまとめた定番
+  - 図表とイラストで全体像をつかみやすい
+  - 同シリーズの過去6回問題集と章立てを揃えやすい
+- rank: 2
+  offer_type: book
+  name: 運行管理教科書 運行管理者＜貨物＞テキスト&問題集 第3版
+  publisher: 翔泳社
+  edition: 第3版
+  price_yen: 3300
+  price_note: Amazon税込参考・送料別
+  pages: 560
+  asin: 479818456X
+  image_file: unkan-book-479818456x.webp
+  amazon_url: https://www.amazon.co.jp/dp/479818456X/ref=nosim?tag=ue083093-22
+  for_who: 条文や数字の理由まで読み込んで理解したい人
+  highlights:
+  - 解説が厚く、条文・数値の整理に向く
+  - テキストと問題集がセットで復習しやすい
+  - 改善基準告示の改定に対応した最新版
+- rank: 3
+  offer_type: book
+  name: ズバリ合格！ 運行管理者＜貨物＞図解テキスト&問題集
+  publisher: ナツメ社 / 物流法務総合研究所（LLCA）
+  edition: 2025年版
+  price_yen: 2530
+  price_note: Amazon税込参考・送料別
+  pages: 392
+  asin: '4816376984'
+  image_file: unkan-book-4816376984.webp
+  amazon_url: https://www.amazon.co.jp/dp/4816376984/ref=nosim?tag=ue083093-22
+  for_who: 図で理解を進めつつ、CBT形式の演習までやりたい人
+  highlights:
+  - 図解にこだわった解説で要点を視覚的に整理
+  - CBT過去問＋模擬問題で本番形式に慣れられる
+  - 2025年発売で比較的新しい内容
+related_links:
+- study-method:独学の始め方
+- past-questions-guide:過去問の使い方
+- affiliate-problem-books:おすすめ問題集3選
+- affiliate-mock-exam-materials:CBT対策問題集3選
+- pass-criteria:合格点の目安
+operator_note: Amazon tag=ue083093-22。4426616654 / 479818456X / 4816376984。2026-07 価格・版・ページは公開前に要再確認。
