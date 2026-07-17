@@ -47,6 +47,7 @@ def main() -> int:
     run([py, "tools/validate_guide_index_picks.py"])
     run([py, "tools/validate_internal_links.py"])
     run([py, "tools/validate_public_content.py"])
+    run([py, "tools/apply_adsense.py"])
     run(["bash", "tools/prepare_public_site.sh"])
     return 0
 
