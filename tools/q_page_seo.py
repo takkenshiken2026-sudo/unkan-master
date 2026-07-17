@@ -126,7 +126,11 @@ def question_meta_description(
     else:
         tail = f"{c['mockExam']}前の確認に。{c['studyModes']}と併用できます。正誤と解説を掲載。"
     ans = (answer_tail or "").strip()
-    ans_part = f" 正答: {ans}。" if ans else ""
+    # 正答をスニペットに露出させると、検索者が検索結果画面だけで答えを得てしまい
+    # クリックに至らない。GSC 上、1ページ目掲載（掲載順位6〜9位）でも CTR≈0 の
+    # 過去問・実践演習ページが多発しており、正答そのものは伏せて「答えと理由は本文で
+    # 確認できる」という誘導に変更し、クリックを促す。
+    ans_part = " 正答と各選択肢の理由を、わかりやすい解説で確認できます。" if ans else ""
     core = body.strip() if body.strip() else tail
     if body.strip():
         combo = prefix + core + ans_part
@@ -207,9 +211,11 @@ def question_page_title(
     year_label: str = "",
 ) -> str:
     """各問ページの <title>。"""
+    # 検索意図（設問文で検索し「答えと解説」を探す）に合わせ、識別子のあとに
+    # 「答えと解説」を添えてクリック誘導を強める。H1 は識別子のみで簡潔に保つ。
     return (
         f"{question_h1(mode, year=year, qno=qno, question_id=question_id, category=category, year_label=year_label)}"
-        f"｜{brand_name()}"
+        f" 答えと解説｜{brand_name()}"
     )
 
 
