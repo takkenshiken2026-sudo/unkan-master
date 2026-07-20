@@ -861,6 +861,20 @@ def build_article_html(
         )
         related = merge_related_boxes(article_links, hub_box)
     quality_panel = quality_panel_html(article)
+    # 情報系ガイド記事の冒頭に「この記事の要点」ボックスを表示（用語集などと同じ設計）。
+    # アフィリエイト記事は別途商品ボックスを持つため重複を避けて除外する。
+    key_points_box = (
+        ""
+        if is_affiliate_article(article)
+        else key_points_box_html(
+            article,
+            slug_titles=slug_titles,
+            url_labels=url_labels,
+            affiliate_brief=brief,
+            rel_path=rel_path,
+            site_root=ROOT,
+        )
+    )
     author = apply_vars(article.get("author_name", ""))
     reviewer = apply_vars(article.get("reviewer_name", ""))
     sources = parse_source_links(article.get("primary_sources", ""))
@@ -995,6 +1009,7 @@ def build_article_html(
     </div>
     <h1 class="article-title">{html.escape(title)}</h1>
     <p class="article-lead">{lead_html}</p>
+    {key_points_box}
     {toc}
     {quality_panel}
     {sections}
