@@ -661,11 +661,19 @@ def quiz_jsonld_node(page: dict) -> dict | None:
     suggested = [t for i, t in enumerate(opts, 1) if i != correct and t]
     if not suggested:
         return None
+    accepted: dict = {"@type": "Answer", "text": accepted_text}
+    # 可視ページ上の解説を正解の補足(comment)として付与し、練習問題リッチリザルトの
+    # 解説表示に対応させる。未入力プレースホルダは付けない。
+    exp = re.sub(r"\s+", " ", norm(page.get("exp"))).strip()
+    if exp and not exp.startswith("（解説は未入力"):
+        if len(exp) > 500:
+            exp = exp[:497].rstrip() + "…"
+        accepted["comment"] = {"@type": "Comment", "text": exp}
     question = {
         "@type": "Question",
         "eduQuestionType": "Multiple choice",
         "text": stem,
-        "acceptedAnswer": {"@type": "Answer", "text": accepted_text},
+        "acceptedAnswer": accepted,
         "suggestedAnswer": [{"@type": "Answer", "text": t} for t in suggested],
     }
     subject = norm(page.get("category")) or exam_name()
