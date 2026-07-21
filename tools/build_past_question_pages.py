@@ -639,6 +639,50 @@ def page_dict(row: dict, line_no: int) -> dict:
     }
 
 
+def quiz_jsonld_node(page: dict) -> dict | None:
+    """単一正答の選択式問題を Google 練習問題(Quiz)構造化データにする。
+
+    可視ページ上の問題文・選択肢・正答をそのままマークアップする。複合正答・穴埋め
+    (Ａ〜Ｄ形式)・複数正答・正誤問題など「1つの選択肢が正答」に収まらない形式は、
+    誤った構造化データを避けるため None を返す（対象外）。
+    """
+    if page.get("is_invalidated"):
+        return None
+    opts = [norm(o) for o in (page.get("opts") or [])]
+    correct = page.get("correct")
+    stem = norm(page.get("stem_plain"))
+    if not stem or not isinstance(correct, int):
+        return None
+    if not (1 <= correct <= len(opts)):
+        return None
+    accepted_text = opts[correct - 1]
+    if not accepted_text:
+        return None
+    suggested = [t for i, t in enumerate(opts, 1) if i != correct and t]
+    if not suggested:
+        return None
+    question = {
+        "@type": "Question",
+        "eduQuestionType": "Multiple choice",
+        "text": stem,
+        "acceptedAnswer": {"@type": "Answer", "text": accepted_text},
+        "suggestedAnswer": [{"@type": "Answer", "text": t} for t in suggested],
+    }
+    subject = norm(page.get("category")) or exam_name()
+    return {
+        "@type": "Quiz",
+        "about": {"@type": "Thing", "name": subject},
+        "educationalAlignment": [
+            {
+                "@type": "AlignmentObject",
+                "alignmentType": "educationalSubject",
+                "targetName": exam_name(),
+            }
+        ],
+        "hasPart": question,
+    }
+
+
 def build_question_html(
     page: dict,
     row: dict,
@@ -717,6 +761,9 @@ def build_question_html(
             },
         ],
     }
+    quiz_node = quiz_jsonld_node(page)
+    if quiz_node:
+        json_ld["@graph"].append(quiz_node)
 
     site_header = site_page_header(
         rel_path,
