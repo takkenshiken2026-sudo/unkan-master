@@ -100,6 +100,45 @@ def is_affiliate_article(row: dict[str, str]) -> bool:
     return AFFILIATE_TAG in tags
 
 
+# 記事内にサーバー描画のオンライン講座CTA（site-config の coursePromo）を出すページ。
+# 講座を検討しやすい高流入・高意図ページと、講座比較記事を対象にする。
+COURSE_PROMO_SLUGS: frozenset[str] = frozenset(
+    {
+        # 講座比較アフィリエイト記事（CTA が収益導線・公開の前提になる）
+        "affiliate-online-course-compare",
+        "affiliate-correspondence-course",
+        "affiliate-cram-school",
+        "affiliate-retake-short-course",
+        "affiliate-qualification-support-service",
+        # 講座を最も検討する層が読む情報記事（独学・学習計画・難易度・再受験・苦手）
+        "study-plan",
+        "study-method",
+        "exam-difficulty-passrate",
+        "retake-guide",
+        "calculation-problems",
+        "past-questions-guide",
+        "basic-training-course",
+        # 高流入の教材選び記事（独学教材の代替として講座を提示）
+        "affiliate-textbooks-recommend",
+        "affiliate-problem-books",
+        "affiliate-beginner-textbooks",
+    }
+)
+
+
+def renders_course_cta(row: dict[str, str]) -> bool:
+    """この記事にサーバー描画のオンライン講座CTAを出すか。
+
+    coursePromo（トラッキング可能な ASP リンク）が設定済みで、対象 slug の場合に True。
+    講座アフィリエイト記事はこの CTA が収益導線になるため、公開可否判定でも使う。
+    """
+    if norm(row.get("slug")) not in COURSE_PROMO_SLUGS:
+        return False
+    from tools.site_config import course_promo  # noqa: WPS433
+
+    return course_promo() is not None
+
+
 def affiliate_article_is_buildable(
     row: dict[str, str],
     *,
@@ -110,6 +149,8 @@ def affiliate_article_is_buildable(
     if not is_affiliate_article(row):
         return True
     if affiliate_external_links_in_row(row):
+        return True
+    if renders_course_cta(row):
         return True
     if brief and affiliate_brief_has_links(brief):
         return True

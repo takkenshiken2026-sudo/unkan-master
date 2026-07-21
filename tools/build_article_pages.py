@@ -30,6 +30,7 @@ from tools.seo_utils import content_date_from_row, json_ld_date_modified, meta_u
 from tools.site_config import (  # noqa: E402
     brand_name,
     clean_origin,
+    course_promo,
     exam_name,
     external_links,
     guide_article_genres,
@@ -383,6 +384,44 @@ def key_points_items(
         if heading and body and not is_affiliate_skip_section(article, heading):
             from_headings.append(heading)
     return from_headings[:3]
+
+
+def course_promo_cta_html(article: dict[str, str]) -> str:
+    """記事内に表示するオンライン講座CTA（site-config の coursePromo・オンスク等）。
+
+    対象 slug（COURSE_PROMO_SLUGS）かつ coursePromo 設定済みのときだけ、サーバー描画で
+    「PR」表記・料金・公式リンク（rel=nofollow sponsored）付きの導線ボックスを返す。
+    """
+    from tools.affiliate_links import renders_course_cta  # noqa: E402
+
+    if not renders_course_cta(article):
+        return ""
+    cp = course_promo() or {}
+    url = norm(cp.get("url"))
+    if not url:
+        return ""
+    title = norm(cp.get("modeTitle")) or "オンライン講座"
+    purpose = norm(cp.get("modePurpose")) or "動画講座で効率よく学習したい"
+    price = norm(cp.get("priceLabel"))
+    tag = norm(cp.get("tagLabel")) or "PR"
+    note = norm(cp.get("footnote"))
+    desc = f"{purpose}方に。独学で伸び悩む・時間を確保しにくい社会人の学習の選択肢です。"
+    price_html = (
+        f'<span class="seo-course-cta-price">{html.escape(price)}</span>' if price else ""
+    )
+    note_html = (
+        f'<p class="seo-course-cta-note">{html.escape(note)}</p>' if note else ""
+    )
+    return (
+        '<aside class="seo-course-cta" aria-label="オンライン講座の案内">'
+        f'<div class="seo-course-cta-head"><span class="seo-course-cta-tag">{html.escape(tag)}</span>{price_html}</div>'
+        f'<p class="seo-course-cta-title">{html.escape(title)}</p>'
+        f'<p class="seo-course-cta-desc">{html.escape(desc)}</p>'
+        f'<a class="seo-course-cta-btn" href="{html.escape(url, quote=True)}" '
+        'target="_blank" rel="nofollow sponsored noopener noreferrer">講座の内容を見る</a>'
+        f"{note_html}"
+        "</aside>"
+    )
 
 
 def key_points_box_html(
@@ -875,6 +914,7 @@ def build_article_html(
             site_root=ROOT,
         )
     )
+    course_promo_cta = course_promo_cta_html(article)
     author = apply_vars(article.get("author_name", ""))
     reviewer = apply_vars(article.get("reviewer_name", ""))
     sources = parse_source_links(article.get("primary_sources", ""))
@@ -1013,6 +1053,7 @@ def build_article_html(
     {toc}
     {quality_panel}
     {sections}
+    {course_promo_cta}
     {faq_section}
     {info_table}
     {official_box}
