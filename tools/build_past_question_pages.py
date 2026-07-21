@@ -959,6 +959,55 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
     exercise_scope_note = exercise_scope_note_html()
     index_picks_html = build_guide_index_picks_html(rel_path)
 
+    # 構造化データ: この一覧が「網羅的な過去問コレクション」であることを Google に伝える。
+    # パンくず + CollectionPage(+ItemList) で全掲載問題への参照を明示する。
+    q_index_url = public_url(base_url, "q/index.html")
+    # 網羅性は numberOfItems=全587問 で伝える。itemListElement はページ肥大を避け、
+    # 直近年度を優先した代表 100 件に絞る（Google は部分的な ItemList を許容）。
+    _ITEM_LIST_CAP = 100
+    _featured = sorted(pages, key=lambda pg: (pg["year"], pg["qno"]), reverse=True)[:_ITEM_LIST_CAP]
+    collection_items = [
+        {
+            "@type": "ListItem",
+            "position": idx,
+            "url": public_url(base_url, pg["rel_path"]),
+            "name": page_heading(pg),
+        }
+        for idx, pg in enumerate(_featured, 1)
+    ]
+    q_index_jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "トップ", "item": public_url(base_url, "index.html")},
+                    {"@type": "ListItem", "position": 2, "name": "過去問一覧", "item": q_index_url},
+                ],
+            },
+            {
+                "@type": "CollectionPage",
+                "@id": q_index_url + "#collection",
+                "url": q_index_url,
+                "name": page_title,
+                "description": page_desc,
+                "inLanguage": "ja-JP",
+                "isPartOf": {"@type": "WebSite", "name": brand_name(), "url": public_url(base_url, "index.html")},
+                "about": {"@type": "Thing", "name": f"{exam_name()} 過去問"},
+                "mainEntity": {
+                    "@type": "ItemList",
+                    "numberOfItems": len(pages),
+                    "itemListElement": collection_items,
+                },
+            },
+        ],
+    }
+    q_index_jsonld_script = (
+        '<script type="application/ld+json">\n'
+        + json.dumps(q_index_jsonld, ensure_ascii=False, indent=2)
+        + "\n</script>"
+    )
+
     return f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -971,10 +1020,11 @@ def build_q_index(pages: list[dict], base_url: str) -> str:
 <meta property="og:description" content="{html.escape(page_desc)}">
 <meta name="twitter:card" content="summary_large_image">
 {ROBOTS_INDEX_FOLLOW}
-<link rel="canonical" href="{html.escape(public_url(base_url, "q/index.html"))}">
+<link rel="canonical" href="{html.escape(q_index_url)}">
 {HEAD_FONTS}
 <link rel="stylesheet" href="../site-pages.css?v={Q_INDEX_CSS_VER}">
 <link rel="stylesheet" href="../site-theme.css">
+{q_index_jsonld_script}
 </head>
 <body class="{shell_body_class('q-index-page')}">
 {site_page_wrap_open()}
