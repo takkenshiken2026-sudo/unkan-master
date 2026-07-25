@@ -969,8 +969,24 @@ def _glossary_study_point_items(entry: dict, *, max_items: int = 3) -> list[str]
     if exam_points and not any(
         any(marker in item for marker in _MISTAKE_POINT_MARKERS) for item in exam_points
     ):
-        cleaned = [item.strip() for item in exam_points if len(item.strip()) >= 8]
-        cleaned = [item for item in cleaned if not item.startswith("根拠：")]
+        # 「（○○の試験論点）」「（復習）」は各ページ共通のテンプレ定型句で
+        # 情報量がないため取り除き、素の論点キーワードだけを残す。
+        cleaned = []
+        for item in exam_points:
+            item = re.sub(r"（[^）]*試験論点）", "", item)
+            item = item.replace("（復習）", "").strip()
+            if len(item) >= 2 and not item.startswith("根拠："):
+                cleaned.append(item)
+        # 同一の要点が複数回並ぶと水増しに見えるため重複を除去する。
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for item in cleaned:
+            k = re.sub(r"[\s。]+", "", item)
+            if not k or k in seen:
+                continue
+            seen.add(k)
+            deduped.append(item)
+        cleaned = deduped
         if cleaned and not _exam_points_look_low_quality(cleaned):
             return cleaned[:max_items]
 
@@ -1147,12 +1163,20 @@ def _term_detail_prose_paragraphs(raw_body: str) -> list[str]:
     return paras
 
 
-def _merge_term_detail_prose(parts: list[str], raw_body: str, *, max_chars: int) -> None:
-    """short_def / definition 後に term_detail_body の散文を最大2段落まで追補。"""
+def _merge_term_detail_prose(
+    parts: list[str], raw_body: str, *, max_chars: int, seed_keys: set[str] | None = None
+) -> None:
+    """short_def / definition 後に term_detail_body の散文を最大2段落まで追補。
+
+    seed_keys には「まず押さえる要点」で提示済みの文キーを渡し、
+    term_detail_body 側で同じ文が再掲されるのを防ぐ。
+    """
     joined = "\n\n".join(parts)
     if len(joined) >= max_chars or not raw_body.strip():
         return
     existing = _definition_body_keys(joined)
+    if seed_keys:
+        existing |= seed_keys
     added = 0
     for para in _term_detail_prose_paragraphs(raw_body):
         if added >= _DEFINITION_DETAIL_MAX_PARAS:
@@ -1209,11 +1233,12 @@ def glossary_definition_body_text(entry: dict) -> str:
     tables = re.findall(r"<table[\s\S]*?</table>", raw_body, flags=re.I)
 
     parts: list[str] = []
-    if short_def:
-        parts.append(short_def if short_def.endswith("。") else short_def + "。")
+    # 「まず押さえる要点」で short_def をそのまま提示しているため、定義セクションでは
+    # short_def と重複しない説明だけを載せる（同一文の使い回しによる低品質化を防ぐ）。
+    summary_keys = _definition_body_keys(short_def)
 
     defn = definition or short_def
-    body_so_far = "".join(parts)
+    body_so_far = ""
     for sent in _definition_sentences(defn):
         if term:
             lead = re.match(
@@ -1227,7 +1252,7 @@ def glossary_definition_body_text(entry: dict) -> str:
         if any(skip in sent for skip in _DEFINITION_SKIP_SENTENCE):
             continue
         key = re.sub(r"\s+", "", sent)[:48]
-        if not key or key in re.sub(r"\s+", "", body_so_far):
+        if not key or key in summary_keys or key in re.sub(r"\s+", "", body_so_far):
             continue
         parts.append(sent)
         body_so_far = "".join(parts)
@@ -1243,7 +1268,9 @@ def glossary_definition_body_text(entry: dict) -> str:
     if nums and not any(n in joined for n in nums):
         parts.append(f"押さえる数値・期限：{'、'.join(nums[:4])}。")
 
-    _merge_term_detail_prose(parts, raw_body, max_chars=_DEFINITION_BODY_MAX_CHARS)
+    _merge_term_detail_prose(
+        parts, raw_body, max_chars=_DEFINITION_BODY_MAX_CHARS, seed_keys=summary_keys
+    )
 
     body = "\n\n".join(parts)
     if "有害" not in category:

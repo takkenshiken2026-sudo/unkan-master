@@ -32,6 +32,31 @@ def adsense_markup(client_id: str) -> str:
     )
 
 
+def ads_txt_line(client_id: str) -> str:
+    """AdSense の ads.txt 行。client_id は "ca-pub-XXXX" 形式を想定。
+
+    ads.txt では "pub-XXXX" 形式のパブリッシャー ID を用いる。
+    f08c47fec0942fa0 は Google の認証局 ID（全 AdSense 共通の固定値）。
+    """
+    publisher_id = client_id[3:] if client_id.startswith("ca-") else client_id
+    return f"google.com, {publisher_id}, DIRECT, f08c47fec0942fa0"
+
+
+def write_ads_txt(client_id: str) -> bool:
+    """公開ルートに ads.txt を冪等に書き出す。変更があれば True。
+
+    ads.txt が「不明（Not found）」のままだと AdSense の収益化が保留されるため、
+    公開ディメインの直下（GitHub Pages では public_site/ 直下）に必ず配置する。
+    """
+    ads_path = ROOT / "ads.txt"
+    desired = ads_txt_line(client_id) + "\n"
+    current = ads_path.read_text(encoding="utf-8") if ads_path.exists() else None
+    if current == desired:
+        return False
+    ads_path.write_text(desired, encoding="utf-8")
+    return True
+
+
 def iter_public_html() -> list[Path]:
     files = sorted(p for p in ROOT.glob("*.html") if p.is_file())
     for name in PAGE_DIRS:
@@ -41,7 +66,32 @@ def iter_public_html() -> list[Path]:
     return files
 
 
+def is_redirect_stub(html_text: str) -> bool:
+    """noindex のメタリフレッシュ移動ページ（実質コンテンツ無し）か判定する。
+
+    こうした移動用スタブに広告コードを載せると「コンテンツのない
+    ページへの広告掲載」として AdSense の品質評価で不利になるため、
+    掲載対象から除外する。
+    """
+    lowered = html_text.lower()
+    return 'http-equiv="refresh"' in lowered or "location.replace(" in lowered
+
+
+def strip_adsense(html_text: str, snippet: str) -> str:
+    """移動用スタブ等から既存の AdSense ローダーを冪等に取り除く。"""
+    for needle in (CHARSET_ANCHOR + "\n" + snippet, "\n" + snippet, snippet):
+        if needle in html_text:
+            return html_text.replace(
+                needle,
+                CHARSET_ANCHOR if needle.startswith(CHARSET_ANCHOR) else "",
+                1,
+            )
+    return html_text
+
+
 def inject(html_text: str, snippet: str, client_id: str) -> str:
+    if is_redirect_stub(html_text):
+        return strip_adsense(html_text, snippet)
     if client_id in html_text or "pagead2.googlesyndication.com" in html_text:
         return html_text
     if CHARSET_ANCHOR in html_text:
@@ -57,6 +107,10 @@ def main() -> int:
         print("apply_adsense: adsenseClientId が未設定のためスキップします。")
         return 0
     snippet = adsense_markup(client_id)
+    if write_ads_txt(client_id):
+        print(f"apply_adsense: ads.txt を更新しました（{ads_txt_line(client_id)}）")
+    else:
+        print("apply_adsense: ads.txt は最新です")
     changed = 0
     skipped = 0
     for path in iter_public_html():

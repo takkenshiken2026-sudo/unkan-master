@@ -678,6 +678,13 @@ def peer_comparison_table_html(
     peer_names = [x for x in split_semicolon(related) if x and x != term][:4]
     if len(peer_names) < 2:
         return ""
+
+    def first_clause(text: str) -> str:
+        """比較表のセルは要点1文に絞る（定義文の丸ごと再掲を避ける）。"""
+        text = (text or "").strip()
+        idx = text.find("。")
+        return (text[:idx] if idx > 0 else text).strip().rstrip("。")
+
     rows: list[tuple[str, str]] = [(term, by_term.get(term, {}).get("short_def") or "—")]
     for name in peer_names:
         snippet = by_term.get(name, {}).get("short_def") or "関連用語ページで定義を確認"
@@ -685,7 +692,7 @@ def peer_comparison_table_html(
     body = "".join(
         "<tr>"
         f"<th>{html.escape(label)}</th>"
-        f"<td>{html.escape(snippet.rstrip('。'))}</td>"
+        f"<td>{html.escape(first_clause(snippet))}</td>"
         "</tr>"
         for label, snippet in rows
     )

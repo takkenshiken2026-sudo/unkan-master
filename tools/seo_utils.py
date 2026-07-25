@@ -91,9 +91,19 @@ def is_noindex_html(path: Path) -> bool:
     return is_noindex_html_text(path.read_text(encoding="utf-8"))
 
 
+def is_glossary_term_page(name: str) -> bool:
+    """個別の用語解説ページ（terms/g-*.html）かどうか。
+
+    これらは CSV から自動生成される定型ページで独自性が低く、
+    サイト全体の品質評価（AdSense 等）を下げやすいため noindex 扱いにする。
+    一覧・分野ハブ（terms/index.html, terms/field-*/index.html）は対象外。
+    """
+    return name.startswith("g-") and name.endswith(".html")
+
+
 def robots_meta_for_slug(slug_file: str) -> str:
     name = Path(slug_file).name
-    if name in SITEMAP_EXCLUDED_BASENAMES:
+    if name in SITEMAP_EXCLUDED_BASENAMES or is_glossary_term_page(name):
         return NOINDEX_ROBOTS_META
     return INDEX_ROBOTS_META
 
