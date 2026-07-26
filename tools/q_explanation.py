@@ -1037,6 +1037,23 @@ def _extended_question_mode(page: dict, row: dict) -> str:
     return "single"
 
 
+def study_hint_section_html(row: dict) -> str:
+    """手書きの学習ヒント(explanation_point)がある問題だけ「学習のヒント」節を出力する。
+
+    未記入時に生成される分野別の定型ヒントは対象外とし、全ページへ定型文を
+    水増しすることを避ける（有用性の低いコンテンツ化を防ぐため）。
+    """
+    point = norm(row.get("explanation_point"))
+    if not point or _is_template_study_hint(point):
+        return ""
+    hint = dedupe_prose(point)
+    return (
+        '<section class="q-exp-section" aria-labelledby="q-exp-hint-h">'
+        '<h3 id="q-exp-hint-h" class="q-exp-h3">学習のヒント</h3>'
+        f"<p>{text_to_html(hint)}</p></section>"
+    )
+
+
 def build_combination_explanation_html(page: dict, row: dict) -> str:
     """穴埋め組合せ — 語句バンク（１～８）を他肢として並べない。"""
     base = norm(row.get("explanation")) or "（解説は未入力です。）"
@@ -1064,6 +1081,9 @@ def build_combination_explanation_html(page: dict, row: dict) -> str:
     body = summary or base
     parts.append(f"<p>{text_to_html(body)}</p></section>")
 
+    _hint_html = study_hint_section_html(row)
+    if _hint_html:
+        parts.append(_hint_html)
     parts.append("</div>")
     return "\n    ".join(parts)
 
@@ -1109,6 +1129,9 @@ def build_truefalse_group_explanation_html(page: dict, row: dict) -> str:
         parts.append("</li>")
     parts.append("</ul></section>")
 
+    _hint_html = study_hint_section_html(row)
+    if _hint_html:
+        parts.append(_hint_html)
     parts.append("</div>")
     return "\n    ".join(parts)
 
@@ -1303,6 +1326,9 @@ def build_explanation_html(page: dict, row: dict) -> str:
                 f'<ul class="q-exp-choice-list">{lis}</ul></section>'
             )
 
+    _hint_html = study_hint_section_html(row)
+    if _hint_html:
+        parts.append(_hint_html)
     parts.append("</div>")
     return "\n    ".join(parts)
 
