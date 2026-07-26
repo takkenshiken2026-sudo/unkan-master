@@ -20,6 +20,8 @@ from tools.site_config import adsense_client_id  # noqa: E402
 
 CHARSET_ANCHOR = '<meta charset="UTF-8">'
 HEAD_ANCHOR = "<head>"
+# サイト確認用メタタグの識別子（冪等挿入・除去の判定に使う）。
+ADSENSE_META_MARKER = 'name="google-adsense-account"'
 # public_site へコピーされる HTML（prepare_public_site.sh と対応）。
 PAGE_DIRS = ("articles", "q", "terms")
 
@@ -30,6 +32,11 @@ def adsense_markup(client_id: str) -> str:
         f'src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={client_id}"\n'
         '     crossorigin="anonymous"></script>'
     )
+
+
+def adsense_meta_markup(client_id: str) -> str:
+    """AdSense サイト確認用メタタグ（審査時のサイト所有確認に使われる）。"""
+    return f'<meta name="google-adsense-account" content="{client_id}">'
 
 
 def ads_txt_line(client_id: str) -> str:
@@ -72,14 +79,18 @@ def is_redirect_stub(html_text: str) -> bool:
     こうした移動用スタブに広告コードを載せると「コンテンツのない
     ページへの広告掲載」として AdSense の品質評価で不利になるため、
     掲載対象から除外する。
+
+    判定は移動用スタブ固有の <meta http-equiv="refresh"> のみで行う。
+    SPA（index.html 等）は本文の JavaScript で location.replace() を
+    使うことがあり、これを条件に含めると実コンテンツページを誤って
+    スタブ扱いしてしまうため、location.replace は判定に用いない。
     """
-    lowered = html_text.lower()
-    return 'http-equiv="refresh"' in lowered or "location.replace(" in lowered
+    return 'http-equiv="refresh"' in html_text.lower()
 
 
-def strip_adsense(html_text: str, snippet: str) -> str:
-    """移動用スタブ等から既存の AdSense ローダーを冪等に取り除く。"""
-    for needle in (CHARSET_ANCHOR + "\n" + snippet, "\n" + snippet, snippet):
+def _strip_block(html_text: str, block: str) -> str:
+    """<head> へ差し込んだブロックを冪等に取り除く。"""
+    for needle in (CHARSET_ANCHOR + "\n" + block, "\n" + block, block):
         if needle in html_text:
             return html_text.replace(
                 needle,
@@ -89,16 +100,34 @@ def strip_adsense(html_text: str, snippet: str) -> str:
     return html_text
 
 
+def _insert_after_head(html_text: str, block: str) -> str:
+    """<head> 直後（charset の後）にブロックを差し込む。"""
+    if CHARSET_ANCHOR in html_text:
+        return html_text.replace(CHARSET_ANCHOR, CHARSET_ANCHOR + "\n" + block, 1)
+    if HEAD_ANCHOR in html_text:
+        return html_text.replace(HEAD_ANCHOR, HEAD_ANCHOR + "\n" + block, 1)
+    return html_text
+
+
+def strip_adsense(html_text: str, snippet: str) -> str:
+    """移動用スタブ等から AdSense ローダーと確認メタタグを冪等に取り除く。"""
+    text = _strip_block(html_text, snippet)
+    text = _strip_block(text, ADSENSE_META_MARKER)
+    return text
+
+
 def inject(html_text: str, snippet: str, client_id: str) -> str:
+    # 中身のない移動用スタブには広告コード・確認タグを載せない。
     if is_redirect_stub(html_text):
         return strip_adsense(html_text, snippet)
-    if client_id in html_text or "pagead2.googlesyndication.com" in html_text:
-        return html_text
-    if CHARSET_ANCHOR in html_text:
-        return html_text.replace(CHARSET_ANCHOR, CHARSET_ANCHOR + "\n" + snippet, 1)
-    if HEAD_ANCHOR in html_text:
-        return html_text.replace(HEAD_ANCHOR, HEAD_ANCHOR + "\n" + snippet, 1)
-    return html_text
+    text = html_text
+    # AdSense ローダー（既存判定は URL で行う）。
+    if "pagead2.googlesyndication.com" not in text:
+        text = _insert_after_head(text, snippet)
+    # サイト確認用メタタグ（ローダーとは独立に冪等挿入）。
+    if ADSENSE_META_MARKER not in text:
+        text = _insert_after_head(text, adsense_meta_markup(client_id))
+    return text
 
 
 def main() -> int:
