@@ -248,6 +248,119 @@ def render_month_daily(stem: str) -> str | None:
     return "".join(out)
 
 
+def _cont_run_table(text: str) -> str | None:
+    """連続運転（運転…／休憩…／…）を工程表に。"""
+    segs = [s.strip() for s in re.split(r"[／/]", text) if s.strip()]
+    if len(segs) < 3 or not all(s.startswith(("運転", "休憩")) for s in segs):
+        return None
+    acts, durs = [], []
+    for s in segs:
+        label = "運転" if s.startswith("運転") else "休憩"
+        dur = s[len(label):].strip()
+        cls = "run" if label == "運転" else "rest"
+        acts.append(f'<td class="{cls}">{_esc(label)}</td>')
+        durs.append(f"<td>{_esc(dur)}</td>")
+    return (
+        '<div class="q-choice-tbl q-flow-wrap"><table class="q-cont">'
+        f'<tbody><tr class="act">{"".join(acts)}</tr>'
+        f'<tr class="dur">{"".join(durs)}</tr></tbody></table></div>'
+    )
+
+
+def _year_month_table(text: str) -> str | None:
+    """各月の拘束時間　4月:293／…（／１年間:…）を横表に。"""
+    if "各月" not in text and "月:" not in text:
+        return None
+    pairs = re.findall(r"([0-9０-９]+月)\s*[:：]\s*([0-9０-９,，]+)", text)
+    ytot = re.search(r"(?:１年間|1年間)\s*[:：]\s*([0-9０-９,，]+)", text)
+    if len(pairs) < 6:
+        return None
+    heads = "".join(f"<th>{_esc(m)}</th>" for m, _ in pairs)
+    vals = "".join(f"<td>{_esc(v)}</td>" for _, v in pairs)
+    if ytot:
+        heads += "<th>１年間</th>"
+        vals += f'<td class="tot">{_esc(ytot.group(1))}</td>'
+    return (
+        '<div class="q-choice-tbl q-flow-wrap"><table class="q-cm">'
+        f"<thead><tr>{heads}</tr></thead><tbody><tr>{vals}</tr></tbody></table></div>"
+    )
+
+
+def _two_week_table(text: str) -> str | None:
+    """第1週…第2週… の日別運転時間を横表に。"""
+    if "第1週" not in text and "第１週" not in text:
+        return None
+    days = re.findall(r"([0-9０-９]+)日\s*[:：]\s*([0-9０-９]+|休日)", text)
+    if len(days) < 8:
+        return None
+    tot = re.search(r"(?:運転時間計|計)\s*[:：]?\s*([0-9０-９]+時間)", text)
+    heads = "".join(f"<th>{_esc(d)}日</th>" for d, _ in days)
+    cells = []
+    for _, v in days:
+        if v == "休日":
+            cells.append('<td class="hol">休</td>')
+        else:
+            cells.append(f"<td>{_esc(v)}</td>")
+    foot = f'<p class="q-plan-note">2週間の運転時間計：{_esc(tot.group(1))}</p>' if tot else ""
+    return (
+        '<div class="q-choice-tbl q-flow-wrap"><table class="q-cm">'
+        f'<thead><tr>{heads}</tr></thead><tbody><tr>{"".join(cells)}</tr></tbody></table></div>'
+        + foot
+    )
+
+
+def _days_hours_table(text: str) -> str | None:
+    """1日目:10時間／… の5日間などを横表に。"""
+    days = re.findall(r"([0-9０-９]+日目)\s*[:：]\s*([0-9０-９]+時間)", text)
+    if len(days) < 3:
+        return None
+    heads = "".join(f"<th>{_esc(d)}</th>" for d, _ in days)
+    vals = "".join(f"<td>{_esc(v)}</td>" for _, v in days)
+    return (
+        '<div class="q-choice-tbl q-flow-wrap"><table class="q-cm">'
+        f"<thead><tr>{heads}</tr></thead><tbody><tr>{vals}</tr></tbody></table></div>"
+    )
+
+
+def _week_start_end_table(text: str) -> str | None:
+    """月:始業8時〜終業22時／… を曜日×始業終業の表に。"""
+    ents = re.findall(
+        r"(月|火|水|木|金|土|日|[０-９0-9]+日目)\s*[:：]?\s*始業\s*([0-9０-９]+時[0-9０-９]*分?)\s*[〜～]\s*終業\s*([0-9０-９]+時[0-9０-９]*分?)",
+        text,
+    )
+    if len(ents) < 3:
+        return None
+    body = "".join(
+        f"<tr><th>{_esc(d)}</th><td>{_esc(s)}</td><td>{_esc(e)}</td></tr>" for d, s, e in ents
+    )
+    return (
+        '<div class="q-choice-tbl q-sched"><table class="q-work">'
+        "<thead><tr><th></th><th>始業</th><th>終業</th></tr></thead>"
+        f"<tbody>{body}</tbody></table></div>"
+    )
+
+
+def render_choice_html(text: str) -> str | None:
+    """選択肢に含まれる各種表を HTML テーブルに。対象外なら None。"""
+    text = (text or "").strip()
+    if not text:
+        return None
+    for fn in (
+        _year_month_table,
+        _two_week_table,
+        _week_start_end_table,
+        _days_hours_table,
+        _cont_run_table,
+    ):
+        try:
+            out = fn(text)
+        except Exception:
+            out = None
+        if out:
+            return out
+    return None
+
+
 def render_stem_html(stem: str) -> str | None:
     """復元した各種スケジュール問題文を表 HTML に。対象外なら None。"""
     if not stem or not stem.strip():

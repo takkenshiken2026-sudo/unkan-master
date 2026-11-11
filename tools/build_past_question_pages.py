@@ -715,8 +715,19 @@ def build_question_html(
     css_href = rel_css(rel_path)
     theme_href = rel_theme_css(rel_path)
 
+    def _opt_body(text: str) -> str:
+        try:
+            from tools.q_schedule_table import render_choice_html
+
+            tbl = render_choice_html(text)
+            if tbl:
+                return tbl
+        except Exception:
+            pass
+        return html.escape(text)
+
     opts_html = "".join(
-        f'<li class="q-opt"><span class="q-opt-num">（{i}）</span> {html.escape(o)}</li>'
+        f'<li class="q-opt"><span class="q-opt-num">（{i}）</span> {_opt_body(o)}</li>'
         for i, o in enumerate(page["opts"], start=1)
     )
 

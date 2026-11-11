@@ -6363,3 +6363,15 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
 .q-month td.hol{color:var(--text3,#999)}
 .q-month tr.wtot td,.q-month tr.wtot th{background:#f6f2ea;font-weight:600}
 .q-month tr.mtot td,.q-month tr.mtot th{background:var(--accent-soft,#f0e7dd);font-weight:700}
+
+/* ===== 選択肢内の表（年間拘束・連続運転・2週間・5日間・週間図） ===== */
+.q-opt .q-choice-tbl{overflow-x:auto;margin:4px 0;display:block}
+.q-opt .q-cm,.q-opt .q-cont,.q-opt .q-work{border-collapse:collapse;font-size:12px}
+.q-opt .q-cm th,.q-opt .q-cm td,.q-opt .q-cont td,.q-opt .q-work th,.q-opt .q-work td{border:1px solid var(--border);padding:3px 8px;text-align:center;white-space:nowrap}
+.q-opt .q-cm th,.q-opt .q-work th{background:var(--tableHead,#2b2b2b);color:#fff;font-weight:600}
+.q-opt .q-cm td.tot{background:#f1ede6;font-weight:700}
+.q-opt .q-cm td.hol{color:var(--text3,#999)}
+.q-opt .q-cont .act td{background:#f1ede6;font-weight:600}
+.q-opt .q-cont .act td.rest{background:#faf8f5;font-weight:400;color:var(--text2,#555)}
+.q-opt .q-cont .dur td{color:var(--text2,#555);font-size:11px}
+.q-opt .q-plan-note{font-size:11px;color:var(--text2,#555);margin:2px 0}

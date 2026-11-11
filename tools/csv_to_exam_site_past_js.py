@@ -63,6 +63,17 @@ def build_stem_html(row: dict) -> str:
     except Exception:
         return ""
 
+def build_opts_html(opts: list) -> list:
+    """選択肢に含まれる表を HTML 化。表が無ければ空配列を返す。"""
+    try:
+        from tools.q_schedule_table import render_choice_html
+        html_list = [render_choice_html(o) or "" for o in opts]
+        return html_list if any(html_list) else []
+    except Exception:
+        return []
+
+
+
 
 def parse_correct(raw: str, *, max_choice: int) -> int | None:
     return parse_correct_js_index(
@@ -106,6 +117,7 @@ def row_to_obj(row: dict, line_no: int) -> dict | None:
         "text": text,
         "stemHtml": build_stem_html(row),
         "opts": opts,
+        "optsHtml": build_opts_html(opts),
         "ans": 0 if cor is None else cor,
         "exp": exp,
     }
@@ -154,6 +166,7 @@ def practice_row_to_obj(row: dict, line_no: int) -> dict | None:
         "text": text,
         "stemHtml": build_stem_html(row),
         "opts": opts,
+        "optsHtml": build_opts_html(opts),
         "ans": 0 if cor is None else cor,
         "exp": exp,
         "level": level_from_tags(row.get("tags", "")),
