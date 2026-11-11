@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import io
 import csv
 import json
 import re
@@ -150,7 +151,7 @@ def load_practice_questions() -> list[dict]:
     if not PRACTICE_CSV.is_file():
         return []
     text = PRACTICE_CSV.read_text(encoding="utf-8-sig")
-    rows = list(csv.DictReader(text.splitlines()))
+    rows = list(csv.DictReader(io.StringIO(text)))
     out: list[dict] = []
     for i, row in enumerate(rows, start=2):
         o = practice_row_to_obj(row, i)
@@ -183,7 +184,7 @@ def main() -> int:
         print(f"入力がありません: {DATA_CSV}", file=sys.stderr)
         return 1
     text = DATA_CSV.read_text(encoding="utf-8-sig")
-    rows = list(csv.DictReader(text.splitlines()))
+    rows = list(csv.DictReader(io.StringIO(text)))
     objs: list[dict] = []
     year_labels: dict[int, str] = {}
     for i, row in enumerate(rows, start=2):

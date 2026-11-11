@@ -20,6 +20,7 @@ q/index.html・robots.txt を更新する（sitemap は build_sitemap.py）。
 
 from __future__ import annotations
 
+import io
 import csv
 import html
 import json
@@ -238,7 +239,7 @@ def load_glossary_lookup() -> dict[str, str]:
 
     if not GLOSSARY_CSV.is_file():
         return {}
-    rows = list(csv.DictReader(GLOSSARY_CSV.read_text(encoding="utf-8-sig").splitlines()))
+    rows = list(csv.DictReader(io.StringIO(GLOSSARY_CSV.read_text(encoding="utf-8-sig"))))
     used: dict[str, str] = {}
     entries = []
     for row in rows:
@@ -586,7 +587,7 @@ def split_semicolon(s: str) -> list[str]:
 
 def load_rows() -> list[dict]:
     text = DATA_CSV.read_text(encoding="utf-8-sig")
-    return list(csv.DictReader(text.splitlines()))
+    return list(csv.DictReader(io.StringIO(text)))
 
 
 def page_dict(row: dict, line_no: int) -> dict:

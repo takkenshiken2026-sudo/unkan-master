@@ -14,6 +14,7 @@ data/practice_questions.csv / data/ichimon_questions.csv から静的 SEO ペー
 
 from __future__ import annotations
 
+import io
 import csv
 import html
 import json
@@ -167,13 +168,13 @@ def marubatsu_label(correct_answer: bool) -> str:
 def load_practice_rows() -> list[dict]:
     if not PRACTICE_CSV.is_file():
         return []
-    return list(csv.DictReader(PRACTICE_CSV.read_text(encoding="utf-8-sig").splitlines()))
+    return list(csv.DictReader(io.StringIO(PRACTICE_CSV.read_text(encoding="utf-8-sig"))))
 
 
 def load_ichimon_rows() -> list[dict]:
     if not ICHIMON_CSV.is_file():
         return []
-    return list(csv.DictReader(ICHIMON_CSV.read_text(encoding="utf-8-sig").splitlines()))
+    return list(csv.DictReader(io.StringIO(ICHIMON_CSV.read_text(encoding="utf-8-sig"))))
 
 
 def practice_page_dict(row: dict, line_no: int) -> dict:

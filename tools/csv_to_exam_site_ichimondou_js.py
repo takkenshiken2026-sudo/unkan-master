@@ -11,6 +11,7 @@ explanation_opposite, explanation_point, category, tags, source, note
 
 from __future__ import annotations
 
+import io
 import csv
 import json
 import re
@@ -83,7 +84,7 @@ def main() -> int:
         print(f"入力がありません: {DATA_CSV}", file=sys.stderr)
         return 1
     text = DATA_CSV.read_text(encoding="utf-8-sig")
-    rows_in = list(csv.DictReader(text.splitlines()))
+    rows_in = list(csv.DictReader(io.StringIO(text)))
     objs: list[dict] = []
     for i, row in enumerate(rows_in, start=2):
         objs.append(row_to_obj(row, i))
