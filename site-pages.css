@@ -6339,3 +6339,27 @@ html:not(.js) .terms-idx-seo-fallback .terms-idx-seo-list a {
   font-size: var(--fs-sub);
   font-weight: 700;
 }
+
+/* ===== 復元スケジュール（運行計画・勤務表・日別表）の罫線テーブル ===== */
+.q-plan{display:flex;flex-direction:column;gap:16px;margin:12px 0}
+.q-plan-day{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--bg2,#fafafa)}
+.q-plan-day-title{font-weight:700;font-size:var(--fs-sub,.95rem);margin-bottom:8px}
+.q-plan-time{border-collapse:collapse;margin-bottom:8px}
+.q-plan-time th,.q-plan-time td{border:1px solid var(--border);padding:4px 10px;text-align:center;font-size:13px;white-space:nowrap}
+.q-plan-time th{background:var(--tableHead,#2b2b2b);color:#fff;font-weight:600}
+.q-plan-flow-wrap{overflow-x:auto}
+.q-plan-flow{border-collapse:collapse;min-width:100%;table-layout:auto}
+.q-plan-flow td{border:1px solid var(--border);padding:5px 7px;text-align:center;font-size:12px;white-space:nowrap}
+.q-plan-flow .q-plan-act td{background:#f1ede6;font-weight:600}
+.q-plan-flow .q-plan-act td.loc{background:var(--tableHead,#2b2b2b);color:#fff}
+.q-plan-flow .q-plan-dur td{color:var(--text2,#555);font-size:11px}
+.q-plan-note{font-size:12px;color:var(--text2,#555);margin:4px 0}
+.q-sched{overflow-x:auto;margin:12px 0}
+.q-work,.q-month{border-collapse:collapse;font-size:13px}
+.q-work th,.q-work td,.q-month th,.q-month td{border:1px solid var(--border);padding:5px 12px;text-align:center;white-space:nowrap}
+.q-work th,.q-month thead th{background:var(--tableHead,#2b2b2b);color:#fff;font-weight:600}
+.q-month tbody th{background:#f1ede6;font-weight:600}
+.q-month td.d{color:var(--text2,#555)}
+.q-month td.hol{color:var(--text3,#999)}
+.q-month tr.wtot td,.q-month tr.wtot th{background:#f6f2ea;font-weight:600}
+.q-month tr.mtot td,.q-month tr.mtot th{background:var(--accent-soft,#f0e7dd);font-weight:700}

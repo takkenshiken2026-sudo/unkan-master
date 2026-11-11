@@ -462,6 +462,30 @@ h2.section-label .tip-icon{width:13px;height:13px;font-size:9px}
 .q-meta-value{font-size:12px;color:var(--text);font-weight:600;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
 .q-num{font-size:14px;font-family:var(--mono);color:var(--text3)}
 .q-text{font-size:var(--fs-body);line-height:1.8;color:var(--text);font-family:var(--font);white-space:pre-line}
+.q-text.q-has-table{white-space:normal}
+.q-has-table .q-plan{display:flex;flex-direction:column;gap:14px;margin:10px 0}
+.q-has-table .q-plan-day{border:1px solid var(--border2);border-radius:8px;padding:9px 10px;background:var(--bg2)}
+.q-has-table .q-plan-day-title{font-weight:700;font-size:13px;margin-bottom:7px;white-space:normal}
+.q-has-table .q-plan-time{border-collapse:collapse;margin-bottom:7px}
+.q-has-table .q-plan-time th,.q-has-table .q-plan-time td{border:1px solid var(--border2);padding:3px 9px;text-align:center;font-size:12px;white-space:nowrap}
+.q-has-table .q-plan-time th{background:var(--ink,#2b2b2b);color:#fff;font-weight:600}
+.q-has-table .q-plan-flow-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.q-has-table .q-plan-flow{border-collapse:collapse}
+.q-has-table .q-plan-flow td{border:1px solid var(--border2);padding:4px 6px;text-align:center;font-size:11px;white-space:nowrap}
+.q-has-table .q-plan-act td{background:var(--bg3);font-weight:600}
+.q-has-table .q-plan-act td.loc{background:var(--ink,#2b2b2b);color:#fff}
+.q-has-table .q-plan-dur td{color:var(--text2);font-size:10px}
+.q-has-table .q-plan-note{font-size:11px;color:var(--text2);margin:3px 0;white-space:normal}
+.q-has-table .q-sched{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0}
+.q-has-table .q-work,.q-has-table .q-month{border-collapse:collapse;font-size:12px}
+.q-has-table .q-work th,.q-has-table .q-work td,.q-has-table .q-month th,.q-has-table .q-month td{border:1px solid var(--border2);padding:4px 10px;text-align:center;white-space:nowrap}
+.q-has-table .q-work th,.q-has-table .q-month thead th{background:var(--ink,#2b2b2b);color:#fff;font-weight:600}
+.q-has-table .q-month tbody th{background:var(--bg3);font-weight:600}
+.q-has-table .q-month td.d{color:var(--text2)}
+.q-has-table .q-month td.hol{color:var(--text3)}
+.q-has-table .q-month tr.wtot td,.q-has-table .q-month tr.wtot th{background:var(--bg3);font-weight:600}
+.q-has-table .q-month tr.mtot td,.q-has-table .q-month tr.mtot th{background:var(--accent-soft);font-weight:700}
+.q-has-table p{margin:0 0 8px}
 .bookmark-btn{width:38px;height:38px;border-radius:var(--r);border:1.5px solid var(--border2);background:#fff;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;box-shadow:var(--sh)}
 .bookmark-btn--labeled{width:auto;padding:0 11px 0 9px;gap:5px;height:38px}
 .bookmark-btn-label{font-size:12px;font-weight:700;letter-spacing:.02em;line-height:1;white-space:nowrap}
@@ -4542,7 +4566,7 @@ function renderQScoreReplay(sr){
     <span class="q-meta-item q-meta-field"><span class="q-meta-label">${f.name}</span></span>
     <span class="q-meta-item q-meta-year"><span class="q-meta-value">${sourceLabel}</span></span>${starsHTML}`;
   updateBookmarkButton(q);
-  document.getElementById('q-body').textContent=formatExamQuestionBodyText(q.text||'');
+  {const _qb=document.getElementById('q-body');if(q&&q.stemHtml){_qb.classList.add('q-has-table');_qb.innerHTML=q.stemHtml;}else{_qb.classList.remove('q-has-table');_qb.textContent=formatExamQuestionBodyText(q.text||'');}}
   document.getElementById('opts').innerHTML=q.opts.map((o,j)=>
     `<div class="opt disabled" id="opt${j}"><span class="opt-num">${j+1}</span><span>${o}</span></div>`).join('');
   updateOptsKeyHint(false);
@@ -4603,7 +4627,7 @@ function renderQ(){ window.scrollTo({top:0,behavior:"instant"});
 	    <span class="q-meta-item q-meta-field"><span class="q-meta-label">${f.name}</span></span>
 	    <span class="q-meta-item q-meta-year"><span class="q-meta-value">${sourceLabel}</span></span>${starsHTML}`;
 	  updateBookmarkButton(q);
-	  document.getElementById('q-body').textContent=formatExamQuestionBodyText(q.text||'');
+	  {const _qb=document.getElementById('q-body');if(q&&q.stemHtml){_qb.classList.add('q-has-table');_qb.innerHTML=q.stemHtml;}else{_qb.classList.remove('q-has-table');_qb.textContent=formatExamQuestionBodyText(q.text||'');}}
   document.getElementById('opts').innerHTML=q.opts.map((o,i)=>
     `<div class="opt" id="opt${i}" onclick="pickOpt(${i})"><span class="opt-num">${i+1}</span><span>${o}</span></div>`).join('');
   updateOptsKeyHint(true,q.opts.length);

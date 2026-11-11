@@ -160,6 +160,15 @@ def format_past_stem_html(stem: str) -> str:
     raw = _norm(stem)
     if not raw:
         return ""
+    # 復元済みスケジュール（運行計画・勤務表・日別表）は罫線付き HTML 表に。
+    try:
+        from tools.q_schedule_table import render_stem_html as _sched
+
+        tbl = _sched(raw)
+        if tbl:
+            return tbl
+    except Exception:
+        pass
     op = format_operation_plan_stem(raw)
     if op:
         return op

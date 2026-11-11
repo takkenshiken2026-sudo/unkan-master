@@ -52,6 +52,18 @@ def build_plain_text(row: dict) -> str:
     return "\n\n".join(parts) if parts else "（問題文なし）"
 
 
+
+
+def build_stem_html(row: dict) -> str:
+    """復元済みスケジュール問題文を罫線テーブル HTML に。対象外は空文字。"""
+    try:
+        from tools.q_schedule_table import render_stem_html
+        out = render_stem_html(norm(row.get("stem")))
+        return out or ""
+    except Exception:
+        return ""
+
+
 def parse_correct(raw: str, *, max_choice: int) -> int | None:
     return parse_correct_js_index(
         raw, extended=extended_correct_answers(), max_choice=max_choice
@@ -92,6 +104,7 @@ def row_to_obj(row: dict, line_no: int) -> dict | None:
         "num": qno,
         "field": field,
         "text": text,
+        "stemHtml": build_stem_html(row),
         "opts": opts,
         "ans": 0 if cor is None else cor,
         "exp": exp,
@@ -139,6 +152,7 @@ def practice_row_to_obj(row: dict, line_no: int) -> dict | None:
         "num": qno,
         "field": field,
         "text": text,
+        "stemHtml": build_stem_html(row),
         "opts": opts,
         "ans": 0 if cor is None else cor,
         "exp": exp,
