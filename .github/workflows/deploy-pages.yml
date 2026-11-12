@@ -30,6 +30,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Validate question data integrity
+        run: python3 tools/validate_question_integrity.py
+
       - name: Build site
         run: python3 tools/build_all.py
 

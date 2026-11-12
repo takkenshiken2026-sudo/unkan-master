@@ -61,7 +61,11 @@ def audit_past() -> tuple[int, int]:
             warns += 1
             _warn(f"{path.name}:{idx} explanation_correct が設問文の言い換え")
         choices = parse_explanation_choices(norm(row.get("explanation_choices")))
-        notes = [v for k, v in choices.items() if k != int(row.get("correct") or 0)]
+        # correct は single のとき単一番号だが、combination/multi/truefalse では
+        # 'A-5;B-7' や '1,3' 等のため int() で落ちる。単一番号のときだけ除外キーにする。
+        _cor_raw = norm(row.get("correct"))
+        _cor_key = int(_cor_raw) if _cor_raw.isdigit() else None
+        notes = [v for k, v in choices.items() if k != _cor_key]
         if len(notes) >= 2 and len(set(notes)) == 1:
             if is_template_site():
                 warns += 1
